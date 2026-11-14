@@ -153,7 +153,8 @@
       quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
       quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1600") || thumb;
     }
-    viewerFrame.src = base + "/preview" + resource;
+    // Full-size Google Drive iframe preview is retained for fallback, but disabled for now:
+    // viewerFrame.src = base + "/preview" + resource;
     driveOpen.href = base + "/view" + resource;
     download.href = file.webContentLink || ("https://drive.google.com/uc?export=download&id=" + encodeURIComponent(file.id) + (file.resourceKey ? "&resourcekey=" + encodeURIComponent(file.resourceKey) : ""));
     previous.disabled = activePhotoIndex <= 0;
@@ -336,13 +337,39 @@
     }
   }, { root: null, rootMargin: "450px 0px", threshold: 0 });
   loadMoreObserver.observe(loadMore);
-  viewerFrame.addEventListener("load", () => {
-    if (!viewer.hidden) {
-      viewerFrame.classList.add("ready");
-      const quickPreview = document.getElementById("viewer-image");
-      if (quickPreview) quickPreview.hidden = true;
-    }
-  });
+  // Full-size Google Drive iframe load handler retained for fallback, currently disabled:
+  // viewerFrame.addEventListener("load", () => {
+  //   if (!viewer.hidden) {
+  //     viewerFrame.classList.add("ready");
+  //     const quickPreview = document.getElementById("viewer-image");
+  //     if (quickPreview) quickPreview.hidden = true;
+  //   }
+  // });
+  // Mobile photo navigation: swipe left for next, right for previous.
+  const modalView = document.querySelector(".modal-view");
+  let touchStartX = 0;
+  let touchStartY = 0;
+  if (modalView) {
+    modalView.addEventListener("touchstart", event => {
+      if (!event.touches || event.touches.length !== 1) return;
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    }, { passive: true });
+    modalView.addEventListener("touchend", event => {
+      if (viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
+      const deltaX = event.changedTouches[0].clientX - touchStartX;
+      const deltaY = event.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+      if (deltaX < 0 && activePhotoIndex < activePhotos.length - 1) {
+        activePhotoIndex++;
+        showActivePhoto();
+      } else if (deltaX > 0 && activePhotoIndex > 0) {
+        activePhotoIndex--;
+        showActivePhoto();
+      }
+    }, { passive: true });
+  }
+
   closeViewer.addEventListener("click", closePhoto);
   previous.addEventListener("click", () => {
     if (activePhotoIndex > 0) { activePhotoIndex--; showActivePhoto(); }
