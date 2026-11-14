@@ -76,6 +76,9 @@
       button.disabled = index === folderStack.length - 1;
       button.addEventListener("click", () => {
         folderStack = folderStack.slice(0, index + 1);
+        search.value = "";
+        searchResults = null;
+        searchRun++;
         loadFolder();
       });
       breadcrumbs.append(button);
