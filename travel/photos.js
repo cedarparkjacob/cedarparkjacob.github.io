@@ -517,6 +517,10 @@
     }
     if (!trackingTouch || viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
     trackingTouch = false;
+    if (event.target.closest("button, a")) {
+      lastTapTime = 0;
+      return;
+    }
     const deltaX = event.changedTouches[0].clientX - touchStartX;
     const deltaY = event.changedTouches[0].clientY - touchStartY;
     const absX = Math.abs(deltaX);
