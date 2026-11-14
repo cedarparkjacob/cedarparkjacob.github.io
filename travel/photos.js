@@ -31,6 +31,69 @@
   let searchRun = 0;
   let recursiveCache = new Map();
 
+  const ratingOverlay = document.getElementById("rating-overlay");
+  const favoriteButton = document.getElementById("favorite-toggle");
+  const ratingStars = [...document.querySelectorAll(".rating-star")];
+  const ratingStorageKey = "luddenTravelPhotoRatings_v1";
+  let photoRatings = {};
+  try { photoRatings = JSON.parse(localStorage.getItem(ratingStorageKey) || "{}") || {}; }
+  catch (_) { photoRatings = {}; }
+  let lastTapTime = 0;
+  let lastTapX = 0;
+  let lastTapY = 0;
+
+  function savePhotoRatings() {
+    try { localStorage.setItem(ratingStorageKey, JSON.stringify(photoRatings)); }
+    catch (error) { console.warn("Could not save photo favorites/ratings locally.", error); }
+  }
+
+  function currentPhotoId() {
+    return activePhotos[activePhotoIndex]?.id || "";
+  }
+
+  function updateRatingOverlay() {
+    const id = currentPhotoId();
+    const saved = photoRatings[id] || {};
+    favoriteButton.setAttribute("aria-pressed", saved.favorite ? "true" : "false");
+    favoriteButton.classList.toggle("is-favorite", !!saved.favorite);
+    favoriteButton.innerHTML = (saved.favorite ? "♥" : "♡") + " <span>" + (saved.favorite ? "FAVORITED" : "FAVORITE") + "</span>";
+    ratingStars.forEach(star => {
+      const value = Number(star.dataset.rating);
+      const active = value <= (saved.rating || 0);
+      star.classList.toggle("is-selected", active);
+      star.setAttribute("aria-pressed", active && value === saved.rating ? "true" : "false");
+    });
+  }
+
+  function showRatingOverlay() {
+    if (!currentPhotoId()) return;
+    updateRatingOverlay();
+    ratingOverlay.hidden = false;
+  }
+
+  function hideRatingOverlay() {
+    ratingOverlay.hidden = true;
+  }
+
+  favoriteButton.addEventListener("click", () => {
+    const id = currentPhotoId();
+    if (!id) return;
+    photoRatings[id] = photoRatings[id] || {};
+    photoRatings[id].favorite = !photoRatings[id].favorite;
+    if (!photoRatings[id].favorite && !photoRatings[id].rating) delete photoRatings[id];
+    savePhotoRatings();
+    updateRatingOverlay();
+  });
+
+  ratingStars.forEach(star => star.addEventListener("click", () => {
+    const id = currentPhotoId();
+    if (!id) return;
+    photoRatings[id] = photoRatings[id] || {};
+    photoRatings[id].rating = Number(star.dataset.rating);
+    savePhotoRatings();
+    updateRatingOverlay();
+  }));
+
   function setStatus(message, kind = "") {
     status.textContent = message;
     status.className = "status-line" + (kind ? " " + kind : "");
@@ -141,6 +204,8 @@
     const file = activePhotos[activePhotoIndex];
     if (!file) return;
     viewerTitle.textContent = file.name;
+    hideRatingOverlay();
+    updateRatingOverlay();
     viewerCount.textContent = (activePhotoIndex + 1) + " / " + activePhotos.length;
     const base = "https://drive.google.com/file/d/" + encodeURIComponent(file.id);
     const resource = file.resourceKey ? "?resourcekey=" + encodeURIComponent(file.resourceKey) : "";
@@ -162,6 +227,7 @@
   }
 
   function closePhoto() {
+    hideRatingOverlay();
     viewer.hidden = true;
     viewerFrame.src = "about:blank";
     const quickPreview = document.getElementById("viewer-image");
@@ -349,8 +415,8 @@
   //     if (quickPreview) quickPreview.hidden = true;
   //   }
   // });
-  // Mobile gestures: horizontal swipe changes photos; swipe up closes.
-  // Any multi-touch gesture (including pinch zoom) cancels navigation.
+  // Pinch zoom remains enabled. Multi-touch never triggers photo navigation.
+  // Double-tap opens ratings; any one-finger swipe dismisses the overlay without changing photos.
   let touchStartX = 0;
   let touchStartY = 0;
   let trackingTouch = false;
@@ -360,6 +426,7 @@
     if (event.touches.length > 1) {
       multiTouchGesture = true;
       trackingTouch = false;
+      lastTapTime = 0;
       return;
     }
     if (multiTouchGesture || event.touches.length !== 1) return;
@@ -371,6 +438,7 @@
     if (event.touches && event.touches.length > 1) {
       multiTouchGesture = true;
       trackingTouch = false;
+      lastTapTime = 0;
     }
   }, { passive: true, capture: true });
   viewer.addEventListener("touchend", event => {
@@ -385,6 +453,32 @@
     const deltaY = event.changedTouches[0].clientY - touchStartY;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
+    const moved = Math.max(absX, absY);
+
+    if (!ratingOverlay.hidden) {
+      if (moved >= 40) {
+        event.preventDefault();
+        hideRatingOverlay();
+      }
+      return;
+    }
+
+    if (moved < 18) {
+      const now = Date.now();
+      const x = event.changedTouches[0].clientX;
+      const y = event.changedTouches[0].clientY;
+      if (now - lastTapTime <= 340 && Math.hypot(x - lastTapX, y - lastTapY) <= 48) {
+        event.preventDefault();
+        lastTapTime = 0;
+        showRatingOverlay();
+      } else {
+        lastTapTime = now;
+        lastTapX = x;
+        lastTapY = y;
+      }
+      return;
+    }
+    lastTapTime = 0;
     if (absY >= 70 && deltaY < 0 && absY > absX * 1.25) {
       event.preventDefault();
       closePhoto();
@@ -403,13 +497,20 @@
   viewer.addEventListener("touchcancel", () => {
     trackingTouch = false;
     multiTouchGesture = false;
+    lastTapTime = 0;
   }, { passive: true, capture: true });
+
+  const viewerImage = document.getElementById("viewer-image");
+  viewerImage.addEventListener("dblclick", event => {
+    event.preventDefault();
+    showRatingOverlay();
+  });
 
   // Clicking the outer 22% of the image viewing area navigates.
   const modalView = document.querySelector(".modal-view");
   if (modalView) {
     modalView.addEventListener("click", event => {
-      if (viewer.hidden || event.target === viewerFrame) return;
+      if (viewer.hidden || event.target === viewerFrame || !ratingOverlay.hidden || event.target.closest("#rating-overlay")) return;
       const bounds = modalView.getBoundingClientRect();
       const x = event.clientX - bounds.left;
       const edge = bounds.width * 0.22;
