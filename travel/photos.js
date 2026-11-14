@@ -151,7 +151,7 @@
       quickPreview.alt = file.name;
       const thumb = file.thumbnailLink || "";
       quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
-      quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1600") || thumb;
+      quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1200") || thumb;
     }
     // Full-size Google Drive iframe preview is retained for fallback, but disabled for now:
     // viewerFrame.src = base + "/preview" + resource;
@@ -337,6 +337,10 @@
     }
   }, { root: null, rootMargin: "450px 0px", threshold: 0 });
   loadMoreObserver.observe(loadMore);
+  // Keep a tap fallback in case a mobile browser does not trigger the observer.
+  loadMore.addEventListener("click", () => {
+    if (nextPageToken && !loading && !searchResults) loadFolder({ append: true });
+  });
   // Full-size Google Drive iframe load handler retained for fallback, currently disabled:
   // viewerFrame.addEventListener("load", () => {
   //   if (!viewer.hidden) {
@@ -345,30 +349,36 @@
   //     if (quickPreview) quickPreview.hidden = true;
   //   }
   // });
-  // Mobile photo navigation: swipe left for next, right for previous.
-  const modalView = document.querySelector(".modal-view");
+  // Mobile photo navigation: capture touch events at the modal level so
+  // image elements cannot swallow the gesture. Left = next; right = previous.
   let touchStartX = 0;
   let touchStartY = 0;
-  if (modalView) {
-    modalView.addEventListener("touchstart", event => {
-      if (!event.touches || event.touches.length !== 1) return;
-      touchStartX = event.touches[0].clientX;
-      touchStartY = event.touches[0].clientY;
-    }, { passive: true });
-    modalView.addEventListener("touchend", event => {
-      if (viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
-      const deltaX = event.changedTouches[0].clientX - touchStartX;
-      const deltaY = event.changedTouches[0].clientY - touchStartY;
-      if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
-      if (deltaX < 0 && activePhotoIndex < activePhotos.length - 1) {
-        activePhotoIndex++;
-        showActivePhoto();
-      } else if (deltaX > 0 && activePhotoIndex > 0) {
-        activePhotoIndex--;
-        showActivePhoto();
-      }
-    }, { passive: true });
-  }
+  let trackingTouch = false;
+  viewer.addEventListener("touchstart", event => {
+    if (viewer.hidden || !event.touches || event.touches.length !== 1) {
+      trackingTouch = false;
+      return;
+    }
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    trackingTouch = true;
+  }, { passive: true, capture: true });
+  viewer.addEventListener("touchend", event => {
+    if (!trackingTouch || viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
+    trackingTouch = false;
+    const deltaX = event.changedTouches[0].clientX - touchStartX;
+    const deltaY = event.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    event.preventDefault();
+    if (deltaX < 0 && activePhotoIndex < activePhotos.length - 1) {
+      activePhotoIndex++;
+      showActivePhoto();
+    } else if (deltaX > 0 && activePhotoIndex > 0) {
+      activePhotoIndex--;
+      showActivePhoto();
+    }
+  }, { passive: false, capture: true });
+  viewer.addEventListener("touchcancel", () => { trackingTouch = false; }, { passive: true, capture: true });
 
   closeViewer.addEventListener("click", closePhoto);
   previous.addEventListener("click", () => {
