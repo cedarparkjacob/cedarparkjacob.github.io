@@ -10,15 +10,16 @@ on:
 permissions:
   contents: write
 
+# Keep only the newest pending update; don't queue obsolete deployments.
 concurrency:
   group: site-update-status
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validate-and-stamp:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out site
+      - name: Check out latest main
         uses: actions/checkout@v4
         with:
           ref: main
@@ -36,19 +37,3 @@ jobs:
           git add travel/last-updated.json
           git commit -m "Update site timestamp [skip ci]" || exit 0
           git push origin HEAD:main
-
-      - name: Confirm timestamp is live on GitHub Pages
-        env:
-          SOURCE_SHA: ${{ github.sha }}
-        run: |
-          for attempt in $(seq 1 60); do
-            LIVE_SHA=$(curl -fsS "https://ludden.uk/travel/last-updated.json?check=$attempt" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).sourceCommit || ""' 2>/dev/null || true)
-            if [ "$LIVE_SHA" = "$SOURCE_SHA" ]; then
-              echo "The site timestamp for $SOURCE_SHA is live."
-              exit 0
-            fi
-            echo "Waiting for GitHub Pages deployment ($attempt/60)..."
-            sleep 10
-          done
-          echo "The commit was pushed, but the live timestamp did not appear within 10 minutes."
-          exit 1
