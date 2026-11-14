@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101a20"><title>Photo Library — Ludden Travel</title><link rel="stylesheet" href="../assets/site.css"><script src="../assets/site.js" defer></script><script src="https://accounts.google.com/gsi/client" async defer></script><script src="https://apis.google.com/js/api.js" async defer></script><script src="drive-test.js" defer></script><style>
+body[data-theme="travel"]{--bg:#101a20;--accent:#b9d5c5;--panel:rgba(17,35,39,.76)}
+.test-panel{border:1px solid var(--line);background:var(--panel);padding:clamp(20px,4vw,34px);margin:20px 0 30px}
+.test-panel h2{font-size:23px;margin:0 0 10px}.test-panel p{color:#a8b8b5;line-height:1.7;font-size:13px}
+.action-row{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
+.action{border:1px solid var(--accent);background:var(--accent);color:#10201b;padding:12px 17px;font:500 11px var(--mono);letter-spacing:.08em;cursor:pointer}
+.action.secondary{background:transparent;color:var(--accent)}.action:disabled{opacity:.4;cursor:not-allowed}
+#status{font:11px var(--mono);color:var(--accent);padding:13px 15px;background:rgba(0,0,0,.18);border-left:2px solid var(--accent);white-space:pre-wrap;overflow-wrap:anywhere}
+#file-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:18px}
+.file-item{padding:13px;border:1px solid var(--line);background:rgba(255,255,255,.025);min-width:0}.file-item strong{display:block;font-size:12px;overflow-wrap:anywhere}.file-item small{display:block;color:#8fa49e;font:9px var(--mono);margin-top:7px;overflow-wrap:anywhere}
+.upload-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px}.warning{font-size:11px!important;color:#cdbb9e!important}
+@media(max-width:600px){.action{width:100%}.upload-row{align-items:stretch;flex-direction:column}}
+</style></head>
+<body data-theme="travel"><canvas class="sky-canvas" aria-hidden="true"></canvas><div class="aurora aurora-one"></div><div class="aurora aurora-two"></div><div class="page-shell">
+<header class="topbar"><a class="brand" href="../index.html"><span class="brand-mark">✳</span><span>LUDDEN<span class="brand-dot">.</span></span></a><nav class="mini-nav"><a href="index.html">TRAVEL</a><a class="active" href="photos.html">PHOTOS</a><a href="itineraries.html">ITINERARIES</a><a href="places.html">PLACES</a></nav><a class="top-link" href="../index.html">↖ HOME</a></header>
+<main><section class="subhero"><p class="eyebrow">TRAVEL / PHOTO LIBRARY</p><h1>Everywhere<br><span>worth remembering.</span></h1><p class="hero-description">First, let's verify that the site can securely connect to Google Drive, select your photo folder, and read its contents.</p></section>
+<section class="content-section"><div class="section-heading"><div><p class="eyebrow">CONNECTION CHECK</p><h2>Google Drive prototype</h2></div><span class="section-index">TEST / 001</span></div>
+<div class="test-panel"><h2>1. Connect your Google account</h2><p>This requests the limited <code>drive.file</code> permission. The access token stays in this browser session and is not saved in the website.</p><div class="action-row"><button class="action" id="connectBtn" disabled>CONNECT GOOGLE DRIVE</button><button class="action secondary" id="chooseBtn" disabled>SELECT PHOTO FOLDER</button></div><div id="status" role="status" aria-live="polite">Loading Google libraries…</div></div>
+<div class="test-panel"><h2>2. Inspect the selected folder</h2><p>Select your existing <strong>Ludden Travel Photos</strong> folder. This test only reads its immediate contents.</p><div id="folder-info"></div><div id="file-list"></div></div>
+<div class="test-panel"><h2>3. Optional upload test</h2><p>After the folder is readable, choose one small test photo to upload into it.</p><div class="upload-row"><input id="uploadFile" type="file" accept="image/*" disabled><button class="action secondary" id="uploadBtn" disabled>UPLOAD TEST PHOTO</button></div><p class="warning">If this folder is shared publicly, uploaded files may inherit that sharing setting.</p></div>
+<div class="note-strip"><span>NOTE</span><p><strong>This is only a connection test.</strong> We'll verify public image loading separately before building the full gallery and viewer.</p><span class="note-symbol">✳</span></div></section></main>
+<footer class="site-footer"><span>© 2026 LUDDEN</span><span>TRAVEL / PHOTO LIBRARY</span><a href="index.html">BACK TO TRAVEL ↑</a></footer></div></body></html>
