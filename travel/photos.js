@@ -7,6 +7,8 @@
   const search = document.getElementById("search");
   const sort = document.getElementById("sort");
   const columns = document.getElementById("columns");
+  const favoriteFilter = document.getElementById("favorite-filter");
+  const ratingFilter = document.getElementById("rating-filter");
   const refresh = document.getElementById("refresh");
   const loadMore = document.getElementById("load-more");
   const viewer = document.getElementById("viewer");
@@ -56,7 +58,7 @@
     const saved = photoRatings[id] || {};
     favoriteButton.setAttribute("aria-pressed", saved.favorite ? "true" : "false");
     favoriteButton.classList.toggle("is-favorite", !!saved.favorite);
-    favoriteButton.innerHTML = (saved.favorite ? "♥" : "♡") + " <span>" + (saved.favorite ? "FAVORITED" : "FAVORITE") + "</span>";
+    favoriteButton.textContent = saved.favorite ? "♥" : "♡";
     ratingStars.forEach(star => {
       const value = Number(star.dataset.rating);
       const active = value <= (saved.rating || 0);
@@ -74,6 +76,11 @@
   function hideRatingOverlay() {
     ratingOverlay.hidden = true;
   }
+
+  // Tapping the dimmed area outside the controls closes the rating overlay.
+  ratingOverlay.addEventListener("click", event => {
+    if (event.target === ratingOverlay) hideRatingOverlay();
+  });
 
   favoriteButton.addEventListener("click", () => {
     const id = currentPhotoId();
@@ -176,7 +183,17 @@
       const isFolder = file.mimeType === "application/vnd.google-apps.folder";
       const isImage = file.mimeType?.startsWith("image/");
       if (searchResults && !isImage) return false;
-      return (isFolder || isImage) && (!term || file.name.toLocaleLowerCase().includes(term) || (file._folderPath || "").toLocaleLowerCase().includes(term));
+      if (!(isFolder || isImage)) return false;
+      if (term && !file.name.toLocaleLowerCase().includes(term) && !(file._folderPath || "").toLocaleLowerCase().includes(term)) return false;
+      if (isImage) {
+        const saved = photoRatings[file.id] || {};
+        if (favoriteFilter?.value === "favorites" && !saved.favorite) return false;
+        if (favoriteFilter?.value === "not-favorites" && saved.favorite) return false;
+        const ratingMode = ratingFilter?.value || "all";
+        if (ratingMode === "unrated" && saved.rating) return false;
+        if (/^[1-5]$/.test(ratingMode) && Number(saved.rating || 0) !== Number(ratingMode)) return false;
+      }
+      return true;
     });
     const mode = sort.value;
     list.sort((a, b) => {
@@ -185,6 +202,10 @@
       if (aFolder !== bFolder) return aFolder ? -1 : 1;
       if (mode === "date-desc") return (b.modifiedTime || "").localeCompare(a.modifiedTime || "");
       if (mode === "date-asc") return (a.modifiedTime || "").localeCompare(b.modifiedTime || "");
+      if (mode === "rating-desc") {
+        const ratingDiff = (photoRatings[b.id]?.rating || 0) - (photoRatings[a.id]?.rating || 0);
+        if (ratingDiff) return ratingDiff;
+      }
       const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
       return mode === "name-desc" ? -cmp : cmp;
     });
@@ -204,6 +225,7 @@
     const file = activePhotos[activePhotoIndex];
     if (!file) return;
     viewerTitle.textContent = file.name;
+    resetImageZoom();
     hideRatingOverlay();
     updateRatingOverlay();
     viewerCount.textContent = (activePhotoIndex + 1) + " / " + activePhotos.length;
@@ -228,6 +250,7 @@
 
   function closePhoto() {
     hideRatingOverlay();
+    resetImageZoom();
     viewer.hidden = true;
     viewerFrame.src = "about:blank";
     const quickPreview = document.getElementById("viewer-image");
@@ -396,6 +419,8 @@
   search.addEventListener("input", handleSearch);
   sort.addEventListener("change", render);
   columns.addEventListener("change", render);
+  favoriteFilter?.addEventListener("change", render);
+  ratingFilter?.addEventListener("change", render);
   refresh.addEventListener("click", () => { recursiveCache.clear(); search.value = ""; searchResults = null; loadFolder(); });
   loadMoreObserver = new IntersectionObserver((observations) => {
     if (observations.some(item => item.isIntersecting) && nextPageToken && !loading && !searchResults) {
@@ -415,18 +440,33 @@
   //     if (quickPreview) quickPreview.hidden = true;
   //   }
   // });
-  // Pinch zoom remains enabled. Multi-touch never triggers photo navigation.
-  // Double-tap opens ratings; any one-finger swipe dismisses the overlay without changing photos.
+  // Pinch zoom is handled directly so browser touch-action restrictions cannot block it.
+  // Double-tap/double-click opens ratings; swipes dismiss the overlay without changing photos.
   let touchStartX = 0;
   let touchStartY = 0;
   let trackingTouch = false;
   let multiTouchGesture = false;
+  let imageZoomScale = 1;
+  let pinchStartDistance = 0;
+  let pinchStartScale = 1;
+  const viewerImage = document.getElementById("viewer-image");
+  const touchDistance = (touches) => Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+  function resetImageZoom() {
+    imageZoomScale = 1;
+    pinchStartDistance = 0;
+    pinchStartScale = 1;
+    if (viewerImage) viewerImage.style.transform = "scale(1)";
+  }
   viewer.addEventListener("touchstart", event => {
     if (viewer.hidden || !event.touches) return;
     if (event.touches.length > 1) {
       multiTouchGesture = true;
       trackingTouch = false;
       lastTapTime = 0;
+      if (event.touches.length >= 2) {
+        pinchStartDistance = touchDistance(event.touches);
+        pinchStartScale = imageZoomScale;
+      }
       return;
     }
     if (multiTouchGesture || event.touches.length !== 1) return;
@@ -439,11 +479,20 @@
       multiTouchGesture = true;
       trackingTouch = false;
       lastTapTime = 0;
+      if (event.touches.length >= 2 && pinchStartDistance > 0 && viewerImage) {
+        event.preventDefault();
+        const ratio = touchDistance(event.touches) / pinchStartDistance;
+        imageZoomScale = Math.min(5, Math.max(1, pinchStartScale * ratio));
+        viewerImage.style.transform = "scale(" + imageZoomScale + ")";
+      }
     }
-  }, { passive: true, capture: true });
+  }, { passive: false, capture: true });
   viewer.addEventListener("touchend", event => {
     if (multiTouchGesture) {
-      if (!event.touches || event.touches.length === 0) multiTouchGesture = false;
+      if (!event.touches || event.touches.length === 0) {
+        multiTouchGesture = false;
+        pinchStartDistance = 0;
+      }
       trackingTouch = false;
       return;
     }
@@ -500,7 +549,6 @@
     lastTapTime = 0;
   }, { passive: true, capture: true });
 
-  const viewerImage = document.getElementById("viewer-image");
   viewerImage.addEventListener("dblclick", event => {
     event.preventDefault();
     showRatingOverlay();
