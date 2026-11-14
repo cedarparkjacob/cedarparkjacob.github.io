@@ -228,13 +228,9 @@
     activePhotoIndex = activePhotos.findIndex(item => item.id === file.id);
     showActivePhoto();
     viewer.hidden = false;
+    viewer.classList.add("controls-hidden");
     document.body.style.overflow = "hidden";
     syncImmersiveLandscape();
-    // Use the browser Fullscreen API where supported; CSS keeps an immersive
-    // edge-to-edge fallback on mobile browsers that do not allow programmatic fullscreen.
-    if (isMobileLandscape() && viewer.requestFullscreen) {
-      viewer.requestFullscreen().catch(() => {});
-    }
     closeViewer.focus();
   }
 
@@ -243,7 +239,7 @@
     if (!file?.id || !file.thumbnailLink || preloadedPhotoImages.has(file.id)) return;
     const image = new Image();
     image.decoding = "async";
-    image.src = file.thumbnailLink.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1200") || file.thumbnailLink;
+    image.src = file.thumbnailLink.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w2400") || file.thumbnailLink;
     preloadedPhotoImages.set(file.id, image);
     if (preloadedPhotoImages.size > 8) {
       const oldest = preloadedPhotoImages.keys().next().value;
@@ -273,7 +269,7 @@
       const thumb = file.thumbnailLink || "";
       quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
       quickPreview.fetchPriority = "high";
-      quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1200") || thumb;
+      quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w2400") || thumb;
     }
     preloadAdjacentPhotos();
     // Full-size Google Drive iframe preview is retained for fallback, but disabled for now:
@@ -292,6 +288,7 @@
       document.exitFullscreen().catch(() => {});
     }
     viewer.classList.remove("immersive-landscape");
+    viewer.classList.add("controls-hidden");
     viewerFrame.src = "about:blank";
     const quickPreview = document.getElementById("viewer-image");
     if (quickPreview) quickPreview.removeAttribute("src");
@@ -480,6 +477,12 @@
   //     if (quickPreview) quickPreview.hidden = true;
   //   }
   // });
+  function toggleViewerControls() { viewer.classList.toggle("controls-hidden"); }
+  let pendingTapTimer = null;
+  function clearPendingTap() {
+    if (pendingTapTimer) { clearTimeout(pendingTapTimer); pendingTapTimer = null; }
+  }
+
   // Pinch zoom is handled directly so browser touch-action restrictions cannot block it.
   // Double-tap/double-click opens ratings; swipes dismiss the overlay without changing photos.
   let touchStartX = 0;
@@ -502,6 +505,7 @@
     if (event.touches.length > 1) {
       multiTouchGesture = true;
       trackingTouch = false;
+      clearPendingTap();
       lastTapTime = 0;
       if (event.touches.length >= 2) {
         pinchStartDistance = touchDistance(event.touches);
@@ -518,6 +522,7 @@
     if (event.touches && event.touches.length > 1) {
       multiTouchGesture = true;
       trackingTouch = false;
+      clearPendingTap();
       lastTapTime = 0;
       if (event.touches.length >= 2 && pinchStartDistance > 0 && viewerImage) {
         event.preventDefault();
@@ -569,12 +574,19 @@
       }
       if (now - lastTapTime <= 340 && Math.hypot(x - lastTapX, y - lastTapY) <= 48) {
         event.preventDefault();
+        clearPendingTap();
         lastTapTime = 0;
+        viewer.classList.add("controls-hidden");
         showRatingOverlay();
       } else {
         lastTapTime = now;
         lastTapX = x;
         lastTapY = y;
+        clearPendingTap();
+        pendingTapTimer = setTimeout(() => {
+          pendingTapTimer = null;
+          toggleViewerControls();
+        }, 340);
       }
       return;
     }
@@ -599,6 +611,14 @@
     multiTouchGesture = false;
     lastTapTime = 0;
   }, { passive: true, capture: true });
+
+  viewer.addEventListener("wheel", event => {
+    if (viewer.hidden || !viewerImage || !ratingOverlay.hidden) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+    imageZoomScale = Math.min(5, Math.max(1, imageZoomScale * factor));
+    viewerImage.style.transform = "scale(" + imageZoomScale + ")";
+  }, { passive: false });
 
   viewerImage.addEventListener("dblclick", event => {
     event.preventDefault();
@@ -626,6 +646,8 @@
       } else if (x >= bounds.width - edge && activePhotoIndex < activePhotos.length - 1) {
         activePhotoIndex++;
         showActivePhoto();
+      } else if (event.detail > 0) {
+        toggleViewerControls();
       }
     });
   }
