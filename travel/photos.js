@@ -97,7 +97,13 @@
     const id = currentPhotoId();
     if (!id) return;
     photoRatings[id] = photoRatings[id] || {};
-    photoRatings[id].rating = Number(star.dataset.rating);
+    const selectedRating = Number(star.dataset.rating);
+    if (photoRatings[id].rating === selectedRating) {
+      delete photoRatings[id].rating;
+      if (!photoRatings[id].favorite) delete photoRatings[id];
+    } else {
+      photoRatings[id].rating = selectedRating;
+    }
     savePhotoRatings();
     updateRatingOverlay();
   }));
@@ -231,6 +237,9 @@
     viewer.hidden = false;
     viewer.classList.add("controls-hidden");
     document.body.style.overflow = "hidden";
+    history.pushState({ ...(history.state || {}), photoViewer: true }, "", location.href);
+    viewerHistoryEntry = true;
+    openViewerFullscreen();
     syncImmersiveLandscape();
     closeViewer.focus();
   }
@@ -281,7 +290,19 @@
     next.disabled = activePhotoIndex >= activePhotos.length - 1;
   }
 
-  function closePhoto() {
+  let viewerHistoryEntry = false;
+
+  function openViewerFullscreen() {
+    const isPhone = window.matchMedia("(max-width: 900px)").matches;
+    if (isPhone && !document.fullscreenElement && viewer.requestFullscreen) {
+      viewer.requestFullscreen().catch(() => {
+        // iOS Safari and some embedded browsers do not support element fullscreen.
+      });
+    }
+  }
+
+  function closePhoto(fromHistory = false) {
+    if (viewer.hidden) return;
     hideRatingOverlay();
     resetImageZoom();
     viewer.hidden = true;
@@ -295,6 +316,13 @@
     if (quickPreview) quickPreview.removeAttribute("src");
     document.body.style.overflow = "";
     activePhotoIndex = -1;
+
+    if (!fromHistory && viewerHistoryEntry && history.state?.photoViewer === true) {
+      viewerHistoryEntry = false;
+      history.back();
+    } else {
+      viewerHistoryEntry = false;
+    }
   }
 
   function render() {
@@ -668,6 +696,10 @@
     }
     if (!ratingOverlay.hidden && !event.target.closest("#rating-panel")) hideRatingOverlay();
   });
+  window.addEventListener("popstate", () => {
+    if (!viewer.hidden) closePhoto(true);
+  });
+
   document.addEventListener("keydown", event => {
     if (viewer.hidden) return;
     if (event.key === "Escape") closePhoto();
