@@ -58,7 +58,7 @@
     const saved = photoRatings[id] || {};
     favoriteButton.setAttribute("aria-pressed", saved.favorite ? "true" : "false");
     favoriteButton.classList.toggle("is-favorite", !!saved.favorite);
-    favoriteButton.textContent = saved.favorite ? "♥" : "♡";
+    favoriteButton.setAttribute("aria-label", saved.favorite ? "Remove from favorites" : "Add to favorites");
     ratingStars.forEach(star => {
       const value = Number(star.dataset.rating);
       const active = value <= (saved.rating || 0);
