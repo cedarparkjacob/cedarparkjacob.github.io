@@ -703,7 +703,7 @@
   // On Android browsers, the system Back action may exit fullscreen first.
   // Treat that as closing the photo viewer as well.
   document.addEventListener("fullscreenchange", () => {
-    if (!viewer.hidden && !document.fullscreenElement) closePhoto(true);
+    if (!viewer.hidden && !document.fullscreenElement) closePhoto(false);
   });
 
   document.addEventListener("keydown", event => {
