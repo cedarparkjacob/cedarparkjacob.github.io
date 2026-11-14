@@ -349,26 +349,48 @@
   //     if (quickPreview) quickPreview.hidden = true;
   //   }
   // });
-  // Mobile photo navigation: capture touch events at the modal level so
-  // image elements cannot swallow the gesture. Left = next; right = previous.
+  // Mobile gestures: horizontal swipe changes photos; swipe up closes.
+  // Any multi-touch gesture (including pinch zoom) cancels navigation.
   let touchStartX = 0;
   let touchStartY = 0;
   let trackingTouch = false;
+  let multiTouchGesture = false;
   viewer.addEventListener("touchstart", event => {
-    if (viewer.hidden || !event.touches || event.touches.length !== 1) {
+    if (viewer.hidden || !event.touches) return;
+    if (event.touches.length > 1) {
+      multiTouchGesture = true;
       trackingTouch = false;
       return;
     }
+    if (multiTouchGesture || event.touches.length !== 1) return;
     touchStartX = event.touches[0].clientX;
     touchStartY = event.touches[0].clientY;
     trackingTouch = true;
   }, { passive: true, capture: true });
+  viewer.addEventListener("touchmove", event => {
+    if (event.touches && event.touches.length > 1) {
+      multiTouchGesture = true;
+      trackingTouch = false;
+    }
+  }, { passive: true, capture: true });
   viewer.addEventListener("touchend", event => {
+    if (multiTouchGesture) {
+      if (!event.touches || event.touches.length === 0) multiTouchGesture = false;
+      trackingTouch = false;
+      return;
+    }
     if (!trackingTouch || viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
     trackingTouch = false;
     const deltaX = event.changedTouches[0].clientX - touchStartX;
     const deltaY = event.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    if (absY >= 70 && deltaY < 0 && absY > absX * 1.25) {
+      event.preventDefault();
+      closePhoto();
+      return;
+    }
+    if (absX < 45 || absX < absY * 1.2) return;
     event.preventDefault();
     if (deltaX < 0 && activePhotoIndex < activePhotos.length - 1) {
       activePhotoIndex++;
@@ -378,7 +400,28 @@
       showActivePhoto();
     }
   }, { passive: false, capture: true });
-  viewer.addEventListener("touchcancel", () => { trackingTouch = false; }, { passive: true, capture: true });
+  viewer.addEventListener("touchcancel", () => {
+    trackingTouch = false;
+    multiTouchGesture = false;
+  }, { passive: true, capture: true });
+
+  // Clicking the outer 22% of the image viewing area navigates.
+  const modalView = document.querySelector(".modal-view");
+  if (modalView) {
+    modalView.addEventListener("click", event => {
+      if (viewer.hidden || event.target === viewerFrame) return;
+      const bounds = modalView.getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const edge = bounds.width * 0.22;
+      if (x <= edge && activePhotoIndex > 0) {
+        activePhotoIndex--;
+        showActivePhoto();
+      } else if (x >= bounds.width - edge && activePhotoIndex < activePhotos.length - 1) {
+        activePhotoIndex++;
+        showActivePhoto();
+      }
+    });
+  }
 
   closeViewer.addEventListener("click", closePhoto);
   previous.addEventListener("click", () => {
