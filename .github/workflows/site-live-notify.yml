@@ -7,11 +7,9 @@ on:
 
 permissions:
   actions: read
-  contents: read
-  issues: write
 
 jobs:
-  notify:
+  confirm-live:
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +22,9 @@ jobs:
             let targetSha = null;
             let pagesRun = null;
 
-            // The status workflow pushes a timestamp/version commit after
-            // validation. Wait for Pages to publish that exact commit.
+            // Site update status commits the timestamp/version marker after
+            // validating the changed JavaScript. Pages must publish that exact
+            // marker commit successfully before this workflow can succeed.
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
               const { data: branch } = await github.rest.repos.getBranch({
                 owner,
@@ -54,56 +53,20 @@ jobs:
             }
 
             if (!pagesRun || pagesRun.status !== "completed" || pagesRun.conclusion !== "success") {
-              core.warning("No successful Pages deployment was confirmed within the wait window. No notification was sent.");
+              core.setFailed("GitHub Pages did not confirm a successful deployment within the wait window.");
               return;
             }
 
-            // Do not notify for a deployment that became stale while it was running.
             const { data: latestBranch } = await github.rest.repos.getBranch({
               owner,
               repo,
               branch: "main"
             });
             if (latestBranch.commit.sha !== targetSha) {
-              core.info("A newer commit reached main; skipping this outdated deployment notification.");
+              core.setFailed("A newer commit reached main before notification; this deployment is outdated.");
               return;
             }
 
-            const title = "Site deployment notifications";
-            const { data: openIssues } = await github.rest.issues.listForRepo({
-              owner,
-              repo,
-              state: "open",
-              per_page: 100
-            });
-
-            let issue = openIssues.find(item =>
-              !item.pull_request && item.title === title
-            );
-
-            if (!issue) {
-              const created = await github.rest.issues.create({
-                owner,
-                repo,
-                title,
-                body: "This thread records successful GitHub Pages deployments. Each successful site update adds a comment and mentions @cedarparkjacob."
-              });
-              issue = created.data;
-            }
-
-            const body = [
-              "@cedarparkjacob **Your site update is live.**",
-              "",
-              "- Site: https://ludden.uk/",
-              "- Photo gallery: https://ludden.uk/travel/photos.html",
-              "- Published commit: `" + targetSha.slice(0, 7) + "`",
-              "- Deployment completed: " + new Date(pagesRun.updated_at).toUTCString(),
-              "- [View successful Pages deployment](" + pagesRun.html_url + ")"
-            ].join("\n");
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: issue.number,
-              body
-            });
+            core.notice("Site is live: https://ludden.uk/travel/photos.html");
+            core.notice("Published commit: " + targetSha);
+            core.notice("Pages deployment: " + pagesRun.html_url);
