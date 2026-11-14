@@ -151,7 +151,7 @@
       quickPreview.alt = file.name;
       const thumb = file.thumbnailLink || "";
       quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
-      quickPreview.src = thumb.replace(/=s\\d+(?:-[a-z])?$/i, "=w1600") || thumb;
+      quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1600") || thumb;
     }
     viewerFrame.src = base + "/preview" + resource;
     driveOpen.href = base + "/view" + resource;
