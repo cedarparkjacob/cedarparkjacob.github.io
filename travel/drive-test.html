@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="Private Google Drive connection test for the Ludden Travel library.">
+  <title>Drive Connection Test — Ludden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <style>
+    .test-wrap{max-width:820px;margin:0 auto;padding:62px 0 90px}
+    .test-wrap h1{font-size:clamp(38px,6vw,64px);letter-spacing:-.07em;line-height:1;margin:0 0 16px}
+    .test-wrap h1 span{color:var(--accent);font-weight:500}
+    .test-lead{color:#a9b8c6;line-height:1.8;max-width:650px;font-size:14px}
+    .test-panel{margin-top:30px;padding:26px;border:1px solid var(--line);background:var(--panel);border-radius:5px}
+    .test-actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}
+    .test-button{appearance:none;border:1px solid var(--accent);background:rgba(169,217,232,.1);color:var(--ink);padding:13px 17px;font:11px var(--mono);letter-spacing:.08em;cursor:pointer;transition:.2s}
+    .test-button:hover:not(:disabled){background:rgba(169,217,232,.2);transform:translateY(-1px)}
+    .test-button.secondary{border-color:var(--line);background:transparent;color:#a9b8c6}
+    .test-button:disabled{opacity:.35;cursor:not-allowed}
+    .test-status{display:flex;align-items:center;gap:10px;color:#a9b8c6;font:11px var(--mono);letter-spacing:.06em;margin:14px 0}
+    .test-status:before{content:"";width:7px;height:7px;border-radius:50%;background:#78899a;flex:none}
+    .test-status.ok:before{background:#8fe0c5;box-shadow:0 0 12px #8fe0c5}
+    .test-status.error:before{background:#ff9dba;box-shadow:0 0 12px #ff9dba}
+    .test-output{margin-top:18px;padding:16px;background:rgba(0,0,0,.22);border:1px solid var(--line);min-height:100px;white-space:pre-wrap;overflow-wrap:anywhere;color:#b6c4d0;font:11px/1.75 var(--mono)}
+    .test-note{font-size:12px;line-height:1.8;color:#8799a9;margin-top:20px}
+    .test-note strong{color:#cbd8e2}
+    .test-nav{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:23px 0}
+    .test-nav a{font:10px var(--mono);letter-spacing:.1em;color:var(--accent)}
+    @media(max-width:600px){.test-wrap{padding:45px 0 70px}.test-panel{padding:19px}.test-actions{display:grid}.test-button{width:100%}}
+  </style>
+</head>
+<body data-theme="home">
+  <canvas class="sky-canvas" aria-hidden="true"></canvas>
+  <div class="aurora aurora-one" aria-hidden="true"></div><div class="aurora aurora-two" aria-hidden="true"></div>
+  <div class="page-shell">
+    <header class="test-nav">
+      <a class="brand" href="../index.html"><span class="brand-mark">✳</span><span>LUDDEN<span class="brand-dot">.</span></span></a>
+      <a href="../index.html">← HOME</a>
+    </header>
+    <main class="test-wrap">
+      <p class="eyebrow"><span class="live-dot"></span> TRAVEL LIBRARY / CONNECTION CHECK</p>
+      <h1>Google Drive<br><span>connection test.</span></h1>
+      <p class="test-lead">This is a temporary setup page to verify that Ludden can securely connect to your Google Drive and access the travel-photo folder you choose. It does not upload, edit, move, or delete anything.</p>
+
+      <section class="test-panel" aria-labelledby="connection-heading">
+        <p class="eyebrow" id="connection-heading">STEP 01 / AUTHORIZE</p>
+        <div class="test-status" id="library-status" role="status" aria-live="polite">Google libraries are loading…</div>
+        <div class="test-actions">
+          <button class="test-button" id="connect-button" type="button" disabled>CONNECT GOOGLE DRIVE</button>
+          <button class="test-button secondary" id="disconnect-button" type="button" disabled>DISCONNECT THIS SESSION</button>
+        </div>
+        <p class="eyebrow">STEP 02 / CHOOSE THE PHOTO FOLDER</p>
+        <p class="test-lead">After connecting, select your <strong>Ludden Travel Photos</strong> folder in the Google Drive picker.</p>
+        <div class="test-actions">
+          <button class="test-button" id="folder-button" type="button" disabled>CHOOSE DRIVE FOLDER</button>
+        </div>
+        <p class="eyebrow">STEP 03 / VERIFY ACCESS</p>
+        <div class="test-output" id="test-output" aria-live="polite">No Google account is connected yet.</div>
+        <p class="test-note"><strong>Privacy:</strong> This page requests the non-sensitive <code>drive.file</code> scope. The access token stays in this browser tab's memory and is not written to local storage, GitHub, or a database. The folder selection is used only for this test. Google will show the permission prompt before granting access.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const CLIENT_ID = "515661449203-pqcnu9q8qpcmv4kpnksv6qai9t7dc26u.apps.googleusercontent.com";
+      const API_KEY = "AIzaSyBoyoDVNQzeDHZOaLa0UsXsDhekAY8ql-Y";
+      const APP_ID = "515661449203";
+      const SCOPE = "https://www.googleapis.com/auth/drive.file";
+      let tokenClient = null;
+      let accessToken = null;
+      let pickerReady = false;
+      let identityReady = false;
+      let firstConsent = true;
+
+      const status = document.getElementById("library-status");
+      const output = document.getElementById("test-output");
+      const connectButton = document.getElementById("connect-button");
+      const folderButton = document.getElementById("folder-button");
+      const disconnectButton = document.getElementById("disconnect-button");
+
+      function setStatus(message, kind = "") {
+        status.textContent = message;
+        status.className = "test-status" + (kind ? " " + kind : "");
+      }
+      function setOutput(message) {
+        output.textContent = message;
+      }
+      function updateButtons() {
+        connectButton.disabled = !(identityReady && pickerReady) || !!accessToken;
+        folderButton.disabled = !(identityReady && pickerReady && accessToken);
+        disconnectButton.disabled = !accessToken;
+      }
+      function readableError(error) {
+        if (typeof error === "string") return error;
+        return error?.message || error?.error_description || error?.details || JSON.stringify(error);
+      }
+
+      window.onDrivePickerApiLoad = () => {
+        gapi.load("picker", () => {
+          pickerReady = true;
+          setStatus(identityReady ? "Ready to connect." : "Google Picker loaded; waiting for sign-in library.");
+          updateButtons();
+        });
+      };
+
+      window.onDriveIdentityLoad = () => {
+        try {
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPE,
+            callback: () => {}
+          });
+          identityReady = true;
+          setStatus(pickerReady ? "Ready to connect." : "Sign-in loaded; waiting for Google Picker.");
+        } catch (error) {
+          setStatus("Could not initialize Google sign-in.", "error");
+          setOutput(readableError(error));
+        }
+        updateButtons();
+      };
+
+      connectButton.addEventListener("click", () => {
+        if (!tokenClient) return;
+        setStatus("Waiting for Google authorization…");
+        tokenClient.callback = (response) => {
+          if (response.error) {
+            setStatus("Google authorization was not completed.", "error");
+            setOutput(readableError(response));
+            return;
+          }
+          accessToken = response.access_token;
+          firstConsent = false;
+          setStatus("Google Drive connected for this browser session.", "ok");
+          setOutput("Authorization succeeded. Next, choose the Ludden Travel Photos folder.");
+          updateButtons();
+        };
+        tokenClient.error_callback = (error) => {
+          setStatus("Google sign-in window could not be opened.", "error");
+          setOutput(readableError(error));
+        };
+        tokenClient.requestAccessToken({ prompt: firstConsent ? "consent" : "" });
+      });
+
+      disconnectButton.addEventListener("click", () => {
+        accessToken = null;
+        setStatus("Disconnected from this browser session.");
+        setOutput("The access token has been cleared from this page. This does not revoke the app's Google permission; you can do that in your Google Account security settings.");
+        updateButtons();
+      });
+
+      folderButton.addEventListener("click", () => {
+        if (!accessToken || !window.google?.picker) return;
+        const folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+          .setSelectFolderEnabled(true);
+        const picker = new google.picker.PickerBuilder()
+          .addView(folderView)
+          .setOAuthToken(accessToken)
+          .setDeveloperKey(API_KEY)
+          .setAppId(APP_ID)
+          .setCallback(handlePicker)
+          .setTitle("Choose your Ludden Travel Photos folder")
+          .build();
+        picker.setVisible(true);
+      });
+
+      async function handlePicker(data) {
+        if (data.action === google.picker.Action.CANCEL) {
+          setOutput("Folder selection cancelled.");
+          return;
+        }
+        if (data.action !== google.picker.Action.PICKED) return;
+        const selected = data.docs?.[0];
+        if (!selected) {
+          setStatus("Picker returned no folder.", "error");
+          return;
+        }
+        const folderId = selected.id || selected[google.picker.Document.ID];
+        const folderName = selected.name || selected[google.picker.Document.NAME] || "Selected folder";
+        setStatus("Folder selected. Testing Drive API access…");
+        setOutput("Selected folder: " + folderName + "\nChecking folder metadata and listing its immediate contents…");
+        try {
+          const folderResponse = await fetch(
+            "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(folderId) +
+            "?fields=id,name,mimeType,webViewLink,driveId&key=" + encodeURIComponent(API_KEY),
+            { headers: { Authorization: "Bearer " + accessToken } }
+          );
+          const folderData = await folderResponse.json();
+          if (!folderResponse.ok) throw new Error(folderData.error?.message || "Drive API folder lookup failed (" + folderResponse.status + ").");
+
+          const query = "'" + folderId.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "' in parents and trashed = false";
+          const params = new URLSearchParams({
+            q: query,
+            pageSize: "100",
+            orderBy: "folder,name",
+            fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime,thumbnailLink,webViewLink,webContentLink,imageMediaMetadata(width,height))",
+            key: API_KEY
+          });
+          const listResponse = await fetch("https://www.googleapis.com/drive/v3/files?" + params.toString(), {
+            headers: { Authorization: "Bearer " + accessToken }
+          });
+          const listData = await listResponse.json();
+          if (!listResponse.ok) throw new Error(listData.error?.message || "Drive API contents lookup failed (" + listResponse.status + ").");
+
+          const files = listData.files || [];
+          const images = files.filter(file => file.mimeType?.startsWith("image/"));
+          const folders = files.filter(file => file.mimeType === "application/vnd.google-apps.folder");
+          const summary = [
+            "SUCCESS — Google Drive API responded.",
+            "",
+            "Folder: " + folderData.name,
+            "Folder ID: " + folderData.id,
+            "Immediate items found: " + files.length,
+            "Image files found: " + images.length,
+            "Subfolders found: " + folders.length,
+            listData.nextPageToken ? "More than one page of items exists." : "No additional page token returned.",
+            "",
+            "First items:"
+          ];
+          for (const file of files.slice(0, 12)) {
+            summary.push("• " + file.name + " [" + file.mimeType + "]");
+          }
+          if (files.length === 0) {
+            summary.push("(No child files were returned. This may indicate that drive.file access to a selected folder does not automatically expose its contents; we'll adjust the permission/selection approach based on this test.)");
+          }
+          setStatus("Folder access test completed.", "ok");
+          setOutput(summary.join("\n"));
+        } catch (error) {
+          setStatus("The folder was selected, but the Drive API test failed.", "error");
+          setOutput("Selected folder: " + folderName + "\nFolder ID: " + folderId + "\n\n" + readableError(error) + "\n\nThis result helps identify whether the selected folder is accessible under the current drive.file permission.");
+        }
+      }
+
+      updateButtons();
+    })();
+  </script>
+  <script async defer src="https://apis.google.com/js/api.js" onload="onDrivePickerApiLoad()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="onDriveIdentityLoad()"></script>
+  <script src="../assets/site.js" defer></script>
+</body>
+</html>
