@@ -1,18 +1,22 @@
 name: Notify when site is live
 
 on:
-  workflow_run:
-    workflows: ["Site update status"]
-    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - "travel/last-updated.json"
 
 permissions:
   actions: read
   contents: read
   issues: write
 
+concurrency:
+  group: site-live-notification
+  cancel-in-progress: true
+
 jobs:
   notify:
-    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Wait for the matching GitHub Pages deployment
@@ -20,34 +24,24 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
+            const targetSha = context.sha;
             const maxAttempts = 40;
-            let targetSha = null;
             let pagesRun = null;
 
-            // The status workflow pushes a timestamp/version commit after
-            // validation. Wait for Pages to publish that exact commit.
+            // This workflow starts from the timestamp commit. Wait until Pages
+            // has successfully published that exact commit.
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-              const { data: branch } = await github.rest.repos.getBranch({
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
                 owner,
                 repo,
-                branch: "main"
+                per_page: 100
               });
+              pagesRun = data.workflow_runs.find(run =>
+                run.name === "pages build and deployment" &&
+                run.head_sha === targetSha
+              );
 
-              const message = branch.commit.commit.message || "";
-              if (message.includes("Update site timestamp")) {
-                targetSha = branch.commit.sha;
-                const { data } = await github.rest.actions.listWorkflowRunsForRepo({
-                  owner,
-                  repo,
-                  per_page: 100
-                });
-                pagesRun = data.workflow_runs.find(run =>
-                  run.name === "pages build and deployment" &&
-                  run.head_sha === targetSha
-                );
-
-                if (pagesRun && pagesRun.status === "completed") break;
-              }
+              if (pagesRun && pagesRun.status === "completed") break;
 
               core.info("Waiting for the matching Pages deployment (" + (attempt + 1) + "/" + maxAttempts + ").");
               await new Promise(resolve => setTimeout(resolve, 15000));
