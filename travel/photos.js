@@ -212,12 +212,29 @@
     return list;
   }
 
+  function isMobileLandscape() {
+    return window.matchMedia("(max-width: 900px) and (orientation: landscape)").matches;
+  }
+
+  function syncImmersiveLandscape() {
+    viewer.classList.toggle("immersive-landscape", !viewer.hidden && isMobileLandscape());
+  }
+
+  window.addEventListener("orientationchange", syncImmersiveLandscape);
+  window.addEventListener("resize", syncImmersiveLandscape);
+
   function openPhoto(file) {
     activePhotos = filteredEntries().filter(item => item.mimeType?.startsWith("image/"));
     activePhotoIndex = activePhotos.findIndex(item => item.id === file.id);
     showActivePhoto();
     viewer.hidden = false;
     document.body.style.overflow = "hidden";
+    syncImmersiveLandscape();
+    // Use the browser Fullscreen API where supported; CSS keeps an immersive
+    // edge-to-edge fallback on mobile browsers that do not allow programmatic fullscreen.
+    if (isMobileLandscape() && viewer.requestFullscreen) {
+      viewer.requestFullscreen().catch(() => {});
+    }
     closeViewer.focus();
   }
 
@@ -271,6 +288,10 @@
     hideRatingOverlay();
     resetImageZoom();
     viewer.hidden = true;
+    if (document.fullscreenElement === viewer && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+    viewer.classList.remove("immersive-landscape");
     viewerFrame.src = "about:blank";
     const quickPreview = document.getElementById("viewer-image");
     if (quickPreview) quickPreview.removeAttribute("src");
