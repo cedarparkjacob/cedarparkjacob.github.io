@@ -221,6 +221,23 @@
     closeViewer.focus();
   }
 
+  const preloadedPhotoImages = new Map();
+  function preloadPhoto(file) {
+    if (!file?.id || !file.thumbnailLink || preloadedPhotoImages.has(file.id)) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = file.thumbnailLink.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1200") || file.thumbnailLink;
+    preloadedPhotoImages.set(file.id, image);
+    if (preloadedPhotoImages.size > 8) {
+      const oldest = preloadedPhotoImages.keys().next().value;
+      if (oldest !== currentPhotoId()) preloadedPhotoImages.delete(oldest);
+    }
+  }
+  function preloadAdjacentPhotos() {
+    preloadPhoto(activePhotos[activePhotoIndex + 1]);
+    preloadPhoto(activePhotos[activePhotoIndex - 1]);
+  }
+
   function showActivePhoto() {
     const file = activePhotos[activePhotoIndex];
     if (!file) return;
@@ -238,8 +255,10 @@
       quickPreview.alt = file.name;
       const thumb = file.thumbnailLink || "";
       quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
+      quickPreview.fetchPriority = "high";
       quickPreview.src = thumb.replace(/=s[0-9]+(?:-[a-z])?$/i, "=w1200") || thumb;
     }
+    preloadAdjacentPhotos();
     // Full-size Google Drive iframe preview is retained for fallback, but disabled for now:
     // viewerFrame.src = base + "/preview" + resource;
     driveOpen.href = base + "/view" + resource;
@@ -516,6 +535,13 @@
       const now = Date.now();
       const x = event.changedTouches[0].clientX;
       const y = event.changedTouches[0].clientY;
+      const viewBounds = modalView?.getBoundingClientRect();
+      const edgeWidth = viewBounds ? viewBounds.width * 0.22 : 0;
+      const inNavigationEdge = viewBounds && (x - viewBounds.left <= edgeWidth || x - viewBounds.left >= viewBounds.width - edgeWidth);
+      if (inNavigationEdge) {
+        lastTapTime = 0;
+        return;
+      }
       if (now - lastTapTime <= 340 && Math.hypot(x - lastTapX, y - lastTapY) <= 48) {
         event.preventDefault();
         lastTapTime = 0;
@@ -551,6 +577,13 @@
 
   viewerImage.addEventListener("dblclick", event => {
     event.preventDefault();
+    event.stopPropagation();
+    if (viewer.hidden || !ratingOverlay.hidden) return;
+    const bounds = modalView?.getBoundingClientRect();
+    if (!bounds) return;
+    const edge = bounds.width * 0.22;
+    const x = event.clientX - bounds.left;
+    if (x <= edge || x >= bounds.width - edge) return;
     showRatingOverlay();
   });
 
@@ -580,7 +613,11 @@
     if (activePhotoIndex < activePhotos.length - 1) { activePhotoIndex++; showActivePhoto(); }
   });
   viewer.addEventListener("click", event => {
-    if (event.target === viewer) closePhoto();
+    if (event.target === viewer) {
+      closePhoto();
+      return;
+    }
+    if (!ratingOverlay.hidden && !event.target.closest("#rating-panel")) hideRatingOverlay();
   });
   document.addEventListener("keydown", event => {
     if (viewer.hidden) return;
