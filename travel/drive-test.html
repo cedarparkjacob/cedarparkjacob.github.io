@@ -273,6 +273,7 @@
             if (firstImage) {
               const candidates = [
                 { label: "DRIVE THUMBNAIL LINK (runtime)", url: firstImage.thumbnailLink },
+                { label: "DRIVE WEB CONTENT LINK (download URL)", url: firstImage.webContentLink },
                 { label: "DRIVE VIEW URL", url: "https://drive.google.com/uc?export=view&id=" + encodeURIComponent(firstImage.id) },
                 { label: "DRIVE API MEDIA URL", url: "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(firstImage.id) + "?alt=media&key=" + encodeURIComponent(API_KEY) }
               ].filter(item => item.url);
