@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths-ignore:
       - "travel/last-updated.json"
+      - "travel/version.json"
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,22 @@ jobs:
 
       - name: Validate gallery JavaScript
         run: node --check travel/photos.js
+
+      - name: Increment photo gallery version
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const path = "travel/version.json";
+          const data = JSON.parse(fs.readFileSync(path, "utf8"));
+          const parts = String(data.version || "").split(".").map(Number);
+          if (parts.length !== 3 || parts.some(value => !Number.isInteger(value) || value < 0)) {
+            throw new Error("Invalid photo gallery version in " + path);
+          }
+          parts[2] += 1;
+          data.version = parts.join(".");
+          fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\\n");
+          console.log("Photo gallery version: " + data.version);
+          NODE
 
       - name: Write last-updated timestamp
         env:
