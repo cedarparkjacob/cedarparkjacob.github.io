@@ -7,6 +7,7 @@ on:
 
 permissions:
   actions: read
+  contents: read
   issues: write
 
 jobs:
@@ -26,6 +27,18 @@ jobs:
             const { owner, repo } = context.repo;
             const run = context.payload.workflow_run;
             const title = "Site deployment notifications";
+
+            // Older Pages runs can finish after a newer commit has already
+            // reached main. Notify only for the deployment of the current tip.
+            const { data: branch } = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: "main"
+            });
+            if (branch.commit.sha !== run.head_sha) {
+              core.info("Skipping an outdated Pages deployment; main has moved on.");
+              return;
+            }
 
             const { data: openIssues } = await github.rest.issues.listForRepo({
               owner,
