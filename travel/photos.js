@@ -86,7 +86,7 @@
 
   function filteredEntries() {
     const term = search.value.trim().toLocaleLowerCase();
-    let list = entries.filter(file => !term || file.name.toLocaleLowerCase().includes(term));
+    let list = entries.filter(file => (file.mimeType === "application/vnd.google-apps.folder" || file.mimeType?.startsWith("image/")) && (!term || file.name.toLocaleLowerCase().includes(term)));
     const mode = sort.value;
     list.sort((a, b) => {
       const aFolder = a.mimeType === "application/vnd.google-apps.folder";
@@ -118,7 +118,7 @@
     const resource = file.resourceKey ? "?resourcekey=" + encodeURIComponent(file.resourceKey) : "";
     viewerFrame.src = base + "/preview" + resource;
     driveOpen.href = base + "/view" + resource;
-    download.href = file.webContentLink || ("https://drive.google.com/uc?export=download&id=" + encodeURIComponent(file.id));
+    download.href = file.webContentLink || ("https://drive.google.com/uc?export=download&id=" + encodeURIComponent(file.id) + (file.resourceKey ? "&resourcekey=" + encodeURIComponent(file.resourceKey) : ""));
     previous.disabled = activePhotoIndex <= 0;
     next.disabled = activePhotoIndex >= activePhotos.length - 1;
   }
