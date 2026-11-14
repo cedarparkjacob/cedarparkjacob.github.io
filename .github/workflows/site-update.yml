@@ -40,7 +40,7 @@ jobs:
           }
           parts[2] += 1;
           data.version = parts.join(".");
-          fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\\n");
+          fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
           console.log("Photo gallery version: " + data.version);
           NODE
 
