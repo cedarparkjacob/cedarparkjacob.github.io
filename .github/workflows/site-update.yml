@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
 
+# The live-notification workflow waits for the matching Pages run after this workflow pushes.
 # Keep only the newest pending update; don't queue obsolete deployments.
 concurrency:
   group: site-update-status
