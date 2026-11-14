@@ -52,6 +52,6 @@ jobs:
           node -e 'const fs=require("fs"); fs.writeFileSync("travel/last-updated.json", JSON.stringify({updatedAt:new Date().toISOString(), sourceCommit:process.env.SOURCE_SHA}, null, 2)+"\n")'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add travel/last-updated.json
+          git add travel/last-updated.json travel/version.json
           git commit -m "Update site timestamp [skip ci]" || exit 0
           git push origin HEAD:main
