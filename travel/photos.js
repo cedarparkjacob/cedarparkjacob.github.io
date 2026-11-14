@@ -43,6 +43,7 @@
   let lastTapTime = 0;
   let lastTapX = 0;
   let lastTapY = 0;
+  let lastTouchInteractionAt = 0;
 
   function savePhotoRatings() {
     try { localStorage.setItem(ratingStorageKey, JSON.stringify(photoRatings)); }
@@ -542,6 +543,7 @@
       return;
     }
     if (!trackingTouch || viewer.hidden || !event.changedTouches || event.changedTouches.length !== 1) return;
+    lastTouchInteractionAt = Date.now();
     trackingTouch = false;
     if (event.target.closest("button, a")) {
       lastTapTime = 0;
@@ -646,7 +648,7 @@
       } else if (x >= bounds.width - edge && activePhotoIndex < activePhotos.length - 1) {
         activePhotoIndex++;
         showActivePhoto();
-      } else if (event.detail > 0 && event.pointerType !== "touch") {
+      } else if (event.detail > 0 && Date.now() - lastTouchInteractionAt > 800) {
         toggleViewerControls();
       }
     });
