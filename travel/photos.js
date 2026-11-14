@@ -646,7 +646,7 @@
       } else if (x >= bounds.width - edge && activePhotoIndex < activePhotos.length - 1) {
         activePhotoIndex++;
         showActivePhoto();
-      } else if (event.detail > 0) {
+      } else if (event.detail > 0 && event.pointerType !== "touch") {
         toggleViewerControls();
       }
     });
