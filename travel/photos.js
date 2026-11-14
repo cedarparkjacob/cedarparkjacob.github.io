@@ -25,6 +25,7 @@
   let loading = false;
   let activePhotos = [];
   let activePhotoIndex = -1;
+  let loadMoreObserver = null;
   let searchResults = null;
   let searchTimer = null;
   let searchRun = 0;
@@ -141,10 +142,12 @@
     const base = "https://drive.google.com/file/d/" + encodeURIComponent(file.id);
     const resource = file.resourceKey ? "?resourcekey=" + encodeURIComponent(file.resourceKey) : "";
     const quickPreview = document.getElementById("viewer-image");
+    viewerFrame.classList.remove("ready");
     if (quickPreview) {
       quickPreview.hidden = false;
       quickPreview.alt = file.name;
       const thumb = file.thumbnailLink || "";
+      quickPreview.onerror = () => { quickPreview.onerror = null; if (thumb) quickPreview.src = thumb; };
       quickPreview.src = thumb.replace(/=s\\d+(?:-[a-z])?$/i, "=w1600") || thumb;
     }
     viewerFrame.src = base + "/preview" + resource;
@@ -247,6 +250,11 @@
       gallery.append(message);
     } finally {
       loading = false;
+      if (nextPageToken) {
+        loadMore.disabled = false;
+        loadMore.textContent = "SCROLL TO LOAD MORE";
+        if (loadMoreObserver) { loadMoreObserver.unobserve(loadMore); loadMoreObserver.observe(loadMore); }
+      }
     }
   }
 
@@ -319,12 +327,19 @@
   sort.addEventListener("change", render);
   columns.addEventListener("change", render);
   refresh.addEventListener("click", () => { recursiveCache.clear(); search.value = ""; searchResults = null; loadFolder(); });
-  const loadMoreObserver = new IntersectionObserver((observations) => {
+  loadMoreObserver = new IntersectionObserver((observations) => {
     if (observations.some(item => item.isIntersecting) && nextPageToken && !loading && !searchResults) {
       loadFolder({ append: true });
     }
   }, { root: null, rootMargin: "450px 0px", threshold: 0 });
   loadMoreObserver.observe(loadMore);
+  viewerFrame.addEventListener("load", () => {
+    if (!viewer.hidden) {
+      viewerFrame.classList.add("ready");
+      const quickPreview = document.getElementById("viewer-image");
+      if (quickPreview) quickPreview.hidden = true;
+    }
+  });
   closeViewer.addEventListener("click", closePhoto);
   previous.addEventListener("click", () => {
     if (activePhotoIndex > 0) { activePhotoIndex--; showActivePhoto(); }
