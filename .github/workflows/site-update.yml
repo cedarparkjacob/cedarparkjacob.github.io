@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - "travel/last-updated.json"
       - "travel/version.json"
+      - ".github/workflows/site-live-notify.yml"
   workflow_dispatch:
 
 permissions:
