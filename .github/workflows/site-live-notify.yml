@@ -2,7 +2,7 @@ name: Notify when site is live
 
 on:
   workflow_run:
-    workflows: ["pages build and deployment"]
+    workflows: ["Site update status"]
     types: [completed]
 
 permissions:
@@ -12,34 +12,64 @@ permissions:
 
 jobs:
   notify:
-    # The timestamp commit is created only after a real site change has passed
-    # validation. This avoids notifying for the earlier, intermediate Pages build.
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_commit.message != null &&
-      contains(github.event.workflow_run.head_commit.message, 'Update site timestamp')
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Notify the site owner in GitHub
+      - name: Wait for the matching GitHub Pages deployment
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const run = context.payload.workflow_run;
-            const title = "Site deployment notifications";
+            const maxAttempts = 40;
+            let targetSha = null;
+            let pagesRun = null;
 
-            // Older Pages runs can finish after a newer commit has already
-            // reached main. Notify only for the deployment of the current tip.
-            const { data: branch } = await github.rest.repos.getBranch({
+            // The status workflow pushes a timestamp/version commit after
+            // validation. Wait for Pages to publish that exact commit.
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+              const { data: branch } = await github.rest.repos.getBranch({
+                owner,
+                repo,
+                branch: "main"
+              });
+
+              const message = branch.commit.commit.message || "";
+              if (message.includes("Update site timestamp")) {
+                targetSha = branch.commit.sha;
+                const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                  owner,
+                  repo,
+                  per_page: 100
+                });
+                pagesRun = data.workflow_runs.find(run =>
+                  run.name === "pages build and deployment" &&
+                  run.head_sha === targetSha
+                );
+
+                if (pagesRun && pagesRun.status === "completed") break;
+              }
+
+              core.info("Waiting for the matching Pages deployment (" + (attempt + 1) + "/" + maxAttempts + ").");
+              await new Promise(resolve => setTimeout(resolve, 15000));
+            }
+
+            if (!pagesRun || pagesRun.status !== "completed" || pagesRun.conclusion !== "success") {
+              core.warning("No successful Pages deployment was confirmed within the wait window. No notification was sent.");
+              return;
+            }
+
+            // Do not notify for a deployment that became stale while it was running.
+            const { data: latestBranch } = await github.rest.repos.getBranch({
               owner,
               repo,
               branch: "main"
             });
-            if (branch.commit.sha !== run.head_sha) {
-              core.info("Skipping an outdated Pages deployment; main has moved on.");
+            if (latestBranch.commit.sha !== targetSha) {
+              core.info("A newer commit reached main; skipping this outdated deployment notification.");
               return;
             }
 
+            const title = "Site deployment notifications";
             const { data: openIssues } = await github.rest.issues.listForRepo({
               owner,
               repo,
@@ -56,21 +86,19 @@ jobs:
                 owner,
                 repo,
                 title,
-                body: "This thread records successful GitHub Pages deployments. Each successful site update will add a comment and mention @cedarparkjacob."
+                body: "This thread records successful GitHub Pages deployments. Each successful site update adds a comment and mentions @cedarparkjacob."
               });
               issue = created.data;
             }
 
-            const shortSha = (run.head_sha || "").slice(0, 7);
-            const deployedAt = new Date(run.updated_at || run.created_at).toUTCString();
             const body = [
               "@cedarparkjacob **Your site update is live.**",
               "",
               "- Site: https://ludden.uk/",
               "- Photo gallery: https://ludden.uk/travel/photos.html",
-              "- Published commit: `" + shortSha + "`",
-              "- Deployment completed: " + deployedAt,
-              "- [View successful Pages deployment](" + run.html_url + ")"
+              "- Published commit: `" + targetSha.slice(0, 7) + "`",
+              "- Deployment completed: " + new Date(pagesRun.updated_at).toUTCString(),
+              "- [View successful Pages deployment](" + pagesRun.html_url + ")"
             ].join("\n");
 
             await github.rest.issues.createComment({
