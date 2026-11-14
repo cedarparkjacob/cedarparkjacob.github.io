@@ -209,26 +209,57 @@
           const files = listData.files || [];
           const images = files.filter(file => file.mimeType?.startsWith("image/"));
           const folders = files.filter(file => file.mimeType === "application/vnd.google-apps.folder");
+
+          // A public folder can be listed with the API key alone. This tests
+          // the public-gallery path independently of the signed-in drive.file scope.
+          let publicResult;
+          try {
+            const publicParams = new URLSearchParams({
+              q: "'" + folderId + "' in parents and trashed = false",
+              pageSize: "100",
+              orderBy: "folder,name",
+              fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,webContentLink,imageMediaMetadata(width,height))",
+              key: API_KEY
+            });
+            const publicResponse = await fetch("https://www.googleapis.com/drive/v3/files?" + publicParams.toString());
+            const publicData = await publicResponse.json();
+            if (!publicResponse.ok) {
+              publicResult = { ok: false, message: publicData.error?.message || "Public listing failed (" + publicResponse.status + ")." };
+            } else {
+              publicResult = { ok: true, files: publicData.files || [], more: !!publicData.nextPageToken };
+            }
+          } catch (publicError) {
+            publicResult = { ok: false, message: readableError(publicError) };
+          }
+
           const summary = [
-            "SUCCESS — Google Drive API responded.",
-            "",
+            "SIGNED-IN TEST (drive.file)",
             "Folder: " + folderData.name,
-            "Folder ID: " + folderData.id,
-            "Immediate items found: " + files.length,
-            "Image files found: " + images.length,
-            "Subfolders found: " + folders.length,
-            listData.nextPageToken ? "More than one page of items exists." : "No additional page token returned.",
+            "Immediate items returned: " + files.length,
+            "Images returned: " + images.length,
+            "Subfolders returned: " + folders.length,
             "",
-            "First items:"
+            "PUBLIC GALLERY TEST (API key only; no OAuth token)",
+            publicResult.ok
+              ? "SUCCESS — public listing returned " + publicResult.files.length + " item(s)."
+              : "NOT ACCESSIBLE — " + publicResult.message,
+            ...(publicResult.ok ? [
+              "Public images: " + publicResult.files.filter(file => file.mimeType?.startsWith("image/")).length,
+              "Public subfolders: " + publicResult.files.filter(file => file.mimeType === "application/vnd.google-apps.folder").length,
+              publicResult.more ? "More public items exist on another page." : "No additional public page token.",
+              "",
+              "Publicly listed items:",
+              ...publicResult.files.slice(0, 12).map(file => "• " + file.name + " [" + file.mimeType + "]")
+            ] : [
+              "",
+              "If this folder is not already shared as 'Anyone with the link' (Viewer), that is likely why the public listing is unavailable. This test has not changed any sharing settings."
+            ]),
+            "",
+            "OAuth-visible items:",
+            ...(files.length ? files.slice(0, 12).map(file => "• " + file.name + " [" + file.mimeType + "]") : ["(None returned under drive.file.)"])
           ];
-          for (const file of files.slice(0, 12)) {
-            summary.push("• " + file.name + " [" + file.mimeType + "]");
-          }
-          if (files.length === 0) {
-            summary.push("(No child files were returned. This may indicate that drive.file access to a selected folder does not automatically expose its contents; we'll adjust the permission/selection approach based on this test.)");
-          }
-          setStatus("Folder access test completed.", "ok");
-          setOutput(summary.join("\n"));
+          setStatus("Both folder access tests completed.", publicResult.ok ? "ok" : "");
+          setOutput(summary.join("\\n"));
         } catch (error) {
           setStatus("The folder was selected, but the Drive API test failed.", "error");
           setOutput("Selected folder: " + folderName + "\nFolder ID: " + folderId + "\n\n" + readableError(error) + "\n\nThis result helps identify whether the selected folder is accessible under the current drive.file permission.");
