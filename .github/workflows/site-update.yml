@@ -1,0 +1,54 @@
+name: Site update status
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "travel/last-updated.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-update-status
+  cancel-in-progress: false
+
+jobs:
+  validate-and-stamp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate gallery JavaScript
+        run: node --check travel/photos.js
+
+      - name: Write last-updated timestamp
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          node -e 'const fs=require("fs"); fs.writeFileSync("travel/last-updated.json", JSON.stringify({updatedAt:new Date().toISOString(), sourceCommit:process.env.SOURCE_SHA}, null, 2)+"\\n")'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add travel/last-updated.json
+          git commit -m "Update site timestamp [skip ci]" || exit 0
+          git push origin HEAD:main
+
+      - name: Confirm timestamp is live on GitHub Pages
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          for attempt in $(seq 1 60); do
+            LIVE_SHA=$(curl -fsS "https://ludden.uk/travel/last-updated.json?check=$attempt" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).sourceCommit || ""' 2>/dev/null || true)
+            if [ "$LIVE_SHA" = "$SOURCE_SHA" ]; then
+              echo "The site timestamp for $SOURCE_SHA is live."
+              exit 0
+            fi
+            echo "Waiting for GitHub Pages deployment ($attempt/60)..."
+            sleep 10
+          done
+          echo "The commit was pushed, but the live timestamp did not appear within 10 minutes."
+          exit 1
