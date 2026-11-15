@@ -243,8 +243,7 @@ document.getElementById("joinGameButton");
 const gameCodeError =
 document.getElementById("gameCodeError");
 
-const alphabetElement =
-document.getElementById("alphabet");
+const teamCountInput=document.getElementById("teamCount");const teamAssignments=document.getElementById("teamAssignments");const randomizeTeamsButton=document.getElementById("randomizeTeams");
 
 const selectedCountElement =
 document.getElementById("selectedCount");
@@ -539,135 +538,15 @@ document.getElementById("finishGameButton");
 TEAM SELECTION
 ========================================================= */
 
-let selectedLetters = [];
-
-function createAlphabet() {
-
-  const letters = Object.keys(animals);
-
-  alphabetElement.innerHTML = "";
-
-  for (const letter of letters) {
-
-    const button = document.createElement("button");
-
-    button.className = "letter-button";
-    button.textContent = letter;
-    button.dataset.letter = letter;
-
-    button.addEventListener(
-      "click",
-      () => toggleLetter(letter, button)
-    );
-
-    alphabetElement.appendChild(button);
-  }
-}
-}
-
-function toggleLetter(letter, button) {
-
-const index =
-selectedLetters.indexOf(letter);
-
-if (index === -1) {
-
-
-selectedLetters.push(letter);
-
-button.classList.add("selected");
-
-
-} else {
-
-
-selectedLetters.splice(index, 1);
-
-button.classList.remove("selected");
-
-
-}
-
-updateTeamSelectionDisplay();
-}
-
-function updateTeamSelectionDisplay() {
-
-selectedCountElement.textContent =
-selectedLetters.length;
-
-selectedLettersElement.innerHTML = "";
-
-selectedLetters.forEach(letter => {
-
-
-const element =
-  document.createElement("span");
-
-element.className =
-  "selected-letter";
-
-element.textContent =
-  letter;
-
-selectedLettersElement.appendChild(element);
-
-
-});
-
-startGameButton.disabled =
-selectedLetters.length === 0;
-}
-
-/* =========================================================
-RANDOM ANIMAL ASSIGNMENT
-========================================================= */
-
-function assignAnimals(letters) {
-
-  const usedAnimals = [];
-
-  return letters.map((letter, index) => {
-
-    const available =
-      animals[letter].filter(
-        animal =>
-          !usedAnimals.includes(animal.name)
-      );
-
-    const pool =
-      available.length > 0
-        ? available
-        : animals[letter];
-
-    const animal =
-      pool[
-        Math.floor(
-          Math.random() * pool.length
-        )
-      ];
-
-    usedAnimals.push(animal.name);
-
-    return {
-
-      id:
-        `${letter}-${index}-${Date.now()}`,
-
-      letter: letter,
-
-      name: animal.name,
-
-      emoji: animal.emoji,
-
-      score: 0,
-
-      position: index
-    };
-
-  });
-}
-
+const animalCatalog=Object.values(animals).flat();
+let teamDrafts=[];
+function randomAnimal(exclude=[]){const p=animalCatalog.filter(a=>!exclude.includes(a.name));return p[Math.floor(Math.random()*p.length)];}
+function renderTeamAssignments(){const n=Math.max(1,Math.min(animalCatalog.length,Number(teamCountInput.value)||1));teamCountInput.value=n;teamDrafts=Array.from({length:n},(_,i)=>teamDrafts[i]||null);teamAssignments.innerHTML="";teamDrafts.forEach((v,i)=>{const row=document.createElement("div");row.className="team-assignment-row";const label=document.createElement("label");label.textContent="Team "+(i+1);const sel=document.createElement("select");const rand=document.createElement("option");rand.value="";rand.textContent="🎲 Random";sel.appendChild(rand);animalCatalog.forEach(a=>{const o=document.createElement("option");o.value=a.name;o.textContent=a.emoji+" "+a.name;sel.appendChild(o);});sel.value=v||"";sel.addEventListener("change",()=>{teamDrafts[i]=sel.value||null;refreshTeamChoices();});const btn=document.createElement("button");btn.type="button";btn.textContent="Random";btn.addEventListener("click",()=>{teamDrafts[i]=randomAnimal(teamDrafts.filter((x,j)=>j!==i&&x)).name;renderTeamAssignments();});row.append(label,sel,btn);teamAssignments.appendChild(row);});selectedCount.textContent=n;refreshTeamChoices();}
+function refreshTeamChoices(){[...teamAssignments.querySelectorAll("select")].forEach((s,i)=>{[...s.options].forEach(o=>{if(o.value)o.disabled=teamDrafts.some((v,j)=>j!==i&&v===o.value);});s.value=teamDrafts[i]||"";});updateCreateButton();}
+function updateCreateButton(){const c=teamDrafts.filter(Boolean);const ok=teamDrafts.length>0&&c.length===new Set(c).size;if(typeof createGameButton!=="undefined"&&createGameButton)createGameButton.disabled=!ok;if(typeof startGameButton!=="undefined"&&startGameButton)startGameButton.disabled=!ok;}
+function buildTeams(){const used=[];return teamDrafts.map((v,i)=>{const a=v?animalCatalog.find(x=>x.name===v):randomAnimal(used);if(!a||used.includes(a.name))throw Error("Each team must have a different animal.");used.push(a.name);return{id:"team-"+(i+1)+"-"+Date.now(),name:a.name,emoji:a.emoji,score:0,position:i};});}
+function randomizeAllTeams(){const shuffled=[...animalCatalog].sort(()=>Math.random()-.5);teamDrafts=teamDrafts.map((_,i)=>shuffled[i].name);renderTeamAssignments();}
+teamCountInput.addEventListener("change",renderTeamAssignments);randomizeTeamsButton.addEventListener("click",randomizeAllTeams);renderTeamAssignments();
 /* =========================================================
 START GAME
 ========================================================= */
@@ -679,9 +558,7 @@ startGame
 
 async function startGame() {
 
-if (selectedLetters.length === 0) {
-return;
-}
+if (!teamDrafts.length) return;
 
 stopGameTimer();
 
@@ -694,7 +571,7 @@ game.lastValue = null;
 game.lastTeamId = null;
 
 game.teams =
-assignAnimals(selectedLetters);
+buildTeams();
 
 firebaseGameId =
   Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -1530,25 +1407,7 @@ timerRunning: false
 
 };
 
-selectedLetters = [];
-
-document
-.querySelectorAll(".letter-button")
-.forEach(button => {
-
-
-  button.classList.remove("selected");
-
-});
-
-
-setupSection.classList.remove("hidden");
-
-gameControls.classList.add("hidden");
-
-reassignButton.disabled = true;
-
-updateTeamSelectionDisplay();
+teamDrafts=[];renderTeamAssignments();
 
 teamsElement.innerHTML = "";
 
@@ -1628,10 +1487,11 @@ winnerScreen.classList.add(
 INITIALIZATION
 ========================================================= */
 
-createAlphabet();
-
-updateTeamSelectionDisplay();
+renderTeamAssignments();
 
 renderValue();
 
 updateTimerDisplay();
+
+async function updateVersionCounter(){const el=document.getElementById("versionCounter");if(!el)return;try{const r=await fetch("https://api.github.com/repos/cedarparkjacob/cedarparkjacob.github.io/commits?path=game-testing/zero-out&per_page=1",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});if(!r.ok)throw Error();const h=r.headers.get("Link")||"",m=h.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/);el.textContent="Version "+(m?Number(m[1]):(await r.json()).length);}catch(e){el.textContent="Version unavailable";}}
+updateVersionCounter();
