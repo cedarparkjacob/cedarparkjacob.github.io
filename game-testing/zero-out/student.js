@@ -87,9 +87,9 @@ async function spinForRandomTeam(){
     finishClaim(created.id,newClientId);
   }catch(error){
     status.textContent=error?.message||String(error);
-    const fresh=await get(ref(db,"games/"+code));
-    if(fresh.exists()){game=fresh.val();selectionBusy=false;choices();}
-    else{selectionBusy=false;button.disabled=false;}
+    selectionBusy=false;
+    try{const fresh=await get(ref(db,"games/"+code));if(fresh.exists()){game=fresh.val();choices();}else button.disabled=false;}
+    catch{button.disabled=false;}
   }finally{
     if(spinHandle){clearInterval(spinHandle);spinHandle=null;}
     wheel.classList.remove("spinning");
@@ -124,8 +124,8 @@ async function claim(id){
     console.error("Zero Out team selection failed:",error);
     status.textContent="Connection failed: "+(error?.message||String(error));
     selectionBusy=false;
-    const latest=await get(ref(db,"games/"+code));
-    if(latest.exists()){game=latest.val();choices();}
+    try{const latest=await get(ref(db,"games/"+code));if(latest.exists()){game=latest.val();choices();}else{buttons.forEach(b=>b.disabled=false);$("randomTeamButton").disabled=false;}}
+    catch{buttons.forEach(b=>b.disabled=false);$("randomTeamButton").disabled=false;}
   }
 }
 function connect(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t){$("waiting").textContent="Your team is no longer in this game. Rejoin with the game code.";return;}if(t.connection?.clientId&&t.connection.clientId!==clientId){$("waiting").textContent="This team is connected on another computer.";return;}render(t);},error=>{$("waiting").textContent="Live connection lost: "+(error?.message||"check your connection");});}
