@@ -175,7 +175,9 @@ async function runCheck(){
    const added=now.filter(x=>!oldMap.has(x.id)),removed=old.filter(x=>!newMap.has(x.id));
    const altered=now.filter(x=>oldMap.has(x.id)&&JSON.stringify(oldMap.get(x.id))!==JSON.stringify(x));
    changeSummary="Structure differs from previous check: +"+added.length+" added, −"+removed.length+" removed, "+altered.length+" changed metadata.";
-   const moved=altered.filter(x=>oldMap.get(x.id).queriedParentId!==x.queriedParentId);\n   const renamed=altered.filter(x=>oldMap.get(x.id).name!==x.name);\n   scan.diff={added,removed,changed:altered,moved,renamed};
+   const moved=altered.filter(x=>oldMap.get(x.id).queriedParentId!==x.queriedParentId);
+   const renamed=altered.filter(x=>oldMap.get(x.id).name!==x.name);
+   scan.diff={added,removed,changed:altered,moved,renamed};
   }else if(prior)changeSummary="No structural or selected metadata differences from previous check.";
   else changeSummary="Baseline check. Future checks will be compared against this result.";
   const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,diff:scan.diff||null,fingerprint:fp};
