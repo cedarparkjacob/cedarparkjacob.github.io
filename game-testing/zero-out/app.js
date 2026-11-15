@@ -7,622 +7,54 @@ First working version + timer
 ANIMAL DATABASE - work damnit
 ========================================================= */
 
-const animals = {
-  A: [
-    { name: "Alligator", emoji: "🐊" },
-    { name: "Ant", emoji: "🐜" },
-    { name: "Armadillo", emoji: "🦔" }
-  ],
-  B: [
-    { name: "Badger", emoji: "🦡" },
-    { name: "Bat", emoji: "🦇" },
-    { name: "Bear", emoji: "🐻" },
-    { name: "Beaver", emoji: "🦫" },
-    { name: "Bee", emoji: "🐝" },
-    { name: "Beetle", emoji: "🪲" },
-    { name: "Bird", emoji: "🐦" },
-    { name: "Bison", emoji: "🦬" },
-    { name: "Blowfish", emoji: "🐡" },
-    { name: "Boar", emoji: "🐗" },
-    { name: "Butterfly", emoji: "🦋" }
-  ],
-  C: [
-    { name: "Camel", emoji: "🐪" },
-    { name: "Cat", emoji: "🐈" },
-    { name: "Caterpillar", emoji: "🐛" },
-    { name: "Chipmunk", emoji: "🐿️" },
-    { name: "Chicken", emoji: "🐔" },
-    { name: "Cow", emoji: "🐄" },
-    { name: "Crab", emoji: "🦀" },
-    { name: "Crocodile", emoji: "🐊" }
-  ],
-  D: [
-    { name: "Deer", emoji: "🦌" },
-    { name: "Dodo", emoji: "🦤" },
-    { name: "Dog", emoji: "🐕" },
-    { name: "Dolphin", emoji: "🐬" },
-    { name: "Donkey", emoji: "🫏" },
-    { name: "Dove", emoji: "🕊️" },
-    { name: "Duck", emoji: "🦆" }
-  ],
-  E: [
-    { name: "Eagle", emoji: "🦅" },
-    { name: "Elephant", emoji: "🐘" }
-  ],
-  F: [
-    { name: "Fish", emoji: "🐟" },
-    { name: "Flamingo", emoji: "🦩" },
-    { name: "Fly", emoji: "🪰" },
-    { name: "Fox", emoji: "🦊" },
-    { name: "Frog", emoji: "🐸" }
-  ],
-  G: [
-    { name: "Giraffe", emoji: "🦒" },
-    { name: "Goat", emoji: "🐐" },
-    { name: "Gorilla", emoji: "🦍" },
-    { name: "Goose", emoji: "🪿" }
-  ],
-  H: [
-    { name: "Hamster", emoji: "🐹" },
-    { name: "Hare", emoji: "🐇" },
-    { name: "Hedgehog", emoji: "🦔" },
-    { name: "Hippopotamus", emoji: "🦛" },
-    { name: "Horse", emoji: "🐎" }
-  ],
-  J: [
-    { name: "Jellyfish", emoji: "🪼" }
-  ],
-  K: [
-    { name: "Kangaroo", emoji: "🦘" },
-    { name: "Koala", emoji: "🐨" }
-  ],
-  L: [
-    { name: "Leopard", emoji: "🐆" },
-    { name: "Lion", emoji: "🦁" },
-    { name: "Lizard", emoji: "🦎" },
-    { name: "Llama", emoji: "🦙" },
-    { name: "Lobster", emoji: "🦞" }
-  ],
-  M: [
-    { name: "Mammoth", emoji: "🦣" },
-    { name: "Monkey", emoji: "🐒" },
-    { name: "Mosquito", emoji: "🦟" },
-    { name: "Mouse", emoji: "🐁" }
-  ],
-  O: [
-    { name: "Octopus", emoji: "🐙" },
-    { name: "Orangutan", emoji: "🦧" },
-    { name: "Orca", emoji: "🫍" },
-    { name: "Ostrich", emoji: "🦤" },
-    { name: "Otter", emoji: "🦦" },
-    { name: "Oyster", emoji: "🦪" }
-  ],
-  P: [
-    { name: "Panda", emoji: "🐼" },
-    { name: "Parrot", emoji: "🦜" },
-    { name: "Peacock", emoji: "🦚" },
-    { name: "Penguin", emoji: "🐧" },
-    { name: "Pig", emoji: "🐖" },
-    { name: "Polar Bear", emoji: "🐻‍❄️" },
-    { name: "Poodle", emoji: "🐩" }
-  ],
-  R: [
-    { name: "Rabbit", emoji: "🐇" },
-    { name: "Raccoon", emoji: "🦝" },
-    { name: "Ram", emoji: "🐏" },
-    { name: "Rat", emoji: "🐀" },
-    { name: "Rhinoceros", emoji: "🦏" }
-  ],
-  S: [
-    { name: "Scorpion", emoji: "🦂" },
-    { name: "Seal", emoji: "🦭" },
-    { name: "Shark", emoji: "🦈" },
-    { name: "Sheep", emoji: "🐑" },
-    { name: "Shrimp", emoji: "🦐" },
-    { name: "Skunk", emoji: "🦨" },
-    { name: "Sloth", emoji: "🦥" },
-    { name: "Snail", emoji: "🐌" },
-    { name: "Snake", emoji: "🐍" },
-    { name: "Spider", emoji: "🕷️" },
-    { name: "Squid", emoji: "🦑" },
-    { name: "Swan", emoji: "🦢" }
-  ],
-  T: [
-    { name: "Tiger", emoji: "🐅" },
-    { name: "T-Rex", emoji: "🦖" },
-    { name: "Tropical Fish", emoji: "🐠" },
-    { name: "Turtle", emoji: "🐢" },
-    { name: "Turkey", emoji: "🦃" }
-  ],
-  W: [
-    { name: "Whale", emoji: "🐋" },
-    { name: "Worm", emoji: "🪱" },
-    { name: "Water Buffalo", emoji: "🐃" },
-    { name: "Wolf", emoji: "🐺" }
-  ],
-  Z: [
-    { name: "Zebra", emoji: "🦓" }
-  ]
-};
-
-/* =========================================================
-GAME STATE
-========================================================= */
-
-let game = {
-
-started: false,
-
-currentValue: null,
-
-lastValue: null,
-
-lastTeamId: null,
-
-teams: [],
-
-timerSeconds: null,
-
-timerRunning: false
-
-};
-
-let timerInterval = null;
-
-// =========================================================
-// FIREBASE
-// =========================================================
-
-import {
-  ref,
-  set,
-  onValue,
-  get
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
-
-const db = window.firebaseDB;
-
-let firebaseGameId = null;
-
-let gameListener = null;
-
-async function saveGameToFirebase() {
-
-  if (!firebaseGameId) {
-    console.error("No Firebase game ID.");
-    return;
-  }
-
-  if (!db) {
-    console.error("Firebase database is not available.");
-    return;
-  }
-
-  const gameData = {
-    started: game.started,
-    currentValue: game.currentValue,
-    lastValue: game.lastValue,
-    lastTeamId: game.lastTeamId,
-    teams: game.teams,
-    timerSeconds: game.timerSeconds,
-    timerRunning: game.timerRunning
-  };
-
-  console.log(
-    "Saving to Firebase:",
-    firebaseGameId,
-    gameData
-  );
-
-  await set(
-    ref(db, "games/" + firebaseGameId),
-    gameData
-  );
-
-  console.log(
-    "Firebase save complete."
-  );
-}
-
-
-
-
-/* =========================================================
-DOM ELEMENTS
-========================================================= */
-
-const gameCodeScreen =
-document.getElementById("gameCodeScreen");
-
-const gameCodeInput =
-document.getElementById("gameCodeInput");
-
-const joinGameButton =
-document.getElementById("joinGameButton");
-
-const gameCodeError =
-document.getElementById("gameCodeError");
-
-const teamCountInput=document.getElementById("teamCount");const teamAssignments=document.getElementById("teamAssignments");const randomizeTeamsButton=document.getElementById("randomizeTeams");
-
-const selectedCountElement =
-document.getElementById("selectedCount");
-
-const selectedLettersElement = document.getElementById("selectedLetters");
-const selectedCount = selectedCountElement;
-
-const startGameButton =
-document.getElementById("startGame");
-
-const setupSection =
-document.getElementById("setupSection");
-
-const gameControls =
-document.getElementById("gameControls");
-
-const teamsElement =
-document.getElementById("teams");
-
-const currentValueElement =
-document.getElementById("currentValue");
-
-const teacherCurrentValueElement =
-document.getElementById("teacherCurrentValue");
-
-const teamButtonsElement =
-document.getElementById("teamButtons");
-
-const controlPanel =
-document.getElementById("controlPanel");
-
-const controlsToggle =
-document.getElementById("controlsToggle");
-
-const closeControls =
-document.getElementById("closeControls");
-
-const newValueButton =
-document.getElementById("newValue");
-
-const reassignButton =
-document.getElementById("reassignButton");
-
-const editScoresButton =
-document.getElementById("editScoresButton");
-
-const resetGameButton =
-document.getElementById("resetGameButton");
-
-const editModal =
-document.getElementById("editModal");
-
-const scoreEditors =
-document.getElementById("scoreEditors");
-
-const saveScoresButton =
-document.getElementById("saveScores");
-
-const cancelScoreEdit =
-document.getElementById("cancelScoreEdit");
-
-const closeEditModal =
-document.getElementById("closeEditModal");
-
-const winnerScreen =
-document.getElementById("winnerScreen");
-
-const winnerAnimal =
-document.getElementById("winnerAnimal");
-
-const winnerName =
-document.getElementById("winnerName");
-
-const winnerScore =
-document.getElementById("winnerScore");
-
-const closeWinner =
-document.getElementById("closeWinner");
-
-
-/* =========================================================
-STUDENT GAME CODE CONNECTION
-========================================================= */
-
-joinGameButton.addEventListener(
-  "click",
-  joinGame
-);
-
-
-gameCodeInput.addEventListener(
-  "keydown",
-  event => {
-
-    if (event.key === "Enter") {
-      joinGame();
-    }
-
-  }
-);
-
-
-async function joinGame() {
-
-  const code =
-    gameCodeInput.value
-      .trim()
-      .toUpperCase();
-
-
-  gameCodeError.textContent = "";
-
-
-  /*
-    Basic code validation.
-  */
-
-  if (!/^[A-Z0-9]{6}$/.test(code)) {
-
-    gameCodeError.textContent =
-      "Enter the 6-character game code.";
-
-    return;
-
-  }
-
-
-  joinGameButton.disabled = true;
-
-  joinGameButton.textContent =
-    "CONNECTING...";
-
-
-  try {
-
-    const gameRef =
-      ref(
-        db,
-        "games/" + code
-      );
-
-
-    /*
-      Check whether the game exists.
-    */
-
-    const snapshot =
-      await get(gameRef);
-
-
-    if (!snapshot.exists()) {
-
-      gameCodeError.textContent =
-        "Game not found. Check the code and try again.";
-
-      joinGameButton.disabled = false;
-
-      joinGameButton.textContent =
-        "JOIN GAME";
-
-      return;
-
-    }
-
-
-    /*
-      Remember the game code.
-    */
-
-    firebaseGameId =
-      code;
-
-
-    /*
-      Hide the code screen.
-    */
-
-    gameCodeScreen.classList.add(
-      "hidden"
-    );
-
-
-    /*
-      Listen for all future changes.
-    */
-
-    if (gameListener) {
-      gameListener();
-    }
-
-
-gameListener =
-  onValue(
-    gameRef,
-    snapshot => {
-
-      const firebaseGame =
-        snapshot.val();
-
-      if (!firebaseGame) {
-        return;
-      }
-
-      /*
-        Remember whether the game was
-        previously running.
-      */
-
-      const wasStarted =
-        game.started;
-
-      /*
-        Update local game state.
-      */
-
-      game =
-        firebaseGame;
-
-      /*
-        Render the scoreboard.
-      */
-
-      renderEverything();
-
-      /*
-        If the teacher just ended the game,
-        show the winner screen.
-      */
-
-      if (
-        wasStarted === true &&
-        game.started === false
-      ) {
-        showWinner();
-      }
-
-    }
-  );
-
-
-  } catch (error) {
-
-    console.error(
-      "Failed to join game:",
-      error
-    );
-
-    gameCodeError.textContent =
-      "Could not connect to the game.";
-
-  }
-
-
-  joinGameButton.disabled = false;
-
-  joinGameButton.textContent =
-    "JOIN GAME";
-
-}
-
-
-/* TIMER ELEMENTS */
-
-const gameTimerElement =
-document.getElementById("gameTimer");
-
-const teacherTimerElement =
-document.getElementById("teacherTimer");
-
-const setupTimerMinutes =
-document.getElementById("setupTimerMinutes");
-
-const setupTimerSeconds =
-document.getElementById("setupTimerSeconds");
-
-const gameTimerMinutes =
-document.getElementById("gameTimerMinutes");
-
-const gameTimerSeconds =
-document.getElementById("gameTimerSeconds");
-
-const setTimerButton =
-document.getElementById("setTimerButton");
-
-const stopTimerButton =
-document.getElementById("stopTimerButton");
-
-const finishGameButton =
-document.getElementById("finishGameButton");
-
-/* =========================================================
-TEAM SELECTION
-========================================================= */
-
-const animalCatalog = Object.values(animals).flat()
-  .filter(a => !["Alligator", "Armadillo", "Caterpillar", "Hare", "Ostrich"].includes(a.name))
-  .concat([
-    { name: "Bactrian Camel", emoji: "🐫" },
-    { name: "Baby Chick", emoji: "🐣" },
-    { name: "Front-Facing Baby Chick", emoji: "🐥" },
-    { name: "Owl", emoji: "🦉" },
-    { name: "Cockroach", emoji: "🪳" },
-    { name: "Bug", emoji: "🐛" },
-    { name: "Coral", emoji: "🪸" },
-    { name: "Orca", emoji: "🫍" },
-    { name: "Ox", emoji: "🐂" },
-    { name: "Rooster", emoji: "🐓" },
-    { name: "Lady Beetle", emoji: "🐞" },
-    { name: "Cricket", emoji: "🦗" },
-    { name: "Sauropod", emoji: "🦕" }
-  ])
-  .filter((animal, index, list) =>
-    list.findIndex(item => item.emoji === animal.emoji) === index
-  );
-
 let teamDrafts = [];
 
 function randomAnimal(exclude = []) {
   const available = animalCatalog.filter(animal => !exclude.includes(animal.name));
-  if (!available.length) throw new Error("There are not enough unique animal emojis for that many teams.");
+  if (!available.length) throw new Error("There are not enough available animals for that many teams.");
   return available[Math.floor(Math.random() * available.length)];
 }
 
 function renderTeamAssignments() {
   const requested = Number(teamCountInput.value);
-  const count = Math.max(1, Math.min(animalCatalog.length, Number.isFinite(requested) && requested ? Math.floor(requested) : 4));
+  const count = Math.max(1, Math.min(animalCatalog.length,
+    Number.isFinite(requested) && requested ? Math.floor(requested) : 4));
   teamCountInput.value = count;
-
   const previous = teamDrafts.slice();
   teamDrafts = Array.from({ length: count }, (_, index) => {
     const name = previous[index];
     return name && animalCatalog.some(animal => animal.name === name) ? name : null;
   });
 
-  // Fill every unassigned slot immediately, without duplicating an animal
-  // already selected manually or randomly in another slot.
+  // Fill unassigned teams randomly, retaining unique manually chosen animals.
   for (let index = 0; index < teamDrafts.length; index++) {
-    if (!teamDrafts[index]) {
-      teamDrafts[index] = randomAnimal(teamDrafts.filter(Boolean)).name;
-    }
+    if (!teamDrafts[index]) teamDrafts[index] = randomAnimal(teamDrafts.filter(Boolean)).name;
   }
 
   teamAssignments.innerHTML = "";
   teamDrafts.forEach((value, index) => {
     const row = document.createElement("div");
     row.className = "team-assignment-row";
-
     const label = document.createElement("label");
     label.textContent = "Team " + (index + 1);
-
     const select = document.createElement("select");
     select.setAttribute("aria-label", "Animal for team " + (index + 1));
-
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Choose an animal";
-    select.appendChild(placeholder);
-
     animalCatalog.forEach(animal => {
       const option = document.createElement("option");
       option.value = animal.name;
       option.textContent = animal.emoji + " " + animal.name;
       select.appendChild(option);
     });
-
     select.value = value;
     select.addEventListener("change", () => {
       const chosen = select.value;
-      if (!chosen) {
-        teamDrafts[index] = randomAnimal(teamDrafts.filter((name, i) => i !== index)).name;
-      } else if (teamDrafts.some((name, i) => i !== index && name === chosen)) {
+      if (teamDrafts.some((name, i) => i !== index && name === chosen)) {
         select.value = teamDrafts[index];
         return;
-      } else {
-        teamDrafts[index] = chosen;
       }
+      teamDrafts[index] = chosen;
       renderTeamAssignments();
     });
-
     const randomButton = document.createElement("button");
     randomButton.type = "button";
     randomButton.textContent = "Random";
@@ -630,11 +62,9 @@ function renderTeamAssignments() {
       teamDrafts[index] = randomAnimal(teamDrafts.filter((name, i) => i !== index)).name;
       renderTeamAssignments();
     });
-
     row.append(label, select, randomButton);
     teamAssignments.appendChild(row);
   });
-
   selectedCount.textContent = String(count);
   updateCreateButton();
 }
@@ -643,13 +73,8 @@ function updateCreateButton() {
   const complete = teamDrafts.length > 0 &&
     teamDrafts.every(name => animalCatalog.some(animal => animal.name === name)) &&
     new Set(teamDrafts).size === teamDrafts.length;
-
-  if (typeof createGameButton !== "undefined" && createGameButton) {
-    createGameButton.disabled = !complete;
-  }
-  if (typeof startGameButton !== "undefined" && startGameButton) {
-    startGameButton.disabled = !complete;
-  }
+  if (typeof createGameButton !== "undefined" && createGameButton) createGameButton.disabled = !complete;
+  if (typeof startGameButton !== "undefined" && startGameButton) startGameButton.disabled = !complete;
 }
 
 function buildTeams() {
@@ -657,13 +82,8 @@ function buildTeams() {
   return teamDrafts.map((name, index) => {
     const animal = animalCatalog.find(item => item.name === name);
     if (!animal) throw new Error("Choose a valid animal for every team.");
-    return {
-      id: "team-" + (index + 1) + "-" + timestamp,
-      name: animal.name,
-      emoji: animal.emoji,
-      score: 0,
-      position: index
-    };
+    return { id: "team-" + (index + 1) + "-" + timestamp,
+      name: animal.name, emoji: animal.emoji, score: 0, position: index };
   });
 }
 
