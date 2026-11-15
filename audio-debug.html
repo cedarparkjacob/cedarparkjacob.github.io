@@ -50,7 +50,9 @@ const candidates=[
 ["6 · Drive API alt=media no key","Same API endpoint without an API key.",apiNoKey,""],
 ["7 · Drive API URL + Range query","API media endpoint with an explicit byte range query.",api+"&supportsAllDrives=true&acknowledgeAbuse=true",""],
 ["8 · Drive preview URL as audio","Preview route tested as an audio source; likely HTML control.", "https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview",""],
-["9 · googleusercontent download","Drive's export URL with confirm=t.",ucDownload+"&confirm=t",""]
+["9 · googleusercontent download","Drive's export URL with confirm=t.",ucDownload+"&confirm=t",""],
+["10 · Drive usercontent download","Google Drive alternate download host.","https://drive.usercontent.google.com/download?id="+encodeURIComponent(id)+"&export=download&authuser=0&confirm=t",""],
+["11 · Drive uc download authuser","Classic download URL with explicit account selector.",ucDownload+"&authuser=0",""]
 ];
 candidates.forEach(c=>addTest(c[0],c[1],c[2],c[3]));
 const link=document.createElement("div");link.className="test";link.innerHTML="<h3>10 · Open webContentLink directly</h3><p>Open the metadata-provided link in a separate tab to see whether it plays, downloads, or displays a confirmation page.</p>";const b=document.createElement("button");b.textContent="Open link";b.onclick=()=>window.open(web,"_blank","noopener");link.append(b);$("tests").append(link);
