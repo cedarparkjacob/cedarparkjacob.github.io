@@ -721,7 +721,113 @@ getDatabase(app);
    ANIMAL DATABASE
    ========================================================= */
 
+const animalCatalog = [
+  { name: "Ant", emoji: "🐜" }, { name: "Bat", emoji: "🦇" }, { name: "Bear", emoji: "🐻" },
+  { name: "Bee", emoji: "🐝" }, { name: "Bird", emoji: "🐦" }, { name: "Blowfish", emoji: "🐡" },
+  { name: "Boar", emoji: "🐗" }, { name: "Butterfly", emoji: "🦋" }, { name: "Camel", emoji: "🐪" },
+  { name: "Cat", emoji: "🐈" }, { name: "Chicken", emoji: "🐔" }, { name: "Cow", emoji: "🐄" },
+  { name: "Crab", emoji: "🦀" }, { name: "Crocodile", emoji: "🐊" }, { name: "Deer", emoji: "🦌" },
+  { name: "Dog", emoji: "🐕" }, { name: "Dolphin", emoji: "🐬" }, { name: "Dove", emoji: "🕊️" },
+  { name: "Duck", emoji: "🦆" }, { name: "Eagle", emoji: "🦅" }, { name: "Elephant", emoji: "🐘" },
+  { name: "Fish", emoji: "🐟" }, { name: "Fox", emoji: "🦊" }, { name: "Frog", emoji: "🐸" },
+  { name: "Giraffe", emoji: "🦒" }, { name: "Goat", emoji: "🐐" }, { name: "Gorilla", emoji: "🦍" },
+  { name: "Hamster", emoji: "🐹" }, { name: "Horse", emoji: "🐎" }, { name: "Leopard", emoji: "🐆" },
+  { name: "Lion", emoji: "🦁" }, { name: "Lizard", emoji: "🦎" }, { name: "Monkey", emoji: "🐒" },
+  { name: "Mouse", emoji: "🐁" }, { name: "Octopus", emoji: "🐙" }, { name: "Panda", emoji: "🐼" },
+  { name: "Penguin", emoji: "🐧" }, { name: "Pig", emoji: "🐖" }, { name: "Poodle", emoji: "🐩" },
+  { name: "Rabbit", emoji: "🐇" }, { name: "Ram", emoji: "🐏" }, { name: "Rat", emoji: "🐀" },
+  { name: "Rhinoceros", emoji: "🦏" }, { name: "Scorpion", emoji: "🦂" }, { name: "Shark", emoji: "🦈" },
+  { name: "Sheep", emoji: "🐑" }, { name: "Shrimp", emoji: "🦐" }, { name: "Snail", emoji: "🐌" },
+  { name: "Snake", emoji: "🐍" }, { name: "Spider", emoji: "🕷️" }, { name: "Squid", emoji: "🦑" },
+  { name: "Tiger", emoji: "🐅" }, { name: "T-Rex", emoji: "🦖" }, { name: "Tropical Fish", emoji: "🐠" },
+  { name: "Turtle", emoji: "🐢" }, { name: "Turkey", emoji: "🦃" }, { name: "Whale", emoji: "🐋" },
+  { name: "Wolf", emoji: "🐺" }, { name: "Zebra", emoji: "🦓" }
+];
+
 let teamDrafts = [];
+function randomAnimal(exclude = []) {
+  const available = animalCatalog.filter(animal => !exclude.includes(animal.name));
+  if (!available.length) throw new Error("There are not enough available animals for that many teams.");
+  return available[Math.floor(Math.random() * available.length)];
+}
+function renderTeamAssignments() {
+  const requested = Number(teamCountInput.value);
+  const count = Math.max(1, Math.min(animalCatalog.length, Number.isFinite(requested) && requested ? Math.floor(requested) : 4));
+  teamCountInput.value = count;
+  const previous = teamDrafts.slice();
+  teamDrafts = Array.from({ length: count }, (_, index) => {
+    const name = previous[index];
+    return name && animalCatalog.some(animal => animal.name === name) ? name : null;
+  });
+  for (let index = 0; index < teamDrafts.length; index++) {
+    if (!teamDrafts[index]) teamDrafts[index] = randomAnimal(teamDrafts.filter(Boolean)).name;
+  }
+  teamAssignments.innerHTML = "";
+  teamDrafts.forEach((value, index) => {
+    const row = document.createElement("div");
+    row.className = "team-assignment-row";
+    const label = document.createElement("label");
+    label.textContent = "Team " + (index + 1);
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Animal for team " + (index + 1));
+    animalCatalog.forEach(animal => {
+      const option = document.createElement("option");
+      option.value = animal.name;
+      option.textContent = animal.emoji + " " + animal.name;
+      select.appendChild(option);
+    });
+    select.value = value;
+    select.addEventListener("change", () => {
+      const chosen = select.value;
+      if (teamDrafts.some((name, i) => i !== index && name === chosen)) {
+        select.value = teamDrafts[index];
+        return;
+      }
+      teamDrafts[index] = chosen;
+      renderTeamAssignments();
+    });
+    const randomButton = document.createElement("button");
+    randomButton.type = "button";
+    randomButton.textContent = "Random";
+    randomButton.addEventListener("click", () => {
+      teamDrafts[index] = randomAnimal(teamDrafts.filter((name, i) => i !== index)).name;
+      renderTeamAssignments();
+    });
+    row.append(label, select, randomButton);
+    teamAssignments.appendChild(row);
+  });
+  selectedCount.textContent = String(count);
+  updateCreateButton();
+}
+function updateCreateButton() {
+  const complete = teamDrafts.length > 0 &&
+    teamDrafts.every(name => animalCatalog.some(animal => animal.name === name)) &&
+    new Set(teamDrafts).size === teamDrafts.length;
+  if (typeof createGameButton !== "undefined" && createGameButton) createGameButton.disabled = !complete;
+  if (typeof startGameButton !== "undefined" && startGameButton) startGameButton.disabled = !complete;
+}
+function buildTeams() {
+  const timestamp = Date.now();
+  return teamDrafts.map((name, index) => {
+    const animal = animalCatalog.find(item => item.name === name);
+    if (!animal) throw new Error("Choose a valid animal for every team.");
+    return { id: "team-" + (index + 1) + "-" + timestamp, name: animal.name,
+      emoji: animal.emoji, score: 0, position: index };
+  });
+}
+function randomizeAllTeams() {
+  const shuffled = [...animalCatalog];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  teamDrafts = shuffled.slice(0, teamDrafts.length).map(animal => animal.name);
+  renderTeamAssignments();
+}
+teamCountInput.addEventListener("change", renderTeamAssignments);
+randomizeTeamsButton.addEventListener("click", randomizeAllTeams);
+
+
 
 function randomAnimal(exclude = []) {
   const available = animalCatalog.filter(animal => !exclude.includes(animal.name));
