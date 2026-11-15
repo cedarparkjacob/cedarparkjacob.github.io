@@ -103,28 +103,7 @@
 
   <section id="setupSection" class="control-section">
 
-    <h3>Choose Teams</h3>
-
-    <p class="instruction">
-      Select one letter for each team.
-      Each letter can only be used once.
-    </p>
-
-    <div id="alphabet" class="alphabet">
-      <!-- Alphabet buttons inserted by JavaScript -->
-    </div>
-
-    <div class="selected-info">
-      Teams selected:
-      <strong id="selectedCount">0</strong>
-    </div>
-
-    <div id="selectedLetters" class="selected-letters">
-      <!-- Selected letters -->
-    </div>
-
-
-    <!-- SETUP TIMER -->
+    <h3>Choose Teams</h3><div class="team-count-row"><label for="teamCount">Number of teams</label><input id="teamCount" type="number" min="1" max="100" value="4"><button type="button" id="randomizeTeams" class="control-button">RANDOMIZE ALL</button></div><p class="instruction">Random animal assignments by default. Choose a specific animal or randomize individual teams. Animals cannot be duplicated.</p><div id="teamAssignments" class="team-assignments"></div><div class="selected-info">Teams: <strong id="selectedCount">4</strong></div><!-- SETUP TIMER -->
 
     <div class="timer-setup">
 
@@ -380,5 +359,5 @@
 
 <script type="module" src="app.js"></script>
 
-</body>
+<div id="versionCounter" class="version-counter">Version …</div></body>
 </html>
