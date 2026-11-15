@@ -108,7 +108,7 @@ jobs:
           if (audioDebugChanged) {
             const debugPath = "audio-debug-build.json";
             const debugData = JSON.parse(fs.readFileSync(debugPath, "utf8"));
-            const debugMatch = String(debugData.version || "").match(/^v(\\d+)$/);
+            const debugMatch = String(debugData.version || "").match(/^v(\d+)$/);
             if (!debugMatch) throw new Error("Invalid independent audio debug version in " + debugPath);
             const debugVersion = Number(debugMatch[1]) + 1;
             fs.writeFileSync(debugPath, JSON.stringify({
@@ -116,7 +116,7 @@ jobs:
               run: debugVersion,
               deployedAt: now,
               sourceCommit: source
-            }, null, 2) + "\\n");
+            }, null, 2) + "\n");
             console.log("Generated audio debug version v" + debugVersion);
           }
 
