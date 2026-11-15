@@ -33,7 +33,7 @@ body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
 <button class="monitor-btn" id="startBtn">START AUTO-CHECK</button>
 <button class="monitor-btn" id="stopBtn" disabled>STOP</button>
 <label class="micro" for="interval">INTERVAL</label><select class="monitor-select" id="interval"><option value="5">5 seconds</option><option value="15" selected>15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select>
-<button class="monitor-btn" id="exportBtn">EXPORT JSON</button><button class="monitor-btn" id="clearBtn">CLEAR LOG</button>
+<button class="monitor-btn" id="copyReportBtn">COPY PASTE REPORT</button><button class="monitor-btn" id="exportBtn">EXPORT JSON</button><button class="monitor-btn" id="clearBtn">CLEAR LOG</button>
 </div>
 <div class="statusline" id="status" role="status" aria-live="polite">Ready. Run a baseline check before changing the folder structure.</div>
 </section>
@@ -175,10 +175,10 @@ async function runCheck(){
    const added=now.filter(x=>!oldMap.has(x.id)),removed=old.filter(x=>!newMap.has(x.id));
    const altered=now.filter(x=>oldMap.has(x.id)&&JSON.stringify(oldMap.get(x.id))!==JSON.stringify(x));
    changeSummary="Structure differs from previous check: +"+added.length+" added, −"+removed.length+" removed, "+altered.length+" changed metadata.";
-   scan.diff={added,removed,changed:altered};
+   const moved=altered.filter(x=>oldMap.get(x.id).queriedParentId!==x.queriedParentId);\n   const renamed=altered.filter(x=>oldMap.get(x.id).name!==x.name);\n   scan.diff={added,removed,changed:altered,moved,renamed};
   }else if(prior)changeSummary="No structural or selected metadata differences from previous check.";
   else changeSummary="Baseline check. Future checks will be compared against this result.";
-  const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,fingerprint:fp};
+  const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,diff:scan.diff||null,fingerprint:fp};
   history.push(record);history=history.slice(-100);saveHistory();previous=record;
   $("statFolders").textContent=record.folderCount;$("statFiles").textContent=record.itemCount-record.folders.length+1;$("statShortcuts").textContent=record.shortcutCount;$("statRequests").textContent=record.requestCount;$("statDuration").textContent=fmt(durationMs);
   $("tree").textContent=buildTree(scan);$("treeStamp").textContent=record.finishedAt;
@@ -190,13 +190,82 @@ async function runCheck(){
 }
 function start(){if(timer)return;const ms=Number($("interval").value)*1000;timer=setInterval(()=>{if(!busy)runCheck()},ms);$("startBtn").disabled=true;$("stopBtn").disabled=false;setStatus("Automatic checks running every "+(ms/1000)+" seconds. You can also use CHECK STRUCTURE NOW.","ok")}
 function stop(){if(timer)clearInterval(timer);timer=null;$("startBtn").disabled=false;$("stopBtn").disabled=true;setStatus("Automatic checks stopped.","")}
+function isAudioItem(x){
+ const n=(x.name||"").toLowerCase(),m=(x.mimeType||"").toLowerCase();
+ return m.startsWith("audio/")||/\.(mp3|m4a|m4b|aac|wav|ogg|opus|flac|wma|aiff?)$/i.test(n);
+}
+function parentLabel(x){return x&&x.path?x.path:"(unknown parent)";}
+function shortItem(x){
+ return (x.name||"(unnamed)")+" | id="+(x.id||"?")+" | "+(x.mimeType||"unknown type")+" | parent="+parentLabel(x);
+}
+function buildPasteReport(){
+ const rows=history.slice(-20),latest=history[history.length-1];
+ const out=[];
+ out.push("GOOGLE DRIVE STRUCTURE TEST");
+ out.push("Target: Test Folder | "+ROOT_ID);
+ out.push("Generated: "+stamp());
+ out.push("Checks saved: "+history.length+" | Included below: "+rows.length+" most recent");
+ out.push("NOTE: This is a compact text summary. Raw API response bodies remain available through EXPORT JSON.");
+ out.push("");
+ if(!latest){out.push("No scans recorded.");return out.join("\n");}
+ const latestItems=latest.items||[];
+ const audio=latestItems.filter(isAudioItem),mimeCounts={};
+ for(const x of latestItems){const k=x.mimeType||"unknown";mimeCounts[k]=(mimeCounts[k]||0)+1;}
+ out.push("LATEST SNAPSHOT");
+ out.push("Check #"+latest.number+" | "+latest.finishedAt+" | "+fmt(latest.durationMs));
+ out.push("Folders: "+latest.folderCount+" | Items returned: "+latest.itemCount+" | Audio files: "+audio.length+" | Shortcuts: "+latest.shortcutCount);
+ out.push("API requests: "+latest.requestCount+" | Errors: "+latest.errorCount+" | incompleteSearch: "+latest.incompleteSearch);
+ out.push("MIME counts: "+Object.keys(mimeCounts).sort().map(k=>k+"="+mimeCounts[k]).join("; "));
+ out.push("Result: "+(latest.changeSummary||""));
+ out.push("");
+ out.push("RECENT CHECKS (oldest to newest)");
+ for(const r of rows){
+  const a=(r.items||[]).filter(isAudioItem).length;
+  const statuses={};
+  for(const q of (r.requests||[])){const k=q.httpStatus==null?"NETWORK/CORS":String(q.httpStatus);statuses[k]=(statuses[k]||0)+1;}
+  out.push("#"+r.number+" | "+r.finishedAt+" | "+fmt(r.durationMs)+" | folders="+r.folderCount+" items="+r.itemCount+" audio="+a+" shortcuts="+r.shortcutCount+" requests="+r.requestCount+" errors="+r.errorCount+" | HTTP "+Object.keys(statuses).sort().map(k=>k+":"+statuses[k]).join(", "));
+  if(r.changeSummary)out.push("  "+r.changeSummary);
+  if(r.incompleteSearch)out.push("  WARNING: incompleteSearch=true");
+  if(r.cycles&&r.cycles.length)out.push("  CYCLES: "+r.cycles.length);
+  if(r.errors&&r.errors.length)for(const e of r.errors.slice(0,8))out.push("  ERROR: "+(e.type||"unknown")+" "+(e.path||e.folderId||"")+" "+(e.error&&e.error.message||e.error||""));
+  const d=r.diff;
+  if(d){
+   if(d.moved&&d.moved.length){
+    out.push("  MOVED ("+d.moved.length+"):");
+    for(const x of d.moved.slice(0,25)){const old=(rows.find(z=>z.number===r.number-1)?.items||[]).find(y=>y.id===x.id);out.push("    "+(x.name||x.id)+": "+parentLabel(old)+" -> "+parentLabel(x)+" | id="+x.id);}
+    if(d.moved.length>25)out.push("    ... "+(d.moved.length-25)+" more moved items");
+   }
+   if(d.added&&d.added.length){out.push("  ADDED ("+d.added.length+"):");for(const x of d.added.slice(0,20))out.push("    "+shortItem(x));if(d.added.length>20)out.push("    ... "+(d.added.length-20)+" more");}
+   if(d.removed&&d.removed.length){out.push("  REMOVED ("+d.removed.length+"):");for(const x of d.removed.slice(0,20))out.push("    "+shortItem(x));if(d.removed.length>20)out.push("    ... "+(d.removed.length-20)+" more");}
+   const other=(d.changed||[]).filter(x=>!(d.moved||[]).some(y=>y.id===x.id)&&!(d.renamed||[]).some(y=>y.id===x.id));
+   if(other.length){out.push("  OTHER METADATA CHANGES ("+other.length+"):");for(const x of other.slice(0,15))out.push("    "+shortItem(x));if(other.length>15)out.push("    ... "+(other.length-15)+" more");}
+  }
+ }
+ out.push("");
+ out.push("LATEST REQUEST FAILURES");
+ const failures=(latest.requests||[]).filter(x=>!x.ok);
+ if(!failures.length)out.push("None.");
+ else for(const x of failures.slice(0,30))out.push((x.label||"request")+" | HTTP "+(x.httpStatus||"network/CORS")+" | "+(x.error&&x.error.message||x.networkError||"failed"));
+ out.push("");
+ out.push("INTERPRETATION");
+ out.push("A move is identified by the same Drive item ID appearing with a different queried parent/path. A successful listing is what the API returned to this browser at that time; it does not expose Google's internal indexing state.");
+ return out.join("\n");
+}
+async function copyReport(){
+ const text=buildPasteReport();
+ try{
+  if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);}
+  else{const box=document.createElement("textarea");box.value=text;box.style.position="fixed";box.style.opacity="0";document.body.appendChild(box);box.select();const ok=document.execCommand("copy");box.remove();if(!ok)throw new Error("Clipboard copy was blocked");}
+  setStatus("Compact report copied. Paste it directly into the chat.", "ok");
+ }catch(e){setStatus("Could not copy automatically: "+String(e&&e.message||e)+". Use the report text shown below.", "warn");$("tree").textContent=text;}
+}
 function download(){
  const payload={exportedAt:stamp(),target:{name:"Test Folder",id:ROOT_ID},history};
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="drive-structure-log-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
 function clear(){if(!confirm("Clear all saved checks from this browser? Export first if you need the logs."))return;history=[];runNumber=0;saveHistory();renderHistory();$("tree").textContent="The folder tree will appear here after the first check.";$("treeStamp").textContent="NO SCAN YET";["statFolders","statFiles","statShortcuts","statRequests","statDuration"].forEach(id=>$(id).textContent="—");setStatus("Log cleared. Next check will become the new baseline.")}
-$("checkBtn").addEventListener("click",runCheck);$("startBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("exportBtn").addEventListener("click",download);$("clearBtn").addEventListener("click",clear);
+$("checkBtn").addEventListener("click",runCheck);$("copyReportBtn").addEventListener("click",copyReport);$("startBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("exportBtn").addEventListener("click",download);$("clearBtn").addEventListener("click",clear);
 renderHistory();
 if(history.length){const r=history[history.length-1];$("statFolders").textContent=r.folderCount;$("statFiles").textContent=r.itemCount;$("statShortcuts").textContent=r.shortcutCount;$("statRequests").textContent=r.requestCount;$("statDuration").textContent=fmt(r.durationMs);$("tree").textContent="Previous tree is in the saved check log. Run a new check to refresh the tree.";setStatus(history.length+" previous check(s) restored from this browser's local log.")}
 })();
