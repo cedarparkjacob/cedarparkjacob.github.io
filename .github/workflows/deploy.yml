@@ -1,0 +1,85 @@
+name: Deploy Website and Track Version
+
+on:
+  workflow_run:
+    workflows:
+      - Generate site metadata
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest website files
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Build website and generate deployment version
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          rsync -av --exclude='.git' --exclude='.github' --exclude='_site' ./ _site/
+
+          cat > _site/version.json <<EOF
+          {
+            "version": "v${GITHUB_RUN_NUMBER}",
+            "commit": "${GITHUB_SHA::7}",
+            "updated": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          }
+          EOF
+
+          # Make the shared version display run on every HTML page,
+          # including pages in nested folders.
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path("_site")
+          script_tag = '<script src="/version.js"></script>'
+          for page in root.rglob("*.html"):
+              html = page.read_text(encoding="utf-8")
+              if re.search(r'<script\s+src=["\']/version\.js["\']', html, re.I):
+                  continue
+              match = re.search(r"</body\s*>", html, re.I)
+              if match:
+                  html = html[:match.start()] + script_tag + "\n" + html[match.start():]
+              else:
+                  html += "\n" + script_tag + "\n"
+              page.write_text(html, encoding="utf-8")
+              print("Added shared version display:", page)
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./_site
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4
