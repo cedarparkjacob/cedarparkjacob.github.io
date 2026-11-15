@@ -43,8 +43,6 @@ const animals = {
     { name: "Dolphin", emoji: "🐬" },
     { name: "Donkey", emoji: "🫏" },
     { name: "Dove", emoji: "🕊️" },
-    { name: "Dragon", emoji: "🐉" },
-    { name: "Dragon Face", emoji: "🐲" },
     { name: "Duck", emoji: "🦆" }
   ],
   E: [
@@ -52,7 +50,6 @@ const animals = {
     { name: "Elephant", emoji: "🐘" }
   ],
   F: [
-    { name: "Falcon", emoji: "🦅" },
     { name: "Fish", emoji: "🐟" },
     { name: "Flamingo", emoji: "🦩" },
     { name: "Fly", emoji: "🪰" },
@@ -71,9 +68,6 @@ const animals = {
     { name: "Hedgehog", emoji: "🦔" },
     { name: "Hippopotamus", emoji: "🦛" },
     { name: "Horse", emoji: "🐎" }
-  ],
-  I: [
-    { name: "Insect", emoji: "🐛" }
   ],
   J: [
     { name: "Jellyfish", emoji: "🪼" }
@@ -95,10 +89,8 @@ const animals = {
     { name: "Mosquito", emoji: "🦟" },
     { name: "Mouse", emoji: "🐁" }
   ],
-  N: [
-    { name: "Octopus", emoji: "🐙" }
-  ],
   O: [
+    { name: "Octopus", emoji: "🐙" },
     { name: "Orangutan", emoji: "🦧" },
     { name: "Orca", emoji: "🫍" },
     { name: "Ostrich", emoji: "🦤" },
@@ -112,8 +104,7 @@ const animals = {
     { name: "Penguin", emoji: "🐧" },
     { name: "Pig", emoji: "🐖" },
     { name: "Polar Bear", emoji: "🐻‍❄️" },
-    { name: "Poodle", emoji: "🐩" },
-    { name: "Pufferfish", emoji: "🐡" }
+    { name: "Poodle", emoji: "🐩" }
   ],
   R: [
     { name: "Rabbit", emoji: "🐇" },
@@ -143,17 +134,11 @@ const animals = {
     { name: "Turtle", emoji: "🐢" },
     { name: "Turkey", emoji: "🦃" }
   ],
-  U: [
-    { name: "Unicorn", emoji: "🦄" }
-  ],
   W: [
     { name: "Whale", emoji: "🐋" },
     { name: "Worm", emoji: "🪱" },
     { name: "Water Buffalo", emoji: "🐃" },
     { name: "Wolf", emoji: "🐺" }
-  ],
-  X: [
-    { name: "X-Ray Tetra", emoji: "🐟" }
   ],
   Z: [
     { name: "Zebra", emoji: "🦓" }
@@ -558,30 +543,25 @@ let selectedLetters = [];
 
 function createAlphabet() {
 
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const letters = Object.keys(animals);
 
-alphabetElement.innerHTML = "";
+  alphabetElement.innerHTML = "";
 
-for (const letter of letters) {
+  for (const letter of letters) {
 
+    const button = document.createElement("button");
 
-const button =
-  document.createElement("button");
+    button.className = "letter-button";
+    button.textContent = letter;
+    button.dataset.letter = letter;
 
-button.className = "letter-button";
+    button.addEventListener(
+      "click",
+      () => toggleLetter(letter, button)
+    );
 
-button.textContent = letter;
-
-button.dataset.letter = letter;
-
-button.addEventListener(
-  "click",
-  () => toggleLetter(letter, button)
-);
-
-alphabetElement.appendChild(button);
-
-
+    alphabetElement.appendChild(button);
+  }
 }
 }
 
