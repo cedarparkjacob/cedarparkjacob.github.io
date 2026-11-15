@@ -6,11 +6,13 @@ on:
       - main
     paths-ignore:
       - audio-build.json
+      - travel/last-updated.json
+      - travel/version.json
   workflow_dispatch:
 
 # Serialize version commits so two pushes cannot race each other.
 concurrency:
-  group: site-build-version
+  group: site-generated-metadata
   cancel-in-progress: false
 
 permissions:
