@@ -538,32 +538,148 @@ document.getElementById("finishGameButton");
 TEAM SELECTION
 ========================================================= */
 
-const animalCatalog=Object.values(animals).flat()
-  .filter(a=>!["Alligator","Armadillo","Caterpillar","Hare","Ostrich"].includes(a.name))
+const animalCatalog = Object.values(animals).flat()
+  .filter(a => !["Alligator", "Armadillo", "Caterpillar", "Hare", "Ostrich"].includes(a.name))
   .concat([
-    {name:"Bactrian Camel",emoji:"🐫"},{name:"Baby Chick",emoji:"🐣"},
-    {name:"Front-Facing Baby Chick",emoji:"🐥"},{name:"Owl",emoji:"🦉"},
-    {name:"Cockroach",emoji:"🪳"},{name:"Bug",emoji:"🐛"},
-    {name:"Coral",emoji:"🪸"},{name:"Orca",emoji:"🫍"}
+    { name: "Bactrian Camel", emoji: "🐫" },
+    { name: "Baby Chick", emoji: "🐣" },
+    { name: "Front-Facing Baby Chick", emoji: "🐥" },
+    { name: "Owl", emoji: "🦉" },
+    { name: "Cockroach", emoji: "🪳" },
+    { name: "Bug", emoji: "🐛" },
+    { name: "Coral", emoji: "🪸" },
+    { name: "Orca", emoji: "🫍" },
+    { name: "Ox", emoji: "🐂" },
+    { name: "Rooster", emoji: "🐓" },
+    { name: "Lady Beetle", emoji: "🐞" },
+    { name: "Cricket", emoji: "🦗" },
+    { name: "Sauropod", emoji: "🦕" }
   ])
-  .filter((a,i,list)=>list.findIndex(x=>x.emoji===a.emoji)===i);
-let teamDrafts=[];
-function randomAnimal(exclude=[]){const p=animalCatalog.filter(a=>!exclude.includes(a.name));return p[Math.floor(Math.random()*p.length)];}
-function renderTeamAssignments(){const n=Math.max(1,Math.min(animalCatalog.length,Number(teamCountInput.value)||1));teamCountInput.value=n;teamDrafts=Array.from({length:n},(_,i)=>teamDrafts[i]||null);teamAssignments.innerHTML="";teamDrafts.forEach((v,i)=>{const row=document.createElement("div");row.className="team-assignment-row";const label=document.createElement("label");label.textContent="Team "+(i+1);const sel=document.createElement("select");const rand=document.createElement("option");rand.value="";rand.textContent="🎲 Random";sel.appendChild(rand);animalCatalog.forEach(a=>{const o=document.createElement("option");o.value=a.name;o.textContent=a.emoji+" "+a.name;sel.appendChild(o);});sel.value=v||"";sel.addEventListener("change",()=>{teamDrafts[i]=sel.value||null;refreshTeamChoices();});const btn=document.createElement("button");btn.type="button";btn.textContent="Random";btn.addEventListener("click",()=>{teamDrafts[i]=randomAnimal(teamDrafts.filter((x,j)=>j!==i&&x)).name;renderTeamAssignments();});row.append(label,sel,btn);teamAssignments.appendChild(row);});selectedCount.textContent=n;refreshTeamChoices();}
-function refreshTeamChoices(){[...teamAssignments.querySelectorAll("select")].forEach((s,i)=>{[...s.options].forEach(o=>{if(o.value)o.disabled=teamDrafts.some((v,j)=>j!==i&&v===o.value);});s.value=teamDrafts[i]||"";});updateCreateButton();}
-function updateCreateButton(){const c=teamDrafts.filter(Boolean);const ok=teamDrafts.length>0&&c.length===new Set(c).size;if(typeof createGameButton!=="undefined"&&createGameButton)createGameButton.disabled=!ok;if(typeof startGameButton!=="undefined"&&startGameButton)startGameButton.disabled=!ok;}
-function buildTeams(){
- const used=[];
- const reserved=teamDrafts.filter(Boolean);
- return teamDrafts.map((v,i)=>{
-  const a=v?animalCatalog.find(x=>x.name===v):randomAnimal([...used,...reserved]);
-  if(!a||used.includes(a.name))throw Error("Each team must have a different animal.");
-  used.push(a.name);
-  return{id:"team-"+(i+1)+"-"+Date.now(),name:a.name,emoji:a.emoji,score:0,position:i};
- });
+  .filter((animal, index, list) =>
+    list.findIndex(item => item.emoji === animal.emoji) === index
+  );
+
+let teamDrafts = [];
+
+function randomAnimal(exclude = []) {
+  const available = animalCatalog.filter(animal => !exclude.includes(animal.name));
+  if (!available.length) throw new Error("There are not enough unique animal emojis for that many teams.");
+  return available[Math.floor(Math.random() * available.length)];
 }
-function randomizeAllTeams(){const shuffled=[...animalCatalog].sort(()=>Math.random()-.5);teamDrafts=teamDrafts.map((_,i)=>shuffled[i].name);renderTeamAssignments();}
-teamCountInput.addEventListener("change",renderTeamAssignments);randomizeTeamsButton.addEventListener("click",randomizeAllTeams);renderTeamAssignments();
+
+function renderTeamAssignments() {
+  const requested = Number(teamCountInput.value);
+  const count = Math.max(1, Math.min(animalCatalog.length, Number.isFinite(requested) && requested ? Math.floor(requested) : 4));
+  teamCountInput.value = count;
+
+  const previous = teamDrafts.slice();
+  teamDrafts = Array.from({ length: count }, (_, index) => {
+    const name = previous[index];
+    return name && animalCatalog.some(animal => animal.name === name) ? name : null;
+  });
+
+  // Fill every unassigned slot immediately, without duplicating an animal
+  // already selected manually or randomly in another slot.
+  for (let index = 0; index < teamDrafts.length; index++) {
+    if (!teamDrafts[index]) {
+      teamDrafts[index] = randomAnimal(teamDrafts.filter(Boolean)).name;
+    }
+  }
+
+  teamAssignments.innerHTML = "";
+  teamDrafts.forEach((value, index) => {
+    const row = document.createElement("div");
+    row.className = "team-assignment-row";
+
+    const label = document.createElement("label");
+    label.textContent = "Team " + (index + 1);
+
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Animal for team " + (index + 1));
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose an animal";
+    select.appendChild(placeholder);
+
+    animalCatalog.forEach(animal => {
+      const option = document.createElement("option");
+      option.value = animal.name;
+      option.textContent = animal.emoji + " " + animal.name;
+      select.appendChild(option);
+    });
+
+    select.value = value;
+    select.addEventListener("change", () => {
+      const chosen = select.value;
+      if (!chosen) {
+        teamDrafts[index] = randomAnimal(teamDrafts.filter((name, i) => i !== index)).name;
+      } else if (teamDrafts.some((name, i) => i !== index && name === chosen)) {
+        select.value = teamDrafts[index];
+        return;
+      } else {
+        teamDrafts[index] = chosen;
+      }
+      renderTeamAssignments();
+    });
+
+    const randomButton = document.createElement("button");
+    randomButton.type = "button";
+    randomButton.textContent = "Random";
+    randomButton.addEventListener("click", () => {
+      teamDrafts[index] = randomAnimal(teamDrafts.filter((name, i) => i !== index)).name;
+      renderTeamAssignments();
+    });
+
+    row.append(label, select, randomButton);
+    teamAssignments.appendChild(row);
+  });
+
+  selectedCount.textContent = String(count);
+  updateCreateButton();
+}
+
+function updateCreateButton() {
+  const complete = teamDrafts.length > 0 &&
+    teamDrafts.every(name => animalCatalog.some(animal => animal.name === name)) &&
+    new Set(teamDrafts).size === teamDrafts.length;
+
+  if (typeof createGameButton !== "undefined" && createGameButton) {
+    createGameButton.disabled = !complete;
+  }
+  if (typeof startGameButton !== "undefined" && startGameButton) {
+    startGameButton.disabled = !complete;
+  }
+}
+
+function buildTeams() {
+  const timestamp = Date.now();
+  return teamDrafts.map((name, index) => {
+    const animal = animalCatalog.find(item => item.name === name);
+    if (!animal) throw new Error("Choose a valid animal for every team.");
+    return {
+      id: "team-" + (index + 1) + "-" + timestamp,
+      name: animal.name,
+      emoji: animal.emoji,
+      score: 0,
+      position: index
+    };
+  });
+}
+
+function randomizeAllTeams() {
+  const shuffled = [...animalCatalog];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  teamDrafts = shuffled.slice(0, teamDrafts.length).map(animal => animal.name);
+  renderTeamAssignments();
+}
+
+teamCountInput.addEventListener("change", renderTeamAssignments);
+randomizeTeamsButton.addEventListener("click", randomizeAllTeams);
+
 /* =========================================================
 START GAME
 ========================================================= */
@@ -1510,5 +1626,28 @@ renderValue();
 
 updateTimerDisplay();
 
-async function updateVersionCounter(){const el=document.getElementById("versionCounter");if(!el)return;try{const r=await fetch("https://api.github.com/repos/cedarparkjacob/cedarparkjacob.github.io/commits?path=game-testing/zero-out&per_page=1",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});if(!r.ok)throw Error();const h=r.headers.get("Link")||"",m=h.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/);el.textContent="Version "+(m?Number(m[1]):(await r.json()).length);}catch(e){el.textContent="Version unavailable";}}
+async function updateVersionCounter() {
+  const element = document.getElementById("versionCounter");
+  if (!element) return;
+  try {
+    let page = 1;
+    let total = 0;
+    while (true) {
+      const response = await fetch(
+        "https://api.github.com/repos/cedarparkjacob/cedarparkjacob.github.io/commits?path=game-testing/zero-out&per_page=100&page=" + page,
+        { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" }
+      );
+      if (!response.ok) throw new Error("GitHub returned HTTP " + response.status);
+      const commits = await response.json();
+      if (!Array.isArray(commits)) throw new Error("Unexpected GitHub response");
+      total += commits.length;
+      if (commits.length < 100) break;
+      page++;
+    }
+    element.textContent = "Version " + total;
+  } catch (error) {
+    console.error("Could not load Zero Out version:", error);
+    element.textContent = "Version unavailable";
+  }
+}
 updateVersionCounter();
