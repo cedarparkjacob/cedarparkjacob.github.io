@@ -211,6 +211,12 @@ button {
   background: #292929;
 }
 
+.team-animal,
+.team-select-button,
+.team-select-button span {
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial, sans-serif;
+}
+
 .team-animal {
   font-size: clamp(2rem, 6vw, 5rem);
   line-height: 1;
