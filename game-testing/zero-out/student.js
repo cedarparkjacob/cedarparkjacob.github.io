@@ -3,9 +3,13 @@ const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=n
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
 $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")join();};
 async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
-function choices(){$("claim").classList.remove("hidden");$("teamChoices").innerHTML=game.teams.map(t=>'<button class="choice" data-id="'+t.id+'">'+t.emoji+' '+escapeHtml(t.name)+(t.connection?.connected?" · IN USE":"")+'</button>').join("");$("teamChoices").querySelectorAll("button").forEach(b=>b.onclick=()=>claim(b.dataset.id));}
+function choices(){
+  $("claim").classList.remove("hidden");
+  $("teamChoices").innerHTML=game.teams.map(t=>'<button type="button" class="choice" data-id="'+t.id+'">'+t.emoji+' '+escapeHtml(t.name)+(t.connection?.connected?" · IN USE":"")+'</button>').join("");
+  $("teamChoices").querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>claim(button.dataset.id)));
+}
 async function claim(id){
-  const status=$("joinStatus");
+  const status=$("claimStatus");
   const buttons=[...$("teamChoices").querySelectorAll("button")];
   buttons.forEach(b=>b.disabled=true);
   status.textContent="Claiming team…";
