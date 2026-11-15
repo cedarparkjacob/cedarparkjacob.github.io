@@ -50,7 +50,7 @@ async function claim(id){
   }
 }
 function connect(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t)return;if(t.connection?.clientId!==clientId){$("waiting").textContent="This team is connected on another computer.";return;}render(t);});}
-function card(t,button=false){const cls="team-card "+(t.id===teamId?"own-team ":"")+(t.id===selectedRecipientId?"selected-team":"");const inner='<div class="emoji">'+t.emoji+'</div><div class="name">'+escapeHtml(t.name)+'</div><div class="score">'+formatScore(t.score)+'</div>';return button?'<button type="button" class="'+cls+' recipient-team" data-id="'+escapeHtml(t.id)+'">'+inner+'</button>':'<div class="'+cls+'">'+inner+'</div>';}
+function card(t,button=false){const cls="team-card "+(t.id===teamId?"own-team ":"")+(t.id===selectedRecipientId?"selected-team":"");const inner='<div class="emoji">'+t.emoji+'</div><div class="name">'+escapeHtml(t.name)+'</div><div class="score">'+formatScore(t.score)+'</div>';return button?'<button type="button" class="'+cls+' recipient-team" data-id="'+escapeHtml(t.id)+'">'+inner+'</button>':'<div class="'+cls+'" data-id="'+escapeHtml(t.id)+'">'+inner+'</div>';}
 function render(t){
   $("teamScreen").classList.remove("hidden");
   $("teamEmoji").textContent=t.emoji;$("teamName").textContent=t.name;$("teamScore").textContent=formatScore(t.score);
@@ -60,14 +60,14 @@ function render(t){
   }
   $("finished").classList.add("hidden");const p=game.pendingPrompt,active=game.status==="active"&&p?.teamId===teamId;
   $("waiting").textContent=game.status==="lobby"?"Connected. Waiting for the teacher to start.":active?"Choose which team receives these points.":"Waiting for your team's next prompt.";
-  $("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");
-  if(active){$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML=game.teams.map(x=>card(x,true)).join("");$("recipientChoices").querySelectorAll("button").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}
+  $("liveTeams").innerHTML=game.teams.map(x=>card(x,active)).join("");
+  if(active){$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML="";$("liveTeams").querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}
   else{$("prompt").classList.add("hidden");$("recipientChoices").innerHTML="";}
 }
 async function award(p,targetId){
-  $("recipientChoices").querySelectorAll("button").forEach(b=>b.disabled=true);selectedRecipientId=targetId;
+  $("liveTeams").querySelectorAll("button").forEach(b=>b.disabled=true);selectedRecipientId=targetId;
   const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="active"||g.pendingPrompt?.id!==p.id||g.pendingPrompt?.teamId!==teamId)return;const i=g.teams.findIndex(t=>t.id===targetId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(p.value);g.lastValue=p.value;g.lastTeamId=targetId;g.lastAward={value:p.value,teamId:targetId,source:"team-choice",at:Date.now()};g.pendingPrompt=null;let v=0;while(!v)v=Math.floor(Math.random()*201)-100;g.currentValue=v;return g;});
   if(!result.committed){selectedRecipientId=null;$("waiting").textContent="That prompt has already been handled. Waiting for the next one.";return;}
   const mine=game.teams.find(x=>x.id===teamId);if(mine){$("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");const selected=$("liveTeams").querySelector('[data-id="'+CSS.escape(targetId)+'"]');if(selected)selected.classList.add("selected-team");}
-  setTimeout(()=>{selectedRecipientId=null;},800);
+  setTimeout(()=>{selectedRecipientId=null;const current=game?.teams?.find(x=>x.id===teamId);if(current&&game.status==="active")$("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");},800);
 }
