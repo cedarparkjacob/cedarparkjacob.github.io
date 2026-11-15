@@ -38,7 +38,6 @@ jobs:
 
       - name: Generate and publish all site metadata
         env:
-          BUILD_NUMBER: ${{ github.run_number }}
           SOURCE_SHA: ${{ github.sha }}
         shell: bash
         run: |
@@ -71,15 +70,20 @@ jobs:
             sourceCommit: process.env.SOURCE_SHA
           }, null, 2) + "\n");
 
-          fs.writeFileSync("audio-build.json", JSON.stringify({
-            version: "v" + process.env.BUILD_NUMBER,
-            run: Number(process.env.BUILD_NUMBER),
+          const audioPath = "audio-build.json";
+          const audioData = JSON.parse(fs.readFileSync(audioPath, "utf8"));
+          const audioMatch = String(audioData.version || "").match(/^v(\\d+)$/);
+          if (!audioMatch) throw new Error("Invalid independent audio version in " + audioPath);
+          const audioVersion = Number(audioMatch[1]) + 1;
+          fs.writeFileSync(audioPath, JSON.stringify({
+            version: "v" + audioVersion,
+            run: audioVersion,
             deployedAt: now,
             sourceCommit: process.env.SOURCE_SHA
-          }, null, 2) + "\n");
+          }, null, 2) + "\\n");
 
           console.log("Generated photo version " + versionData.version);
-          console.log("Generated site build v" + process.env.BUILD_NUMBER);
+          console.log("Generated independent audio version v" + audioVersion);
           NODE
 
             git add audio-build.json travel/last-updated.json travel/version.json
