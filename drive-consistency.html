@@ -26,7 +26,7 @@ body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
 <section class="monitor-head"><p class="eyebrow"><span class="live-dot"></span> ZONE 02 / DRIVE DIAGNOSTICS</p><h1>Drive Structure<br><span>Monitor.</span></h1><p class="monitor-lead">Repeatedly inspect one Google Drive folder tree and preserve every response. Change the folder structure in Drive, then run checks to see exactly when the API begins returning the new structure.</p></section>
 <section class="panel">
 <div class="panel-head"><h2>Target folder</h2><span class="micro">FIXED TEST TARGET</span></div>
-<div class="folder-id">Test Folder · <a class="folder-link" href="https://drive.google.com/drive/folders/190VzPyvR7x-CbLH1WD4BH--WngL41xwp?usp=sharing" target="_blank" rel="noopener">Open in Google Drive ↗</a><br>ID: 190VzPyvR7x-CbLH1WD4BH--WngL41xwp</div>
+<div class="folder-id">Ludden Audiobooks · <a class="folder-link" href="https://drive.google.com/drive/folders/1lzu8_hfqHp86iv-_kpY5stfbE6WzJ3tR?usp=sharing" target="_blank" rel="noopener">Open in Google Drive ↗</a><br>ID: 1lzu8_hfqHp86iv-_kpY5stfbE6WzJ3tR</div>
 <p class="hint">Each check reads the folder metadata, lists every direct child (including all pages), then recursively lists descendant folders. It records IDs, names, MIME types, parent IDs, modified times, shortcut targets, resource keys, pagination, response headers, HTTP status, request duration, and raw JSON responses. It does not move, create, or modify Drive files.</p>
 <div class="controls">
 <button class="monitor-btn primary" id="checkBtn">CHECK STRUCTURE NOW</button>
@@ -49,11 +49,11 @@ body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
 <script>
 (function(){
 "use strict";
-const ROOT_ID="190VzPyvR7x-CbLH1WD4BH--WngL41xwp";
+const ROOT_ID="1lzu8_hfqHp86iv-_kpY5stfbE6WzJ3tR";
 const API_ROOT="https://www.googleapis.com/drive/v3/files";
 const config=window.LUDDEN_TRAVEL_CONFIG||{};
 const apiKey=config.apiKey||"";
-const STORE_KEY="luddenDriveStructureMonitor_v1";
+const STORE_KEY="luddenDriveStructureMonitor_audiobooks_v1";
 const FIELDS="nextPageToken,incompleteSearch,files(id,name,mimeType,parents,createdTime,modifiedTime,size,md5Checksum,webViewLink,webContentLink,resourceKey,driveId,shortcutDetails(targetId,targetMimeType,targetResourceKey),capabilities(canDownload))";
 const $=id=>document.getElementById(id);
 let history=loadHistory(),previous=null,busy=false,timer=null,runNumber=history.length;
@@ -139,7 +139,7 @@ function buildTree(scan){
    else if(folder&&!f.shortcutTargetId&&!seen.has(f.id)){const next=new Set(seen);next.add(f.id);walk(f.id,depth+1,next)}
   }
  }
- lines.push("Test Folder  [root]  id="+ROOT_ID);
+ lines.push("Ludden Audiobooks  [root]  id="+ROOT_ID);
  walk(ROOT_ID,1,new Set([ROOT_ID]));
  if(!scan.items.length)lines.push("  (No children returned)");
  if(scan.errors.length)lines.push("\nSCAN ERRORS: "+scan.errors.length);
@@ -164,7 +164,7 @@ async function runCheck(){
   const rootMeta=await request(metaUrl(ROOT_ID),"GET ROOT METADATA");
   scan.rootMetadata=rootMeta;scan.requests.push(rootMeta);
   if(!rootMeta.ok)scan.errors.push({type:"root-metadata-failed",httpStatus:rootMeta.httpStatus,error:rootMeta.error||rootMeta.networkError});
-  await listAll(ROOT_ID,"Test Folder",0,scan);
+  await listAll(ROOT_ID,"Ludden Audiobooks",0,scan);
   const durationMs=Math.round(performance.now()-started),fp=fingerprint(scan);
   const prior=history.length?history[history.length-1]:null;
   let changed=false,changeSummary="";
@@ -204,7 +204,7 @@ function buildPasteReport(){
  const rows=history.slice(-20),latest=history[history.length-1];
  const out=[];
  out.push("GOOGLE DRIVE STRUCTURE TEST");
- out.push("Target: Test Folder | "+ROOT_ID);
+ out.push("Target: Ludden Audiobooks | "+ROOT_ID);
  out.push("Generated: "+stamp());
  out.push("Checks saved: "+history.length+" | Included below: "+rows.length+" most recent");
  out.push("NOTE: This is a compact text summary. Raw API response bodies remain available through EXPORT JSON.");
@@ -267,7 +267,7 @@ async function copyReport(){
  }catch(e){setStatus("Could not copy automatically: "+String(e&&e.message||e)+". Use the report text shown below.", "warn");$("tree").textContent=text;}
 }
 function download(){
- const payload={exportedAt:stamp(),target:{name:"Test Folder",id:ROOT_ID},history};
+ const payload={exportedAt:stamp(),target:{name:"Ludden Audiobooks",id:ROOT_ID},history};
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="drive-structure-log-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
