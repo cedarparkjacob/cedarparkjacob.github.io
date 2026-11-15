@@ -62,18 +62,20 @@ async function spinForRandomTeam(){
         score:0,position:latest.teams.length,
         connection:{connected:true,clientId:newClientId,joinedAt:Date.now()}
       };
-      const result=await runTransaction(ref(db,"games/"+code),g=>{
-        if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||g.teams.length>=26)return;
-        if(g.teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
-        const usedLetters=new Set(g.teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
+      const result=await runTransaction(ref(db,"games/"+code+"/teams"),teams=>{
+        if(!Array.isArray(teams)||teams.length>=26)return;
+        if(teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
+        const usedLetters=new Set(teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
         const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!usedLetters.has(ch));
         if(!letter)return;
-        team.letter=letter;team.position=g.teams.length;g.teams.push(team);return g;
+        team.letter=letter;team.position=teams.length;teams.push(team);return teams;
       });
       if(result.committed){
-        latest=result.snapshot.val();
+        const freshGame=await get(ref(db,"games/"+code));
+        if(!freshGame.exists()||freshGame.val().status!=="lobby")throw new Error("The game has already started. Rejoin with the current game code.");
+        latest=freshGame.val();
         created=latest.teams.find(t=>t.id===teamIdNew);
-        break;
+        if(created)break;
       }
       const fresh=await get(ref(db,"games/"+code));
       if(!fresh.exists())throw new Error("The game no longer exists.");
@@ -104,12 +106,11 @@ async function claim(id){
   status.textContent="Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
   const newClientId=makeClientId();
   try{
-    const result=await runTransaction(ref(db,"games/"+code),g=>{
-      if(!g||g.status!=="lobby"||!Array.isArray(g.teams))return;
-      const team=g.teams.find(t=>t.id===id);
-      if(!team||team.connection?.connected)return;
-      team.connection={connected:true,clientId:newClientId,joinedAt:Date.now()};
-      return g;
+    const teamIndex=game.teams.findIndex(t=>t.id===id);
+    if(teamIndex<0)throw new Error("That team is no longer in this game.");
+    const result=await runTransaction(ref(db,"games/"+code+"/teams/"+teamIndex+"/connection"),connection=>{
+      if(connection?.connected)return;
+      return {connected:true,clientId:newClientId,joinedAt:Date.now()};
     });
     if(!result.committed){
       const latest=await get(ref(db,"games/"+code));
@@ -117,7 +118,9 @@ async function claim(id){
       status.textContent="That team is already connected or the game has started. Choose another team.";
       return;
     }
-    game=result.snapshot.val();
+    const latest=await get(ref(db,"games/"+code));
+    if(!latest.exists()||latest.val().status!=="lobby")throw new Error("The game has already started.");
+    game=latest.val();
     status.textContent="Connected. Loading team screen…";
     finishClaim(id,newClientId);
   }catch(error){
