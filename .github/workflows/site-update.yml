@@ -122,14 +122,14 @@ jobs:
 
           const rootVersionPath = "version.json";
           const rootVersionData = JSON.parse(fs.readFileSync(rootVersionPath, "utf8"));
-          const rootVersionMatch = String(rootVersionData.version || "").match(/^v?(\\d+)$/);
+          const rootVersionMatch = String(rootVersionData.version || "").match(/^v?(\d+)$/);
           if (!rootVersionMatch) throw new Error("Invalid site version in " + rootVersionPath);
           const nextRootVersion = Number(rootVersionMatch[1]) + 1;
           fs.writeFileSync(rootVersionPath, JSON.stringify({
             version: "v" + nextRootVersion,
             commit: source.slice(0, 7),
             updated: now
-          }, null, 2) + "\\n");
+          }, null, 2) + "\n");
           console.log("Generated site version v" + nextRootVersion);
 
           fs.writeFileSync("travel/last-updated.json", JSON.stringify({
