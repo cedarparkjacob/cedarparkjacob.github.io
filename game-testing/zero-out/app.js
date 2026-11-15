@@ -1374,23 +1374,12 @@ async function updateVersionCounter() {
   const element = document.getElementById("versionCounter");
   if (!element) return;
   try {
-    let page = 1;
-    let total = 0;
-    while (true) {
-      const response = await fetch(
-        "https://api.github.com/repos/cedarparkjacob/cedarparkjacob.github.io/commits?path=game-testing/zero-out&per_page=100&page=" + page,
-        { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" }
-      );
-      if (!response.ok) throw new Error("GitHub returned HTTP " + response.status);
-      const commits = await response.json();
-      if (!Array.isArray(commits)) throw new Error("Unexpected GitHub response");
-      total += commits.length;
-      if (commits.length < 100) break;
-      page++;
-    }
-    element.textContent = "Version " + total;
+    const response = await fetch("../../version.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Version file returned HTTP " + response.status);
+    const data = await response.json();
+    element.textContent = "Version " + data.version;
   } catch (error) {
-    console.error("Could not load Zero Out version:", error);
+    console.error("Could not load version.json:", error);
     element.textContent = "Version unavailable";
   }
 }
