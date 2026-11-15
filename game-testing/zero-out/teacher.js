@@ -20,7 +20,7 @@ async function teamClicked(teamId){
  if(assignMode){if(assignMode==="reassign"&&selectedTeamIds.size&&!selectedTeamIds.has(teamId))selectedTeamIds.clear();if(selectedTeamIds.has(teamId))selectedTeamIds.delete(teamId);else selectedTeamIds.add(teamId);render();return;}
  if(game.pendingPrompt){
    const pending=game.pendingPrompt;
-   const destination=game.teams.filter(t=>t.id!==pending.teamId);
+   const destination=game.teams;
    const randomTeam=destination[Math.floor(Math.random()*destination.length)]||game.teams[Math.floor(Math.random()*game.teams.length)];
    const result=await runTransaction(ref(db,"games/"+gameId),g=>{
      if(!g||g.status!=="active"||g.pendingPrompt?.id!==pending.id)return;
