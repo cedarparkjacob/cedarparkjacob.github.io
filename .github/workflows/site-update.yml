@@ -120,18 +120,6 @@ jobs:
             console.log("Generated audio debug version v" + debugVersion);
           }
 
-          const rootVersionPath = "version.json";
-          const rootVersionData = JSON.parse(fs.readFileSync(rootVersionPath, "utf8"));
-          const rootVersionMatch = String(rootVersionData.version || "").match(/^v?(\d+)$/);
-          if (!rootVersionMatch) throw new Error("Invalid site version in " + rootVersionPath);
-          const nextRootVersion = Number(rootVersionMatch[1]) + 1;
-          fs.writeFileSync(rootVersionPath, JSON.stringify({
-            version: "v" + nextRootVersion,
-            commit: source.slice(0, 7),
-            updated: now
-          }, null, 2) + "\n");
-          console.log("Generated site version v" + nextRootVersion);
-
           fs.writeFileSync("travel/last-updated.json", JSON.stringify({
             updatedAt: now,
             sourceCommit: source
@@ -139,8 +127,8 @@ jobs:
           console.log("Changed files:", changed.join(", ") || "(none)");
           NODE
 
-            git add version.json audio-build.json audio-debug-build.json travel/last-updated.json travel/version.json
-            git commit -m "Update site timestamp [skip ci]"
+            git add audio-build.json audio-debug-build.json travel/last-updated.json travel/version.json
+            git commit -m "Update generated site metadata"
 
             if git push origin HEAD:main; then
               echo "All site metadata published successfully."
