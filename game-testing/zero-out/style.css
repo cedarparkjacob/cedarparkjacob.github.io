@@ -847,3 +847,5 @@ width: 80px;
 }
 
 }
+
+.team-count-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}.team-count-row input{width:75px;padding:9px;background:#222;color:white;border:1px solid #555;border-radius:7px}.team-assignments{display:grid;gap:8px;margin:12px 0}.team-assignment-row{display:grid;grid-template-columns:65px minmax(0,1fr) auto;gap:8px;align-items:center}.team-assignment-row select,.team-assignment-row button{padding:8px;background:#292929;color:white;border:1px solid #555;border-radius:6px}.version-counter{margin:20px auto;text-align:center;color:#777;font-size:.75rem}
