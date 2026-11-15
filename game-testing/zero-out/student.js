@@ -11,7 +11,7 @@ function choices(){
     const busy=!!t.connection?.connected;
     const button=document.createElement("button");
     button.type="button";
-    button.className="choice";
+    button.className="choice";\n    button.dataset.teamId=t.id;
     button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(" · SELECT"));
     button.disabled=busy;
     button.addEventListener("click",()=>claim(t.id));
