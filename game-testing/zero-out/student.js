@@ -55,10 +55,10 @@ function render(t){
   $("teamScreen").classList.remove("hidden");
   $("teamEmoji").textContent=t.emoji;$("teamName").textContent=t.name;$("teamScore").textContent=formatScore(t.score);
   if(game.status==="finished"){
-    $("teamScreen").classList.add("hidden");$("finished").classList.remove("hidden");const w=winners(game.teams);
+    $("studentHeader").classList.add("hidden");$("teamScreen").classList.add("hidden");$("finished").classList.remove("hidden");const w=winners(game.teams);
     $("finishedScores").innerHTML=game.teams.slice().sort((a,b)=>Math.abs(a.score)-Math.abs(b.score)).map(x=>{const win=w.some(y=>y.id===x.id);return '<div class="team-card '+(win?"winner-team":"")+'"><div class="emoji">'+x.emoji+'</div><div class="name">'+escapeHtml(x.name)+'</div><div class="score">'+formatScore(x.score)+'</div>'+(win?'<strong>WINNER</strong>':'')+'</div>';}).join("");return;
   }
-  $("finished").classList.add("hidden");const p=game.pendingPrompt,active=game.status==="active"&&p?.teamId===teamId;
+  $("studentHeader").classList.remove("hidden");$("finished").classList.add("hidden");const p=game.pendingPrompt,active=game.status==="active"&&p?.teamId===teamId;
   $("waiting").textContent=game.status==="lobby"?"Connected. Waiting for the teacher to start.":active?"Choose which team receives these points.":"Waiting for your team's next prompt.";
   $("liveTeams").innerHTML=game.teams.map(x=>card(x,active)).join("");
   if(active){$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML="";$("liveTeams").querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}
