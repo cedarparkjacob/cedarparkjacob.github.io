@@ -50,5 +50,24 @@ async function claim(id){
   }
 }
 function connect(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t)return;if(t.connection?.clientId!==clientId){$("waiting").textContent="This team is connected on another computer.";return;}render(t);});}
-function render(t){$("teamScreen").classList.remove("hidden");$("teamEmoji").textContent=t.emoji;$("teamName").textContent=t.name;$("teamScore").textContent=formatScore(t.score);$("waiting").textContent=game.status==="lobby"?"Connected. Waiting for the teacher to start.":game.status==="active"?"Waiting for your team's next prompt.":"Game finished.";const p=game.pendingPrompt;if(game.status==="active"&&p?.teamId===teamId){$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML=game.teams.map(x=>'<button class="choice" data-id="'+x.id+'">'+x.emoji+' '+escapeHtml(x.name)+'</button>').join("");$("recipientChoices").querySelectorAll("button").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}else $("prompt").classList.add("hidden");if(game.status==="finished"){$("teamScreen").classList.add("hidden");$("finished").classList.remove("hidden");const w=winners(game.teams);$("finishedScores").innerHTML=game.teams.slice().sort((a,b)=>Math.abs(a.score)-Math.abs(b.score)).map(x=>'<div class="team-card"><div class="emoji">'+x.emoji+'</div><div class="name">'+escapeHtml(x.name)+'</div><div class="score">'+formatScore(x.score)+'</div>'+(w.some(y=>y.id===x.id)?'<strong>WINNER</strong>':'')+'</div>').join("");}}
-async function award(p,targetId){const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="active"||!g.pendingPrompt||g.pendingPrompt.id!==p.id||g.pendingPrompt.teamId!==teamId)return;const i=g.teams.findIndex(t=>t.id===targetId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(p.value);g.lastValue=p.value;g.lastTeamId=targetId;g.lastAward={value:p.value,teamId:targetId,source:"team-choice",at:Date.now()};g.pendingPrompt=null;let v=0;while(!v)v=Math.floor(Math.random()*201)-100;g.currentValue=v;return g;});if(!result.committed)$("waiting").textContent="That prompt has already been handled. Waiting for the next one.";}
+function card(t,button=false){const cls="team-card "+(t.id===teamId?"own-team ":"")+(t.id===selectedRecipientId?"selected-team":"");const inner='<div class="emoji">'+t.emoji+'</div><div class="name">'+escapeHtml(t.name)+'</div><div class="score">'+formatScore(t.score)+'</div>';return button?'<button type="button" class="'+cls+' recipient-team" data-id="'+escapeHtml(t.id)+'">'+inner+'</button>':'<div class="'+cls+'">'+inner+'</div>';}
+function render(t){
+  $("teamScreen").classList.remove("hidden");
+  $("teamEmoji").textContent=t.emoji;$("teamName").textContent=t.name;$("teamScore").textContent=formatScore(t.score);
+  if(game.status==="finished"){
+    $("teamScreen").classList.add("hidden");$("finished").classList.remove("hidden");const w=winners(game.teams);
+    $("finishedScores").innerHTML=game.teams.slice().sort((a,b)=>Math.abs(a.score)-Math.abs(b.score)).map(x=>{const win=w.some(y=>y.id===x.id);return '<div class="team-card '+(win?"winner-team":"")+'"><div class="emoji">'+x.emoji+'</div><div class="name">'+escapeHtml(x.name)+'</div><div class="score">'+formatScore(x.score)+'</div>'+(win?'<strong>WINNER</strong>':'')+'</div>';}).join("");return;
+  }
+  $("finished").classList.add("hidden");const p=game.pendingPrompt,active=game.status==="active"&&p?.teamId===teamId;
+  $("waiting").textContent=game.status==="lobby"?"Connected. Waiting for the teacher to start.":active?"Choose which team receives these points.":"Waiting for your team's next prompt.";
+  $("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");
+  if(active){$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML=game.teams.map(x=>card(x,true)).join("");$("recipientChoices").querySelectorAll("button").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}
+  else{$("prompt").classList.add("hidden");$("recipientChoices").innerHTML="";}
+}
+async function award(p,targetId){
+  $("recipientChoices").querySelectorAll("button").forEach(b=>b.disabled=true);selectedRecipientId=targetId;
+  const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="active"||g.pendingPrompt?.id!==p.id||g.pendingPrompt?.teamId!==teamId)return;const i=g.teams.findIndex(t=>t.id===targetId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(p.value);g.lastValue=p.value;g.lastTeamId=targetId;g.lastAward={value:p.value,teamId:targetId,source:"team-choice",at:Date.now()};g.pendingPrompt=null;let v=0;while(!v)v=Math.floor(Math.random()*201)-100;g.currentValue=v;return g;});
+  if(!result.committed){selectedRecipientId=null;$("waiting").textContent="That prompt has already been handled. Waiting for the next one.";return;}
+  const mine=game.teams.find(x=>x.id===teamId);if(mine){$("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");const selected=$("liveTeams").querySelector('[data-id="'+CSS.escape(targetId)+'"]');if(selected)selected.classList.add("selected-team");}
+  setTimeout(()=>{selectedRecipientId=null;},800);
+}
