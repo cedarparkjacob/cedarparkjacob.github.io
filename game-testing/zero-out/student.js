@@ -11,13 +11,15 @@ function choices(){
     const busy=!!t.connection?.connected;
     const button=document.createElement("button");
     button.type="button";
-    button.className="choice";\n    button.dataset.teamId=t.id;
+    button.className="choice";
+    button.dataset.teamId=t.id;
     button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(" · SELECT"));
     button.disabled=busy;
     button.addEventListener("click",()=>claim(t.id));
     $("teamChoices").append(button);
   });
-  $("randomTeamButton").disabled=selectionBusy||game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;\n  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
+  $("randomTeamButton").disabled=selectionBusy||game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;
+  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
   $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":game.teams.length>=animalCatalog.length?"Every available animal is already in use.":"Spin to create and automatically join a new team.";
 }
 function secureRandomIndex(length){
