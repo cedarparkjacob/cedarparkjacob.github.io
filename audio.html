@@ -74,7 +74,7 @@ function buildBooks(files){books=files.filter(function(f){return f.mimeType===fo
 async function connect(id){
  if(!apiKey){status("Google Drive API key missing from site configuration.","error");return;}if(!id){status("Enter a Google Drive folder ID or sharing link.","error");return;}
  root={id:id,name:"Ludden Audiobooks"};selectedBook=null;selectedSeries=null;tracks=[];bookTracks=[];folderStack=[root];$("detail-panel").classList.remove("open");localStorage.setItem(folderKey,id);status("Connecting to Google Drive…");
- try{var files=await listFolder(id);buildBooks(files);status("Connected · "+books.length+" folders found. Choose a book to browse.","ok");restoreLastPlayed();}
+ try{var files=await listFolder(id);buildBooks(files);status("Connected · "+books.length+" folders found. Choose a book to browse.","ok");}
  catch(e){books=[];renderBooks();status(e.message+" Make sure the folder and its contents are shared for public viewing.","error");}
 }
 async function openSeries(series){
