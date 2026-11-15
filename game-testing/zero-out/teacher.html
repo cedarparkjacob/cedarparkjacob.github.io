@@ -898,7 +898,6 @@ const statusElement =
    TEAM SELECTION
    ========================================================= */
 
-const createGameButton=document.getElementById("createGame");
 const animalCatalog=Object.values(animals).flat();
 let teamDrafts=[];
 function randomAnimal(exclude=[]){const p=animalCatalog.filter(a=>!exclude.includes(a.name));return p[Math.floor(Math.random()*p.length)];}
