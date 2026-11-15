@@ -1,5 +1,5 @@
 import {db,ref,get,onValue,runTransaction,animalCatalog,formatScore,winners,escapeHtml} from "./game-core.js";
-const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,spinHandle=null,spunTeamId=null;
+const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,spinHandle=null,selectionBusy=false;
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
 $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")join();};
 async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
@@ -12,68 +12,118 @@ function choices(){
     const button=document.createElement("button");
     button.type="button";
     button.className="choice";
-    button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(t.id===spunTeamId?" · NEW · SELECT":" · SELECT"));
+    button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(" · SELECT"));
     button.disabled=busy;
     button.addEventListener("click",()=>claim(t.id));
     $("teamChoices").append(button);
   });
-  $("randomTeamButton").disabled=game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;
-  $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":game.teams.length>=animalCatalog.length?"Every available animal is already in use.":spunTeamId?"A new team was added. Select it above to claim it.":"Spin to add a new animal team, then select it above.";
+  $("randomTeamButton").disabled=selectionBusy||game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;\n  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
+  $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":game.teams.length>=animalCatalog.length?"Every available animal is already in use.":"Spin to create and automatically join a new team.";
 }
-function secureRandomIndex(length){if(length<=1)return 0;const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues)globalThis.crypto.getRandomValues(values);else values[0]=Math.floor(Math.random()*4294967296);return values[0]%length;}
+function secureRandomIndex(length){
+  if(length<=1)return 0;
+  const values=new Uint32Array(1);
+  if(globalThis.crypto?.getRandomValues)globalThis.crypto.getRandomValues(values);
+  else values[0]=Math.floor(Math.random()*4294967296);
+  return values[0]%length;
+}
+function makeClientId(){
+  return globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+}
+function finishClaim(id,newClientId){
+  teamId=id;clientId=newClientId;
+  localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId,clientId}));
+  $("claim").classList.add("hidden");
+  $("teamScreen").classList.remove("hidden");
+  connect();
+}
 async function spinForRandomTeam(){
- const button=$("randomTeamButton"),status=$("randomTeamStatus"),wheel=$("randomTeamWheel");if(button.disabled||game?.status!=="lobby")return;
- button.disabled=true;status.textContent="Spinning for a new team…";wheel.classList.add("spinning");
- try{
-  const snap=await get(ref(db,"games/"+code));if(!snap.exists())throw new Error("The game no longer exists.");
-  let latest=snap.val();game=latest;if(latest.teams.length>=26)throw new Error("The game has reached the 26-team limit.");
-  let available=animalCatalog.filter(a=>!latest.teams.some(t=>t.name===a.name));if(!available.length)throw new Error("All available animal teams are already in use.");
-  spinHandle=setInterval(()=>{const options=animalCatalog.filter(a=>!game.teams.some(t=>t.name===a.name));if(options.length){const a=options[secureRandomIndex(options.length)];wheel.textContent=a.emoji+" "+a.name;}},85);
-  await new Promise(resolve=>setTimeout(resolve,1750));clearInterval(spinHandle);spinHandle=null;
-  let created=null;
-  for(let attempt=0;attempt<animalCatalog.length;attempt++){
-   available=animalCatalog.filter(a=>!latest.teams.some(t=>t.name===a.name));if(!available.length||latest.teams.length>=26)break;
-   const candidate=available[secureRandomIndex(available.length)],slug=candidate.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
-   const team={id:"random-"+slug+"-"+(globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)),letter:"",name:candidate.name,emoji:candidate.emoji,score:0,position:latest.teams.length,connection:null};
-   const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||g.teams.length>=26||g.teams.some(t=>t.name===candidate.name))return;const usedLetters=new Set(g.teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!usedLetters.has(ch));if(!letter)return;team.letter=letter;team.position=g.teams.length;g.teams.push(team);return g;});
-   if(result.committed){latest=result.snapshot.val();created=latest.teams.find(t=>t.id===team.id);break;}
-   const fresh=await get(ref(db,"games/"+code));if(!fresh.exists())break;latest=fresh.val();
-  }
-  if(!created)throw new Error("A new team could not be added. Try spinning again.");
-  game=latest;spunTeamId=created.id;wheel.textContent=created.emoji+" "+created.name;wheel.classList.remove("spinning");
-  choices();status.textContent="New team added. Select "+created.name+" above to claim it.";
- }catch(error){if(spinHandle){clearInterval(spinHandle);spinHandle=null;}wheel.classList.remove("spinning");status.textContent=error?.message||String(error);button.disabled=false;const fresh=await get(ref(db,"games/"+code));if(fresh.exists()){game=fresh.val();choices();}}
-}
-onclick=spinForRandomTeam;
-async function claim(id){
-  const status=$("claimStatus");
-  const buttons=[...$("teamChoices").querySelectorAll("button")];
-  buttons.forEach(b=>b.disabled=true);
-  status.textContent="Click received. Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
+  const button=$("randomTeamButton"),status=$("randomTeamStatus"),wheel=$("randomTeamWheel");
+  if(selectionBusy||button.disabled||game?.status!=="lobby")return;
+  selectionBusy=true;button.disabled=true;
+  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=true);
+  status.textContent="Spinning for a new team…";wheel.classList.add("spinning");
+  const newClientId=makeClientId();
   try{
-    const index=game.teams.findIndex(t=>t.id===id);
-    if(index<0)throw new Error("That team is not in this game.");
-    clientId=globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2));
-    const connectionRef=ref(db,"games/"+code+"/teams/"+index+"/connection");
-    const result=await runTransaction(connectionRef,current=>{
-      if(current?.connected)return;
-      return {connected:true,clientId,joinedAt:Date.now()};
+    const initial=await get(ref(db,"games/"+code));
+    if(!initial.exists())throw new Error("The game no longer exists.");
+    let latest=initial.val();
+    let created=null;
+    for(let attempt=0;attempt<animalCatalog.length;attempt++){
+      const available=animalCatalog.filter(a=>!latest.teams.some(t=>t.name===a.name));
+      if(!available.length||latest.teams.length>=26)break;
+      const candidate=available[secureRandomIndex(available.length)];
+      const slug=candidate.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+      const teamIdNew="random-"+slug+"-"+newClientId.replace(/[^a-z0-9]/gi,"").slice(-12);
+      const team={
+        id:teamIdNew,letter:"",name:candidate.name,emoji:candidate.emoji,
+        score:0,position:latest.teams.length,
+        connection:{connected:true,clientId:newClientId,joinedAt:Date.now()}
+      };
+      const result=await runTransaction(ref(db,"games/"+code),g=>{
+        if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||g.teams.length>=26)return;
+        if(g.teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
+        const usedLetters=new Set(g.teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
+        const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!usedLetters.has(ch));
+        if(!letter)return;
+        team.letter=letter;team.position=g.teams.length;g.teams.push(team);return g;
+      });
+      if(result.committed){
+        latest=result.snapshot.val();
+        created=latest.teams.find(t=>t.id===teamIdNew);
+        break;
+      }
+      const fresh=await get(ref(db,"games/"+code));
+      if(!fresh.exists())throw new Error("The game no longer exists.");
+      latest=fresh.val();
+      if(latest.status!=="lobby")throw new Error("The teacher has already started the game.");
+    }
+    if(!created)throw new Error(latest.teams.length>=26?"The game has reached the 26-team limit.":"No unused animal team could be added. Try again.");
+    game=latest;wheel.textContent=created.emoji+" "+created.name;
+    wheel.classList.remove("spinning");
+    status.textContent="Joined as "+created.name+".";
+    finishClaim(created.id,newClientId);
+  }catch(error){
+    status.textContent=error?.message||String(error);
+    const fresh=await get(ref(db,"games/"+code));
+    if(fresh.exists()){game=fresh.val();selectionBusy=false;choices();}
+    else{selectionBusy=false;button.disabled=false;}
+  }finally{
+    if(spinHandle){clearInterval(spinHandle);spinHandle=null;}
+    wheel.classList.remove("spinning");
+  }
+}
+$("randomTeamButton").onclick=spinForRandomTeam;
+async function claim(id){
+  if(selectionBusy||game?.status!=="lobby")return;
+  selectionBusy=true;
+  const status=$("claimStatus"),buttons=[...$("teamChoices").querySelectorAll("button")];
+  buttons.forEach(b=>b.disabled=true);$("randomTeamButton").disabled=true;
+  status.textContent="Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
+  const newClientId=makeClientId();
+  try{
+    const result=await runTransaction(ref(db,"games/"+code),g=>{
+      if(!g||g.status!=="lobby"||!Array.isArray(g.teams))return;
+      const team=g.teams.find(t=>t.id===id);
+      if(!team||team.connection?.connected)return;
+      team.connection={connected:true,clientId:newClientId,joinedAt:Date.now()};
+      return g;
     });
     if(!result.committed){
-      status.textContent="That team is already connected. Choose another team.";
       const latest=await get(ref(db,"games/"+code));
-      if(latest.exists()){game=latest.val();choices();}
+      if(latest.exists()){game=latest.val();selectionBusy=false;choices();}
+      status.textContent="That team is already connected or the game has started. Choose another team.";
       return;
     }
-    teamId=id;spunTeamId=null;
-    localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId,clientId}));
+    game=result.snapshot.val();
     status.textContent="Connected. Loading team screen…";
-    $("claim").classList.add("hidden");
-    connect();
+    finishClaim(id,newClientId);
   }catch(error){
     console.error("Zero Out team selection failed:",error);
     status.textContent="Connection failed: "+(error?.message||String(error));
-    buttons.forEach(b=>b.disabled=false);
+    selectionBusy=false;
+    const latest=await get(ref(db,"games/"+code));
+    if(latest.exists()){game=latest.val();choices();}
   }
 }
 function connect(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t){$("waiting").textContent="Your team is no longer in this game. Rejoin with the game code.";return;}if(t.connection?.clientId&&t.connection.clientId!==clientId){$("waiting").textContent="This team is connected on another computer.";return;}render(t);},error=>{$("waiting").textContent="Live connection lost: "+(error?.message||"check your connection");});}
