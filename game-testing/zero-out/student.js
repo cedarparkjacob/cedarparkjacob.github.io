@@ -102,7 +102,7 @@ function render(t){
     $("studentHeader").classList.add("hidden");$("teamScreen").classList.add("hidden");$("finished").classList.remove("hidden");const w=winners(game.teams);
     $("finishedScores").innerHTML=game.teams.slice().sort((a,b)=>Math.abs(a.score)-Math.abs(b.score)).map(x=>{const win=w.some(y=>y.id===x.id);return '<div class="team-card '+(win?"winner-team":"")+'"><div class="emoji">'+x.emoji+'</div><div class="name">'+escapeHtml(x.name)+'</div><div class="score">'+formatScore(x.score)+'</div>'+(win?'<strong>WINNER</strong>':'')+'</div>';}).join("");return;
   }
-  $("studentHeader").classList.remove("hidden");$("finished").classList.add("hidden");const p=game.pendingPrompt,isActive=game.status==="active"||game.started===true,active=isActive&&p?.teamId===teamId;
+  $("studentHeader").classList.remove("hidden");$("finished").classList.add("hidden");const p=(game.pendingPrompts||{})[teamId]||(game.pendingPrompt?.teamId===teamId?game.pendingPrompt:null),isActive=game.status==="active"||game.started===true,active=isActive&&!!p;
   $("waiting").textContent=game.status==="lobby"?"Connected. Waiting for the teacher to start.":active?"Choose which team receives these points.":isActive?"Your team is ready. Watch for the next value.":"Waiting for the teacher…";$("waitingVisual").classList.toggle("hidden",active);
   $("liveTeams").innerHTML=game.teams.map(x=>card(x,active)).join("");
   if(active){$("waitingVisual").classList.add("hidden");$("prompt").classList.remove("hidden");$("promptValue").textContent=formatScore(p.value);$("recipientChoices").innerHTML="";$("liveTeams").querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>award(p,b.dataset.id));}
@@ -110,7 +110,7 @@ function render(t){
 }
 async function award(p,targetId){
   $("liveTeams").querySelectorAll("button").forEach(b=>b.disabled=true);selectedRecipientId=targetId;
-  const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="active"||g.pendingPrompt?.id!==p.id||g.pendingPrompt?.teamId!==teamId)return;const i=g.teams.findIndex(t=>t.id===targetId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(p.value);g.lastValue=p.value;g.lastTeamId=targetId;g.lastAward={value:p.value,teamId:targetId,source:"team-choice",at:Date.now()};g.pendingPrompt=null;return g;});
+  const result=await runTransaction(ref(db,"games/"+code),g=>{if(!g||g.status!=="active")return;const map={...(g.pendingPrompts||{})};const pending=map[teamId]||(g.pendingPrompt?.teamId===teamId?g.pendingPrompt:null);if(pending?.id!==p.id)return;const i=g.teams.findIndex(t=>t.id===targetId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(p.value);g.lastValue=p.value;g.lastTeamId=targetId;g.lastAward={value:p.value,teamId:targetId,source:"team-choice",at:Date.now()};delete map[teamId];g.pendingPrompts=map;delete g.pendingPrompt;return g;});
   if(!result.committed){selectedRecipientId=null;$("waiting").textContent="That prompt has already been handled. Waiting for the next one.";return;}
   const mine=game.teams.find(x=>x.id===teamId);if(mine){$("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");const selected=$("liveTeams").querySelector('[data-id="'+CSS.escape(targetId)+'"]');if(selected)selected.classList.add("selected-team");}
   setTimeout(()=>{selectedRecipientId=null;const current=game?.teams?.find(x=>x.id===teamId);if(current&&game.status==="active")$("liveTeams").innerHTML=game.teams.map(x=>card(x)).join("");},800);
