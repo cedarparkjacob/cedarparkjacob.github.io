@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071715">
+<title>Drive Structure Monitor — Ludden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script><script src="travel/config.js"></script><script src="assets/drive.js"></script>
+<style>
+body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
+.monitor-wrap{max-width:1160px;margin:0 auto;padding:42px 0 90px}.monitor-head{margin-bottom:28px}.monitor-head h1{font-size:clamp(40px,6vw,68px);line-height:.98;letter-spacing:-.075em;margin:0}.monitor-head h1 span{color:var(--accent);font-weight:500}.monitor-lead{max-width:720px;color:#a9b8c6;line-height:1.8;font-size:14px;margin:15px 0 0}
+.panel{border:1px solid var(--line);background:rgba(13,25,33,.78);padding:18px;margin:0 0 18px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.panel-head h2{font-size:17px;margin:0}.micro{font:9px var(--mono);letter-spacing:.12em;color:#8395a2}.folder-id{font:11px/1.7 var(--mono);color:#b9c7ce;overflow-wrap:anywhere}.folder-link{color:var(--accent)}
+.controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.monitor-btn,.monitor-select{height:42px;border:1px solid var(--line);background:#0b151e;color:var(--ink);padding:0 13px;font:10px var(--mono);border-radius:3px}.monitor-btn{cursor:pointer;color:var(--accent)}.monitor-btn.primary{background:var(--accent);color:#10221e;border-color:var(--accent);font-weight:700}.monitor-btn:disabled{opacity:.45;cursor:not-allowed}.monitor-btn:hover:not(:disabled){border-color:var(--accent)}.monitor-select{min-width:100px}
+.statusline{font:10px/1.7 var(--mono);color:#aab8c1;min-height:20px;margin:13px 0 0}.statusline.ok{color:#9bd9bd}.statusline.error{color:#ff9fb2}.statusline.warn{color:#e8c58e}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:18px 0}.stat{padding:13px;border:1px solid var(--line);background:rgba(15,28,36,.72);min-width:0}.stat strong{display:block;font:24px var(--mono);color:var(--accent);overflow-wrap:anywhere}.stat span{display:block;font:9px var(--mono);letter-spacing:.1em;color:#8fa0ac;margin-top:5px}
+.history{border:1px solid var(--line);background:rgba(11,21,29,.72)}.history-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line)}.history-head h2{font-size:17px;margin:0}.history-list{max-height:520px;overflow:auto}.run{border-bottom:1px solid rgba(255,255,255,.08);padding:13px 15px}.run:last-child{border-bottom:0}.run-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.run-title{font:10px var(--mono);color:#d9e2e7}.run-state{font:9px var(--mono);letter-spacing:.1em}.run-state.good{color:#9bd9bd}.run-state.changed{color:#e8c58e}.run-state.bad{color:#ff9fb2}.run-meta{font:9px/1.7 var(--mono);color:#81919c;margin-top:5px}.run details{margin-top:9px}.run summary{font:9px var(--mono);color:var(--accent);cursor:pointer}.run pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;padding:12px;background:#071018;border:1px solid var(--line);font:10px/1.6 var(--mono);color:#b7c6ce}
+.tree{font:10px/1.8 var(--mono);color:#b7c6ce;white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow:auto;padding:14px;background:#071018;border:1px solid var(--line)}.hint{font-size:11px;line-height:1.75;color:#8fa0ac}.legend{display:flex;gap:14px;flex-wrap:wrap;font:9px var(--mono);color:#8fa0ac}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:#9bd9bd}.dot.warn{background:#e8c58e}.dot.bad{background:#ff9fb2}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-head{align-items:flex-start;flex-direction:column}.monitor-wrap{padding-top:32px}.run-top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body data-theme="data">
+<canvas class="sky-canvas" aria-hidden="true"></canvas><div class="aurora aurora-one"></div><div class="aurora aurora-two"></div>
+<div class="page-shell">
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">✳</span><span>LUDDEN<span class="brand-dot">.</span></span></a><nav class="mini-nav"><a href="games.html">GAMES</a><a class="active" href="data.html">DATA</a><a href="nerd.html">NERD STUFF</a></nav><a class="top-link" href="data.html">↖ DATA</a></header>
+<main class="monitor-wrap">
+<section class="monitor-head"><p class="eyebrow"><span class="live-dot"></span> ZONE 02 / DRIVE DIAGNOSTICS</p><h1>Drive Structure<br><span>Monitor.</span></h1><p class="monitor-lead">Repeatedly inspect one Google Drive folder tree and preserve every response. Change the folder structure in Drive, then run checks to see exactly when the API begins returning the new structure.</p></section>
+<section class="panel">
+<div class="panel-head"><h2>Target folder</h2><span class="micro">FIXED TEST TARGET</span></div>
+<div class="folder-id">Test Folder · <a class="folder-link" href="https://drive.google.com/drive/folders/190VzPyvR7x-CbLH1WD4BH--WngL41xwp?usp=sharing" target="_blank" rel="noopener">Open in Google Drive ↗</a><br>ID: 190VzPyvR7x-CbLH1WD4BH--WngL41xwp</div>
+<p class="hint">Each check reads the folder metadata, lists every direct child (including all pages), then recursively lists descendant folders. It records IDs, names, MIME types, parent IDs, modified times, shortcut targets, resource keys, pagination, response headers, HTTP status, request duration, and raw JSON responses. It does not move, create, or modify Drive files.</p>
+<div class="controls">
+<button class="monitor-btn primary" id="checkBtn">CHECK STRUCTURE NOW</button>
+<button class="monitor-btn" id="startBtn">START AUTO-CHECK</button>
+<button class="monitor-btn" id="stopBtn" disabled>STOP</button>
+<label class="micro" for="interval">INTERVAL</label><select class="monitor-select" id="interval"><option value="5">5 seconds</option><option value="15" selected>15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select>
+<button class="monitor-btn" id="exportBtn">EXPORT JSON</button><button class="monitor-btn" id="clearBtn">CLEAR LOG</button>
+</div>
+<div class="statusline" id="status" role="status" aria-live="polite">Ready. Run a baseline check before changing the folder structure.</div>
+</section>
+<div class="stats">
+<div class="stat"><strong id="statFolders">—</strong><span>FOLDERS SEEN</span></div><div class="stat"><strong id="statFiles">—</strong><span>NON-FOLDER ITEMS</span></div><div class="stat"><strong id="statShortcuts">—</strong><span>SHORTCUTS</span></div><div class="stat"><strong id="statRequests">—</strong><span>API REQUESTS</span></div><div class="stat"><strong id="statDuration">—</strong><span>SCAN TIME</span></div>
+</div>
+<section class="panel"><div class="panel-head"><h2>Latest folder tree</h2><span class="micro" id="treeStamp">NO SCAN YET</span></div><div class="tree" id="tree">The folder tree will appear here after the first check.</div></section>
+<section class="history"><div class="history-head"><h2>Check history & raw diagnostics</h2><span class="micro" id="historyCount">0 CHECKS</span></div><div class="history-list" id="history"><div class="run"><div class="run-meta">No checks recorded yet.</div></div></div></section>
+<section class="panel" style="margin-top:18px"><div class="panel-head"><h2>What this test can establish</h2><span class="micro">INTERPRETATION</span></div><div class="legend"><span><i class="dot"></i> Same structure</span><span><i class="dot warn"></i> Structure changed</span><span><i class="dot bad"></i> Request or scan error</span></div><p class="hint">A changed result between checks shows when this API key and browser first observed a different tree. An unchanged result does not prove Drive has no internal pending work; it means the API returned the same visible structure. A 403/429/5xx response, CORS failure, or pagination error is recorded separately. Browser CORS rules can hide some response headers or error bodies, and this page cannot inspect Google's internal indexing state.</p></section>
+</main>
+<footer class="site-footer"><span>© 2026 LUDDEN</span><span>DATA COLLECTION / DRIVE STRUCTURE MONITOR</span><a href="data.html">BACK TO DATA ↑</a></footer>
+</div>
+<script>
+(function(){
+"use strict";
+const ROOT_ID="190VzPyvR7x-CbLH1WD4BH--WngL41xwp";
+const API_ROOT="https://www.googleapis.com/drive/v3/files";
+const config=window.LUDDEN_TRAVEL_CONFIG||{};
+const apiKey=config.apiKey||"";
+const STORE_KEY="luddenDriveStructureMonitor_v1";
+const FIELDS="nextPageToken,incompleteSearch,files(id,name,mimeType,parents,createdTime,modifiedTime,size,md5Checksum,webViewLink,webContentLink,resourceKey,driveId,shortcutDetails(targetId,targetMimeType,targetResourceKey),capabilities(canDownload))";
+const $=id=>document.getElementById(id);
+let history=loadHistory(),previous=null,busy=false,timer=null,runNumber=history.length;
+function loadHistory(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
+function saveHistory(){try{localStorage.setItem(STORE_KEY,JSON.stringify(history.slice(-100)))}catch(e){setStatus("Local log storage is full or unavailable. Export the log to preserve it.","warn")}}
+function setStatus(s,kind){$("status").textContent=s;$("status").className="statusline "+(kind||"")}
+function safe(v){return v==null?"":String(v)}
+function esc(v){return safe(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function stamp(){return new Date().toISOString()}
+function fmt(ms){return ms<1000?Math.round(ms)+" ms":(ms/1000).toFixed(2)+" s"}
+function queryUrl(folderId,pageToken){
+ const q="'"+String(folderId).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+"' in parents and trashed = false";
+ const p=new URLSearchParams({q,pageSize:"1000",orderBy:"folder,name",fields:FIELDS,key:apiKey,supportsAllDrives:"true",includeItemsFromAllDrives:"true"});
+ if(pageToken)p.set("pageToken",pageToken);
+ return API_ROOT+"?"+p.toString();
+}
+function metaUrl(id){
+ const f="id,name,mimeType,parents,createdTime,modifiedTime,webViewLink,resourceKey,driveId,shortcutDetails(targetId,targetMimeType,targetResourceKey),capabilities(canDownload)";
+ return API_ROOT+"/"+encodeURIComponent(id)+"?"+new URLSearchParams({fields:f,key:apiKey,supportsAllDrives:"true"}).toString();
+}
+async function request(url,label,headers){
+ const started=performance.now(),at=stamp();
+ try{
+  const response=await fetch(url,{method:"GET",headers:headers||{},cache:"no-store"});
+  const elapsed=performance.now()-started;
+  const raw=response.headers;
+  const selectedHeaders={};
+  ["date","age","etag","last-modified","cache-control","content-type","x-guploader-uploadid","x-goog-generation","server","vary"].forEach(k=>{const v=raw.get(k);if(v)selectedHeaders[k]=v});
+  let body,textBody;
+  try{textBody=await response.text();try{body=JSON.parse(textBody)}catch(_){body={_unparsed:textBody}}}catch(e){body={_bodyReadError:String(e)}}
+  const result={label,requestedAt:at,elapsedMs:Math.round(elapsed),httpStatus:response.status,ok:response.ok,statusText:response.statusText,headers:selectedHeaders,body};
+  if(!response.ok){const err=body&&body.error;result.error={message:err&&err.message||response.statusText||"HTTP "+response.status,details:err&&err.errors||null,code:err&&err.code||response.status};}
+  return result;
+ }catch(e){return{label,requestedAt:at,elapsedMs:Math.round(performance.now()-started),httpStatus:null,ok:false,networkError:String(e&&e.message||e),likelyCorsOrNetwork:true};}
+}
+function isFolder(f){return f.mimeType==="application/vnd.google-apps.folder"||(f.mimeType==="application/vnd.google-apps.shortcut"&&f.shortcutDetails&&f.shortcutDetails.targetMimeType==="application/vnd.google-apps.folder")}
+function targetId(f){return f.shortcutDetails&&f.shortcutDetails.targetId||f.id}
+function compact(f,parentId,path){
+ return{id:f.id||null,name:f.name||"",mimeType:f.mimeType||"",parents:f.parents||[],queriedParentId:parentId,path:path||"",createdTime:f.createdTime||null,modifiedTime:f.modifiedTime||null,size:f.size||null,md5Checksum:f.md5Checksum||null,resourceKey:f.resourceKey||null,driveId:f.driveId||null,shortcutTargetId:f.shortcutDetails&&f.shortcutDetails.targetId||null,shortcutTargetMimeType:f.shortcutDetails&&f.shortcutDetails.targetMimeType||null,shortcutTargetResourceKey:f.shortcutDetails&&f.shortcutDetails.targetResourceKey||null,canDownload:f.capabilities&&f.capabilities.canDownload};
+}
+async function listAll(folderId,path,depth,scan){
+ if(depth>20){scan.errors.push({type:"depth-limit",folderId,path,depth});return}
+ if(scan.visited.has(folderId)){scan.cycles.push({folderId,path});return}
+ if(scan.visited.size>=1000){scan.errors.push({type:"folder-limit",limit:1000});return}
+ scan.visited.add(folderId);
+ const folder={id:folderId,path,depth};
+ scan.folders.push(folder);
+ let token=null,page=0;
+ do{
+  page++;
+  const res=await request(queryUrl(folderId,token),"LIST "+path+" [page "+page+"]");
+  scan.requests.push(res);
+  if(!res.ok){scan.errors.push({type:"list-failed",folderId,path,page,httpStatus:res.httpStatus,error:res.error||res.networkError});break}
+  const body=res.body||{},items=Array.isArray(body.files)?body.files:[];
+  scan.incompleteSearch=scan.incompleteSearch||body.incompleteSearch===true;
+  scan.rawItems.push({folderId,path,page,items});
+  for(const f of items){
+   const item=compact(f,folderId,path);
+   scan.items.push(item);
+   if(item.mimeType==="application/vnd.google-apps.shortcut")scan.shortcuts.push(item);
+   if(isFolder(f)){
+    const id=targetId(f);
+    if(id)await listAll(id,path+"/"+(f.name||id),depth+1,scan);
+    else scan.errors.push({type:"shortcut-without-target",item});
+   }
+  }
+  token=body.nextPageToken||null;
+  if(token&&page>=100){scan.errors.push({type:"pagination-limit",folderId,path});break}
+ }while(token);
+}
+function fingerprint(scan){
+ return JSON.stringify(scan.items.map(x=>({id:x.id,name:x.name,mimeType:x.mimeType,parents:x.parents,queriedParentId:x.queriedParentId,shortcutTargetId:x.shortcutTargetId,shortcutTargetMimeType:x.shortcutTargetMimeType,modifiedTime:x.modifiedTime})).sort((a,b)=>(a.id||"").localeCompare(b.id||"")));
+}
+function buildTree(scan){
+ const byParent=new Map();for(const item of scan.items){const p=item.queriedParentId;if(!byParent.has(p))byParent.set(p,[]);byParent.get(p).push(item)}
+ const lines=[];
+ function walk(id,depth,seen){
+  const arr=byParent.get(id)||[];
+  for(const f of arr){const folder=isFolder({mimeType:f.mimeType,shortcutDetails:{targetMimeType:f.shortcutTargetMimeType,targetId:f.shortcutTargetId}});
+   const icon=folder?"📁":f.mimeType==="application/vnd.google-apps.shortcut"?"↗":"·";
+   lines.push("  ".repeat(depth)+icon+" "+f.name+"  ["+f.mimeType+"]  id="+f.id+(f.shortcutTargetId?" → "+f.shortcutTargetId:"")+(f.modifiedTime?"  modified="+f.modifiedTime:""));
+   if(folder&&f.shortcutTargetId&&!seen.has(f.shortcutTargetId)){const next=new Set(seen);next.add(f.shortcutTargetId);walk(f.shortcutTargetId,depth+1,next)}
+   else if(folder&&!f.shortcutTargetId&&!seen.has(f.id)){const next=new Set(seen);next.add(f.id);walk(f.id,depth+1,next)}
+  }
+ }
+ lines.push("Test Folder  [root]  id="+ROOT_ID);
+ walk(ROOT_ID,1,new Set([ROOT_ID]));
+ if(!scan.items.length)lines.push("  (No children returned)");
+ if(scan.errors.length)lines.push("\nSCAN ERRORS: "+scan.errors.length);
+ return lines.join("\n");
+}
+function renderHistory(){
+ $("historyCount").textContent=history.length+" CHECKS";
+ $("history").innerHTML=history.slice().reverse().map((r,i)=>{
+  const state=r.errorCount?"ERROR":r.changed?"CHANGED":i===0?"LATEST":"UNCHANGED";
+  const cls=r.errorCount?"bad":r.changed?"changed":"good";
+  const summary=esc(r.startedAt)+" · "+fmt(r.durationMs)+" · "+r.folderCount+" folders · "+r.itemCount+" items · "+r.requestCount+" requests";
+  return '<article class="run"><div class="run-top"><span class="run-title">CHECK #'+r.number+' · '+esc(state)+'</span><span class="run-state '+cls+'">'+esc(state)+'</span></div><div class="run-meta">'+summary+(r.changeSummary?"<br>"+esc(r.changeSummary):"")+'</div><details><summary>EXPAND FULL REQUEST LOG, ERRORS & RAW JSON</summary><pre>'+esc(JSON.stringify(r,null,2))+'</pre></details></article>';
+ }).join("")||'<div class="run"><div class="run-meta">No checks recorded yet.</div></div>';
+}
+async function runCheck(){
+ if(busy)return;
+ if(!apiKey){setStatus("Missing Google Drive API key in travel/config.js.","error");return}
+ busy=true;$("checkBtn").disabled=true;$("startBtn").disabled=true;
+ const started=performance.now(),startedAt=stamp(),scan={rootId:ROOT_ID,startedAt,folders:[],items:[],shortcuts:[],requests:[],errors:[],cycles:[],rawItems:[],visited:new Set(),incompleteSearch:false};
+ setStatus("Checking folder metadata and recursively listing its contents…");
+ try{
+  const rootMeta=await request(metaUrl(ROOT_ID),"GET ROOT METADATA");
+  scan.rootMetadata=rootMeta;scan.requests.push(rootMeta);
+  if(!rootMeta.ok)scan.errors.push({type:"root-metadata-failed",httpStatus:rootMeta.httpStatus,error:rootMeta.error||rootMeta.networkError});
+  await listAll(ROOT_ID,"Test Folder",0,scan);
+  const durationMs=Math.round(performance.now()-started),fp=fingerprint(scan);
+  const prior=history.length?history[history.length-1]:null;
+  let changed=false,changeSummary="";
+  if(prior&&prior.fingerprint!==fp){
+   changed=true;
+   const old=prior.items||[],now=scan.items;
+   const oldMap=new Map(old.map(x=>[x.id,x])),newMap=new Map(now.map(x=>[x.id,x]));
+   const added=now.filter(x=>!oldMap.has(x.id)),removed=old.filter(x=>!newMap.has(x.id));
+   const altered=now.filter(x=>oldMap.has(x.id)&&JSON.stringify(oldMap.get(x.id))!==JSON.stringify(x));
+   changeSummary="Structure differs from previous check: +"+added.length+" added, −"+removed.length+" removed, "+altered.length+" changed metadata.";
+   scan.diff={added,removed,changed:altered};
+  }else if(prior)changeSummary="No structural or selected metadata differences from previous check.";
+  else changeSummary="Baseline check. Future checks will be compared against this result.";
+  const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,rawItems:scan.rawItems,fingerprint:fp};
+  history.push(record);history=history.slice(-100);saveHistory();previous=record;
+  $("statFolders").textContent=record.folderCount;$("statFiles").textContent=record.itemCount-record.folders.length+1;$("statShortcuts").textContent=record.shortcutCount;$("statRequests").textContent=record.requestCount;$("statDuration").textContent=fmt(durationMs);
+  $("tree").textContent=buildTree(scan);$("treeStamp").textContent=record.finishedAt;
+  renderHistory();
+  const hasHttp=scan.errors.length>0;
+  setStatus("Check #"+record.number+" complete · "+record.folderCount+" folders · "+record.items.length+" items · "+record.requests.length+" requests · "+fmt(durationMs)+". "+changeSummary,hasHttp?"error":changed?"warn":"ok");
+ }catch(e){setStatus("Unexpected diagnostic failure: "+String(e&&e.stack||e),"error")}
+ finally{busy=false;$("checkBtn").disabled=false;$("startBtn").disabled=!!timer}
+}
+function start(){if(timer)return;const ms=Number($("interval").value)*1000;timer=setInterval(()=>{if(!busy)runCheck()},ms);$("startBtn").disabled=true;$("stopBtn").disabled=false;setStatus("Automatic checks running every "+(ms/1000)+" seconds. You can also use CHECK STRUCTURE NOW.","ok")}
+function stop(){if(timer)clearInterval(timer);timer=null;$("startBtn").disabled=false;$("stopBtn").disabled=true;setStatus("Automatic checks stopped.","")}
+function download(){
+ const payload={exportedAt:stamp(),target:{name:"Test Folder",id:ROOT_ID},history};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="drive-structure-log-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function clear(){if(!confirm("Clear all saved checks from this browser? Export first if you need the logs."))return;history=[];runNumber=0;saveHistory();renderHistory();$("tree").textContent="The folder tree will appear here after the first check.";$("treeStamp").textContent="NO SCAN YET";["statFolders","statFiles","statShortcuts","statRequests","statDuration"].forEach(id=>$(id).textContent="—");setStatus("Log cleared. Next check will become the new baseline.")}
+$("checkBtn").addEventListener("click",runCheck);$("startBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("exportBtn").addEventListener("click",download);$("clearBtn").addEventListener("click",clear);
+renderHistory();
+if(history.length){const r=history[history.length-1];$("statFolders").textContent=r.folderCount;$("statFiles").textContent=r.itemCount;$("statShortcuts").textContent=r.shortcutCount;$("statRequests").textContent=r.requestCount;$("statDuration").textContent=fmt(r.durationMs);$("tree").textContent="Previous tree is in the saved check log. Run a new check to refresh the tree.";setStatus(history.length+" previous check(s) restored from this browser's local log.")}
+})();
+</script>
+</body></html>
