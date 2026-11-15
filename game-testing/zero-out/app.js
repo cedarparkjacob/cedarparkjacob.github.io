@@ -538,7 +538,15 @@ document.getElementById("finishGameButton");
 TEAM SELECTION
 ========================================================= */
 
-const animalCatalog=Object.values(animals).flat();
+const animalCatalog=Object.values(animals).flat()
+  .filter(a=>!["Alligator","Armadillo","Caterpillar","Hare","Ostrich"].includes(a.name))
+  .concat([
+    {name:"Bactrian Camel",emoji:"🐫"},{name:"Baby Chick",emoji:"🐣"},
+    {name:"Front-Facing Baby Chick",emoji:"🐥"},{name:"Owl",emoji:"🦉"},
+    {name:"Cockroach",emoji:"🪳"},{name:"Bug",emoji:"🐛"},
+    {name:"Coral",emoji:"🪸"},{name:"Orca",emoji:"🫍"}
+  ])
+  .filter((a,i,list)=>list.findIndex(x=>x.emoji===a.emoji)===i);
 let teamDrafts=[];
 function randomAnimal(exclude=[]){const p=animalCatalog.filter(a=>!exclude.includes(a.name));return p[Math.floor(Math.random()*p.length)];}
 function renderTeamAssignments(){const n=Math.max(1,Math.min(animalCatalog.length,Number(teamCountInput.value)||1));teamCountInput.value=n;teamDrafts=Array.from({length:n},(_,i)=>teamDrafts[i]||null);teamAssignments.innerHTML="";teamDrafts.forEach((v,i)=>{const row=document.createElement("div");row.className="team-assignment-row";const label=document.createElement("label");label.textContent="Team "+(i+1);const sel=document.createElement("select");const rand=document.createElement("option");rand.value="";rand.textContent="🎲 Random";sel.appendChild(rand);animalCatalog.forEach(a=>{const o=document.createElement("option");o.value=a.name;o.textContent=a.emoji+" "+a.name;sel.appendChild(o);});sel.value=v||"";sel.addEventListener("change",()=>{teamDrafts[i]=sel.value||null;refreshTeamChoices();});const btn=document.createElement("button");btn.type="button";btn.textContent="Random";btn.addEventListener("click",()=>{teamDrafts[i]=randomAnimal(teamDrafts.filter((x,j)=>j!==i&&x)).name;renderTeamAssignments();});row.append(label,sel,btn);teamAssignments.appendChild(row);});selectedCount.textContent=n;refreshTeamChoices();}
