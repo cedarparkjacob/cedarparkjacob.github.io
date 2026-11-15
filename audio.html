@@ -46,7 +46,7 @@ body[data-theme="listen"]{--bg:#111820;--accent:#d7b58c;--accent2:#a6c4bd;--pane
 "use strict";
 var $=function(id){return document.getElementById(id);};
 var config=window.LUDDEN_TRAVEL_CONFIG||{},apiKey=config.apiKey||"",folderKey="luddenAudioFolder_v1",positionKey="luddenAudioPositions_v1",speedKey="luddenAudioSpeed_v1",bookmarkKey="luddenAudioBookmarks_v1",durationKey="luddenAudioDurations_v1";
-var root=null,books=[],selectedBook=null,selectedSeries=null,tracks=[],bookTracks=[],folderStack=[],currentIndex=-1,sleepTimer=null,sleepEnd=false,positions={},bookmarks={},durations={},seriesStats={},playRequest=0;
+var root=null,books=[],selectedBook=null,selectedSeries=null,tracks=[],bookTracks=[],bookFolderCount=0,folderStack=[],currentIndex=-1,sleepTimer=null,sleepEnd=false,positions={},bookmarks={},durations={},seriesStats={},playRequest=0;
 try{positions=JSON.parse(localStorage.getItem(positionKey)||"{}")||{};}catch(e){positions={};}try{bookmarks=JSON.parse(localStorage.getItem(bookmarkKey)||"{}")||{};}catch(e){bookmarks={};}try{durations=JSON.parse(localStorage.getItem(durationKey)||"{}")||{};}catch(e){durations={};}
 var audio=$("audio"),audioExt=/\.(mp3|m4a|m4b|aac|ogg|opus|wav|flac|oga)$/i,folderMime="application/vnd.google-apps.folder";
 function status(message,kind){$("status").textContent=message;$("status").className="status"+(kind?" "+kind:"");}
