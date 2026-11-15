@@ -90,6 +90,9 @@ document.getElementById("joinGameButton");
 const gameCodeError =
 document.getElementById("gameCodeError");
 
+const joinAnotherGameButton =
+document.getElementById("joinAnotherGameButton");
+
 const teamCountInput=document.getElementById("teamCount");const teamAssignments=document.getElementById("teamAssignments");const randomizeTeamsButton=document.getElementById("randomizeTeams");
 
 const selectedCountElement =
@@ -179,6 +182,34 @@ joinGameButton.addEventListener(
   "click",
   joinGame
 );
+
+joinAnotherGameButton.addEventListener("click", () => {
+  if (gameListener) {
+    gameListener();
+    gameListener = null;
+  }
+  stopGameTimer();
+  firebaseGameId = null;
+  game = {
+    started: false,
+    currentValue: null,
+    lastValue: null,
+    lastTeamId: null,
+    teams: [],
+    timerSeconds: null,
+    timerRunning: false
+  };
+  gameCodeInput.value = "";
+  gameCodeError.textContent = "";
+  teamsElement.innerHTML = "";
+  teamButtonsElement.innerHTML = "";
+  gameCodeScreen.classList.remove("hidden");
+  joinAnotherGameButton.classList.add("hidden");
+  gameControls.classList.add("hidden");
+  setupSection.classList.remove("hidden");
+  renderValue();
+  updateTimerDisplay();
+});
 
 
 gameCodeInput.addEventListener(
@@ -271,6 +302,7 @@ async function joinGame() {
     gameCodeScreen.classList.add(
       "hidden"
     );
+    joinAnotherGameButton.classList.remove("hidden");
 
 
     /*
