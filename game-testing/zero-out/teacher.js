@@ -14,7 +14,7 @@ $("start").onclick=async()=>{if(!game||game.status!=="lobby")return;await update
 $("assignMode").onclick=()=>{assignMode=!assignMode;render();};document.addEventListener("click",event=>{if(assignMode&&!event.target.closest("button")){assignMode=false;render();}});
 async function teamClicked(teamId){
  if(!game||game.status!=="active")return;
- if(assignMode){assignMode=false;selectedTeamId=teamId;if(selectionTimer)clearTimeout(selectionTimer);selectionTimer=setTimeout(()=>{selectedTeamId=null;render();},800);render();const value=game.currentValue;await award(value,teamId,"teacher-direct");setStatus("Assigned "+formatScore(value)+" to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");return;}
+ if(assignMode){if(assignMode==="reassign"&&selectedTeamIds.size&&!selectedTeamIds.has(teamId))selectedTeamIds.clear();if(selectedTeamIds.has(teamId))selectedTeamIds.delete(teamId);else selectedTeamIds.add(teamId);render();return;}
  if(game.pendingPrompt){setStatus("A prompt is already waiting for "+(game.teams.find(t=>t.id===game.pendingPrompt.teamId)?.name||"a team")+".");return;}
  await update(ref(db,"games/"+gameId),{pendingPrompt:{id:crypto.randomUUID(),teamId,value:game.currentValue,createdAt:Date.now()},lastPromptTeamId:teamId});setStatus("Prompt sent to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");
 }
