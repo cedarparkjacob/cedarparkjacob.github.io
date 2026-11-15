@@ -1,6 +1,5 @@
 {
-  "version": "v60",
-  "run": 60,
-  "deployedAt": "2026-11-15T01:48:32.771Z",
-  "sourceCommit": "5ed353fba1f339eac71430603f06120bb8191064"
+  "version": "v8",
+  "run": 8,
+  "deployedAt": "2026-11-15T01:44:38Z"
 }
