@@ -14,7 +14,7 @@ body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
 .statusline{font:10px/1.7 var(--mono);color:#aab8c1;min-height:20px;margin:13px 0 0}.statusline.ok{color:#9bd9bd}.statusline.error{color:#ff9fb2}.statusline.warn{color:#e8c58e}
 .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:18px 0}.stat{padding:13px;border:1px solid var(--line);background:rgba(15,28,36,.72);min-width:0}.stat strong{display:block;font:24px var(--mono);color:var(--accent);overflow-wrap:anywhere}.stat span{display:block;font:9px var(--mono);letter-spacing:.1em;color:#8fa0ac;margin-top:5px}
 .history{border:1px solid var(--line);background:rgba(11,21,29,.72)}.history-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line)}.history-head h2{font-size:17px;margin:0}.history-list{max-height:520px;overflow:auto}.run{border-bottom:1px solid rgba(255,255,255,.08);padding:13px 15px}.run:last-child{border-bottom:0}.run-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.run-title{font:10px var(--mono);color:#d9e2e7}.run-state{font:9px var(--mono);letter-spacing:.1em}.run-state.good{color:#9bd9bd}.run-state.changed{color:#e8c58e}.run-state.bad{color:#ff9fb2}.run-meta{font:9px/1.7 var(--mono);color:#81919c;margin-top:5px}.run details{margin-top:9px}.run summary{font:9px var(--mono);color:var(--accent);cursor:pointer}.run pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;padding:12px;background:#071018;border:1px solid var(--line);font:10px/1.6 var(--mono);color:#b7c6ce}
-.tree{font:10px/1.8 var(--mono);color:#b7c6ce;white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow:auto;padding:14px;background:#071018;border:1px solid var(--line)}.hint{font-size:11px;line-height:1.75;color:#8fa0ac}.legend{display:flex;gap:14px;flex-wrap:wrap;font:9px var(--mono);color:#8fa0ac}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:#9bd9bd}.dot.warn{background:#e8c58e}.dot.bad{background:#ff9fb2}
+.paste-report{display:block;width:100%;min-height:190px;margin-top:12px;padding:12px;background:#071018;border:1px solid var(--line);color:#c5d2d9;font:10px/1.6 var(--mono);resize:vertical}.tree{font:10px/1.8 var(--mono);color:#b7c6ce;white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow:auto;padding:14px;background:#071018;border:1px solid var(--line)}.hint{font-size:11px;line-height:1.75;color:#8fa0ac}.legend{display:flex;gap:14px;flex-wrap:wrap;font:9px var(--mono);color:#8fa0ac}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:#9bd9bd}.dot.warn{background:#e8c58e}.dot.bad{background:#ff9fb2}
 @media(max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-head{align-items:flex-start;flex-direction:column}.monitor-wrap{padding-top:32px}.run-top{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -35,7 +35,7 @@ body[data-theme="data"]{--accent:#8ed8c2;--accent2:#b6c8ff}
 <label class="micro" for="interval">INTERVAL</label><select class="monitor-select" id="interval"><option value="5">5 seconds</option><option value="15" selected>15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select>
 <button class="monitor-btn" id="copyReportBtn">COPY PASTE REPORT</button><button class="monitor-btn" id="exportBtn">EXPORT JSON</button><button class="monitor-btn" id="clearBtn">CLEAR LOG</button>
 </div>
-<div class="statusline" id="status" role="status" aria-live="polite">Ready. Run a baseline check before changing the folder structure.</div>
+<div class="statusline" id="status" role="status" aria-live="polite">Ready. Run a baseline check before changing the folder structure.</div><textarea class="paste-report" id="pasteReport" readonly spellcheck="false" placeholder="The compact paste-ready report will appear here. Click COPY PASTE REPORT after one or more checks."></textarea>
 </section>
 <div class="stats">
 <div class="stat"><strong id="statFolders">—</strong><span>FOLDERS SEEN</span></div><div class="stat"><strong id="statFiles">—</strong><span>NON-FOLDER ITEMS</span></div><div class="stat"><strong id="statShortcuts">—</strong><span>SHORTCUTS</span></div><div class="stat"><strong id="statRequests">—</strong><span>API REQUESTS</span></div><div class="stat"><strong id="statDuration">—</strong><span>SCAN TIME</span></div>
@@ -216,6 +216,10 @@ function buildPasteReport(){
  out.push("Folders: "+latest.folderCount+" | Items returned: "+latest.itemCount+" | Audio files: "+audio.length+" | Shortcuts: "+latest.shortcutCount);
  out.push("API requests: "+latest.requestCount+" | Errors: "+latest.errorCount+" | incompleteSearch: "+latest.incompleteSearch);
  out.push("MIME counts: "+Object.keys(mimeCounts).sort().map(k=>k+"="+mimeCounts[k]).join("; "));
+ const folderCounts=new Map();
+ for(const x of latestItems){const p=x.path||"(unknown)";if(!folderCounts.has(p))folderCounts.set(p,{items:0,audio:0,folders:0,ids:[]});const c=folderCounts.get(p);c.items++;if(isAudioItem(x))c.audio++;if(x.mimeType==="application/vnd.google-apps.folder")c.folders++;}
+ out.push("ITEMS BY CONTAINING FOLDER (folder path | total items | audio | folder children):");
+ for(const [p,c] of [...folderCounts.entries()].sort((a,b)=>a[0].localeCompare(b[0])))out.push("  "+p+" | "+c.items+" | "+c.audio+" | "+c.folders);
  out.push("Result: "+(latest.changeSummary||""));
  out.push("");
  out.push("RECENT CHECKS (oldest to newest)");
@@ -253,6 +257,7 @@ function buildPasteReport(){
 }
 async function copyReport(){
  const text=buildPasteReport();
+ $("pasteReport").value=text;
  try{
   if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);}
   else{const box=document.createElement("textarea");box.value=text;box.style.position="fixed";box.style.opacity="0";document.body.appendChild(box);box.select();const ok=document.execCommand("copy");box.remove();if(!ok)throw new Error("Clipboard copy was blocked");}
