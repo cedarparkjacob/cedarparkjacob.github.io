@@ -5,51 +5,47 @@ $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")joi
 async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
 function choices(){
   $("claim").classList.remove("hidden");
-  $("claimStatus").textContent="Tap an available team to connect this computer.";
-  $("teamChoices").innerHTML=game.teams.map(t=>{
+  $("claimStatus").textContent="Choose a team. Click one of the buttons above.";
+  $("teamChoices").innerHTML="";
+  game.teams.forEach(t=>{
     const busy=!!t.connection?.connected;
-    return '<button type="button" class="choice" data-id="'+escapeHtml(t.id)+'" '+(busy?'disabled':'')+'>'+t.emoji+' '+escapeHtml(t.name)+(busy?" · IN USE":" · SELECT")+'</button>';
-  }).join("");
-  $("teamChoices").onclick=event=>{
-    const button=event.target.closest("button[data-id]");
-    if(!button||button.disabled)return;
-    claim(button.dataset.id);
-  };
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="choice";
+    button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":" · SELECT");
+    button.disabled=busy;
+    button.addEventListener("click",()=>claim(t.id));
+    $("teamChoices").append(button);
+  });
 }
 async function claim(id){
   const status=$("claimStatus");
   const buttons=[...$("teamChoices").querySelectorAll("button")];
   buttons.forEach(b=>b.disabled=true);
-  status.textContent="Connecting to that team…";
+  status.textContent="Click received. Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
   try{
-    clientId=(globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2)));
-    const result=await runTransaction(ref(db,"games/"+code),g=>{
-      if(!g||g.status!=="lobby"||!Array.isArray(g.teams))return;
-      const t=g.teams.find(x=>x.id===id);
-      if(!t||t.connection?.connected)return;
-      t.connection={connected:true,clientId,joinedAt:Date.now()};
-      return g;
+    const index=game.teams.findIndex(t=>t.id===id);
+    if(index<0)throw new Error("That team is not in this game.");
+    clientId=globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+    const connectionRef=ref(db,"games/"+code+"/teams/"+index+"/connection");
+    const result=await runTransaction(connectionRef,current=>{
+      if(current?.connected)return;
+      return {connected:true,clientId,joinedAt:Date.now()};
     });
     if(!result.committed){
+      status.textContent="That team is already connected. Choose another team.";
       const latest=await get(ref(db,"games/"+code));
-      game=latest.val();
-      if(!game)throw new Error("The game record could not be read.");
-      const current=game.teams?.find(t=>t.id===id);
-      status.textContent=game.status!=="lobby"
-        ?"The game is no longer in the lobby. Ask the teacher to create a new game."
-        :current?.connection?.connected
-          ?"That team is already marked as connected. Choose another available team."
-          :"Firebase did not accept the team connection. Check the database write rules.";
-      choices();
+      if(latest.exists()){game=latest.val();choices();}
       return;
     }
     teamId=id;
     localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId,clientId}));
+    status.textContent="Connected. Loading team screen…";
     $("claim").classList.add("hidden");
     connect();
   }catch(error){
     console.error("Zero Out team selection failed:",error);
-    status.textContent="Team selection failed: "+(error?.message||String(error));
+    status.textContent="Connection failed: "+(error?.message||String(error));
     buttons.forEach(b=>b.disabled=false);
   }
 }
