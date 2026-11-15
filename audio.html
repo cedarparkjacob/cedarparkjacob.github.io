@@ -126,7 +126,7 @@ function updateProgress(){var d=audio.duration||0,t=audio.currentTime||0;$("curr
 function setSleep(value){clearTimeout(sleepTimer);sleepTimer=null;sleepEnd=value==="end";if(value!=="0"&&value!=="end")sleepTimer=setTimeout(function(){audio.pause();$("sleep").value="0";status("Sleep timer finished. Playback paused.","ok");},Number(value)*60000);}
 $("refresh").addEventListener("click",function(){if(root)connect(root.id);else status("Enter a Google Drive folder ID or sharing link.");});
 $("search").addEventListener("input",renderBooks);$("sort").addEventListener("change",renderBooks);
-$("close-book").addEventListener("click",function(){$("detail-panel").classList.remove("open");selectedBook=null;tracks=[];bookTracks=[];renderBooks();});
+$("close-book").addEventListener("click",function(){if(selectedSeries)navigateTo(1);else navigateTo(0);});
 $("play-book").addEventListener("click",function(){if(bookTracks.length){tracks=bookTracks.slice();playTrack(0);}});
 $("continue-book").addEventListener("click",function(){var b=selectedBook&&bookmarks[selectedBook.id];if(b)resumeBookmark(b);});
 $("download-book").addEventListener("click",downloadBook);
