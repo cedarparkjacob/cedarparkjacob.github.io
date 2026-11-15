@@ -4,16 +4,12 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "travel/**"
-      - "!travel/last-updated.json"
-      - "!travel/version.json"
-      - "audio.html"
-      - "audio/**"
-      - "audio-debug.html"
-      - "assets/drive.js"
-      - "assets/site.css"
-      - "assets/site.js"
+    paths-ignore:
+      - "version.json"
+      - "audio-build.json"
+      - "audio-debug-build.json"
+      - "travel/last-updated.json"
+      - "travel/version.json"
   workflow_dispatch:
 
 permissions:
@@ -124,6 +120,18 @@ jobs:
             console.log("Generated audio debug version v" + debugVersion);
           }
 
+          const rootVersionPath = "version.json";
+          const rootVersionData = JSON.parse(fs.readFileSync(rootVersionPath, "utf8"));
+          const rootVersionMatch = String(rootVersionData.version || "").match(/^v?(\\d+)$/);
+          if (!rootVersionMatch) throw new Error("Invalid site version in " + rootVersionPath);
+          const nextRootVersion = Number(rootVersionMatch[1]) + 1;
+          fs.writeFileSync(rootVersionPath, JSON.stringify({
+            version: "v" + nextRootVersion,
+            commit: source.slice(0, 7),
+            updated: now
+          }, null, 2) + "\\n");
+          console.log("Generated site version v" + nextRootVersion);
+
           fs.writeFileSync("travel/last-updated.json", JSON.stringify({
             updatedAt: now,
             sourceCommit: source
@@ -131,7 +139,7 @@ jobs:
           console.log("Changed files:", changed.join(", ") || "(none)");
           NODE
 
-            git add audio-build.json audio-debug-build.json travel/last-updated.json travel/version.json
+            git add version.json audio-build.json audio-debug-build.json travel/last-updated.json travel/version.json
             git commit -m "Update site timestamp [skip ci]"
 
             if git push origin HEAD:main; then
