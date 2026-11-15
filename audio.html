@@ -139,7 +139,44 @@ $("speed").addEventListener("change",function(){audio.playbackRate=Number($("spe
 audio.addEventListener("timeupdate",function(){updateProgress();if(Math.floor(audio.currentTime)%10===0)savePosition();if(sleepEnd&&audio.duration&&audio.duration-audio.currentTime<1){audio.pause();$("sleep").value="0";sleepEnd=false;status("Chapter finished. Sleep timer paused playback.","ok");}});
 audio.addEventListener("play",function(){$("play-pause").textContent="Ⅱ";$("play-pause").setAttribute("aria-label","Pause");});audio.addEventListener("pause",function(){$("play-pause").textContent="▶";$("play-pause").setAttribute("aria-label","Play");savePosition();});
 audio.addEventListener("ended",function(){savePosition();if(currentIndex<tracks.length-1)playTrack(currentIndex+1);else{status("Finished listening to this book.","ok");}});
-audio.addEventListener("error",async function(){if(!audio.src)return;var file=tracks[currentIndex];if(file&&!audio.dataset.driveFallback&&!file.resourceKey&&!(file.shortcutDetails&&file.shortcutDetails.targetResourceKey)){audio.dataset.driveFallback="1";var fallback=mediaUrl(file,true);status("Drive API media URL failed. Testing the browser download URL…","error");audio.src=fallback;audio.play().catch(function(err){if(err&&err.name!=="AbortError")status("Download URL play request: "+err.name+": "+err.message,"error");});return;}var e=audio.error,code=e?e.code:0,reason=code===1?"playback was aborted":code===2?"network error":code===3?"audio decoding error":code===4?"unsupported format or Drive returned a non-audio page":"unknown media error";var url=audio.currentSrc||audio.src,probe="";try{var response=await fetch(url,{headers:{Range:"bytes=0-63"}});var type=response.headers.get("content-type")||"(no content-type)";var sample="";if(type.indexOf("text/")===0||type.indexOf("json")>=0){sample=(await response.text()).slice(0,180).replace(/\\s+/g," ");}else{await response.body?.cancel();}probe=" HTTP "+response.status+" · "+type+(sample?" · "+sample:"")+" · "+new URL(response.url).hostname;}catch(err){probe=" Browser diagnostic fetch blocked/failed: "+err.message;}status("Drive audio failed: "+reason+" (media code "+code+")."+probe+" File: "+(file?file.name:"unknown")+".","error");});
+audio.addEventListener("error",async function(){
+ if(!audio.src)return;
+ var file=tracks[currentIndex],isFallback=audio.dataset.driveFallback==="1";
+ if(file&&!isFallback&&!file.resourceKey&&!(file.shortcutDetails&&file.shortcutDetails.targetResourceKey)){
+  var originalUrl=audio.currentSrc||audio.src,apiProbe="";
+  try{
+   var response=await fetch(originalUrl,{headers:{Range:"bytes=0-63"},cache:"no-store"});
+   var type=response.headers.get("content-type")||"(no content-type)",sample="";
+   if(type.indexOf("text/")===0||type.indexOf("json")>=0){
+    sample=(await response.text()).slice(0,240).replace(/\\s+/g," ");
+   }else if(response.body){await response.body.cancel();}
+   apiProbe="API diagnostic: HTTP "+response.status+" · "+type+(sample?" · "+sample:"")+" · "+new URL(response.url).hostname;
+  }catch(err){apiProbe="API diagnostic fetch failed: "+err.message;}
+  audio.dataset.apiDiagnostic=apiProbe;
+  audio.dataset.driveFallback="1";
+  var fallback=mediaUrl(file,true);
+  status("Google API media request failed; testing Drive fallback. "+apiProbe,"error");
+  audio.src=fallback;
+  audio.play().catch(function(err){if(err&&err.name!=="AbortError")status("Drive fallback play request: "+err.name+": "+err.message+". "+apiProbe,"error");});
+  return;
+ }
+ var e=audio.error,code=e?e.code:0,reason=code===1?"playback was aborted":code===2?"network error":code===3?"audio decoding error":code===4?"unsupported format or Drive returned a non-audio page":"unknown media error";
+ var probe=audio.dataset.apiDiagnostic||"";
+ var currentHost="";
+ try{currentHost=new URL(audio.currentSrc||audio.src).hostname;}catch(_){}
+ if(currentHost==="www.googleapis.com"||currentHost==="googleapis.com"){
+  try{
+   var response2=await fetch(audio.currentSrc||audio.src,{headers:{Range:"bytes=0-63"},cache:"no-store"});
+   var type2=response2.headers.get("content-type")||"(no content-type)",sample2="";
+   if(type2.indexOf("text/")===0||type2.indexOf("json")>=0)sample2=(await response2.text()).slice(0,240).replace(/\\s+/g," ");
+   else if(response2.body)await response2.body.cancel();
+   probe=(probe?probe+" | ":"")+"API response: HTTP "+response2.status+" · "+type2+(sample2?" · "+sample2:"");
+  }catch(err2){probe=(probe?probe+" | ":"")+"API diagnostic fetch failed: "+err2.message;}
+ }else if(currentHost==="drive.google.com"){
+  probe=(probe?probe+" | ":"")+"Drive fallback response not inspected: browser JavaScript cannot read this cross-origin response because Drive does not provide CORS headers.";
+ }
+ status("Drive audio failed: "+reason+" (media code "+code+"). "+probe+" File: "+(file?file.name:"unknown")+".","error");
+});
 window.addEventListener("beforeunload",savePosition);
 fetch("audio-build.json?"+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("Build version unavailable");return r.json();}).then(function(build){if(!build.version)throw new Error("Build version missing");$("audio-version").textContent=build.version;$("audio-last-updated").textContent="UPDATED · "+new Date(build.deployedAt).toLocaleString();}).catch(function(){$("audio-version").textContent="PENDING";$("audio-last-updated").textContent="DEPLOY VERSION NOT YET AVAILABLE";});
 var savedSpeed=localStorage.getItem(speedKey);if(savedSpeed){$("speed").value=savedSpeed;audio.playbackRate=Number(savedSpeed);}renderContinue();var last=Object.keys(bookmarks).map(function(k){return bookmarks[k];}).sort(function(a,b){return (b.updated||0)-(a.updated||0);})[0];if(last){$("now-title").textContent=last.trackName||"Continue listening";$("now-book").textContent=(last.bookName||"Audiobook")+" · saved at "+timeLabel(last.time||0);}
