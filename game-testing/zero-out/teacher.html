@@ -912,7 +912,16 @@ function randomAnimal(exclude=[]){const p=animalCatalog.filter(a=>!exclude.inclu
 function renderTeamAssignments(){const n=Math.max(1,Math.min(animalCatalog.length,Number(teamCountInput.value)||1));teamCountInput.value=n;teamDrafts=Array.from({length:n},(_,i)=>teamDrafts[i]||null);teamAssignments.innerHTML="";teamDrafts.forEach((v,i)=>{const row=document.createElement("div");row.className="team-assignment-row";const label=document.createElement("label");label.textContent="Team "+(i+1);const sel=document.createElement("select");const rand=document.createElement("option");rand.value="";rand.textContent="🎲 Random";sel.appendChild(rand);animalCatalog.forEach(a=>{const o=document.createElement("option");o.value=a.name;o.textContent=a.emoji+" "+a.name;sel.appendChild(o);});sel.value=v||"";sel.addEventListener("change",()=>{teamDrafts[i]=sel.value||null;refreshTeamChoices();});const btn=document.createElement("button");btn.type="button";btn.textContent="Random";btn.addEventListener("click",()=>{teamDrafts[i]=randomAnimal(teamDrafts.filter((x,j)=>j!==i&&x)).name;renderTeamAssignments();});row.append(label,sel,btn);teamAssignments.appendChild(row);});selectedCount.textContent=n;refreshTeamChoices();}
 function refreshTeamChoices(){[...teamAssignments.querySelectorAll("select")].forEach((s,i)=>{[...s.options].forEach(o=>{if(o.value)o.disabled=teamDrafts.some((v,j)=>j!==i&&v===o.value);});s.value=teamDrafts[i]||"";});updateCreateButton();}
 function updateCreateButton(){const c=teamDrafts.filter(Boolean);const ok=teamDrafts.length>0&&c.length===new Set(c).size;if(typeof createGameButton!=="undefined"&&createGameButton)createGameButton.disabled=!ok;if(typeof startGameButton!=="undefined"&&startGameButton)startGameButton.disabled=!ok;}
-function buildTeams(){const used=[];return teamDrafts.map((v,i)=>{const a=v?animalCatalog.find(x=>x.name===v):randomAnimal(used);if(!a||used.includes(a.name))throw Error("Each team must have a different animal.");used.push(a.name);return{id:"team-"+(i+1)+"-"+Date.now(),name:a.name,emoji:a.emoji,score:0,position:i};});}
+function buildTeams(){
+ const used=[];
+ const reserved=teamDrafts.filter(Boolean);
+ return teamDrafts.map((v,i)=>{
+  const a=v?animalCatalog.find(x=>x.name===v):randomAnimal([...used,...reserved]);
+  if(!a||used.includes(a.name))throw Error("Each team must have a different animal.");
+  used.push(a.name);
+  return{id:"team-"+(i+1)+"-"+Date.now(),name:a.name,emoji:a.emoji,score:0,position:i};
+ });
+}
 function randomizeAllTeams(){const shuffled=[...animalCatalog].sort(()=>Math.random()-.5);teamDrafts=teamDrafts.map((_,i)=>shuffled[i].name);renderTeamAssignments();}
 teamCountInput.addEventListener("change",renderTeamAssignments);randomizeTeamsButton.addEventListener("click",randomizeAllTeams);renderTeamAssignments();
 /* =========================================================
