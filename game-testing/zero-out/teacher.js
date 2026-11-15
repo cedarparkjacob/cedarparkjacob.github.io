@@ -33,7 +33,10 @@ async function teamClicked(teamId){
    setStatus(result.committed?"Unanswered prompt randomly assigned to "+randomTeam.name+".":"The pending prompt changed; no points were assigned.");
    return;
  }
- await update(ref(db,"games/"+gameId),{pendingPrompt:{id:globalThis.crypto?.randomUUID?.()||("prompt-"+Date.now()),teamId,value:game.currentValue,createdAt:Date.now()},lastPromptTeamId:teamId});setStatus("Prompt sent to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");
+ const prompt={id:globalThis.crypto?.randomUUID?.()||("prompt-"+Date.now()),teamId,value:game.currentValue,createdAt:Date.now()};
+ game.pendingPrompt=prompt;render();
+ try{await update(ref(db,"games/"+gameId),{pendingPrompt:prompt,lastPromptTeamId:teamId});setStatus("Prompt sent to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");}
+ catch(error){game.pendingPrompt=null;render();setStatus("Could not send prompt: "+(error?.message||String(error)));}
 }
 async function award(value,teamId,source,expectedPromptId=null){const result=await runTransaction(ref(db,"games/"+gameId),g=>{if(!g||g.status!=="active"||!Array.isArray(g.teams))return;if(expectedPromptId&&g.pendingPrompt?.id!==expectedPromptId)return;const i=g.teams.findIndex(t=>t.id===teamId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(value);g.lastValue=value;g.lastTeamId=teamId;g.lastAward={value,teamId,source,at:Date.now()};g.pendingPrompt=null;g.currentValue=pointValue();return g;});if(!result.committed)setStatus("That point award could not be completed. Refresh and try again.");}
 async function applyDirectAssignment(){const ids=[...selectedTeamIds],value=selectionValue;if(!ids.length||!game)return;const result=await runTransaction(ref(db,"games/"+gameId),g=>{if(!g||g.status!=="active"||!Array.isArray(g.teams))return;for(const id of ids){const t=g.teams.find(x=>x.id===id);if(!t)return;t.score=(Number(t.score)||0)+Number(value);}const lastId=ids[ids.length-1];g.lastValue=value;g.lastTeamId=lastId;g.lastAward={value,teamId:lastId,teamIds:ids,source:"teacher-direct",at:Date.now()};g.pendingPrompt=null;g.currentValue=pointValue();return g;});const names=ids.map(id=>game.teams.find(t=>t.id===id)?.name).filter(Boolean);clearSelection();setStatus(result.committed?"Assigned "+formatScore(value)+" to "+names.join(", ")+".":"The assignment could not be completed.");}
