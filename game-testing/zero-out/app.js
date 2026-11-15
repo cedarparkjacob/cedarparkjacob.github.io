@@ -248,8 +248,8 @@ const teamCountInput=document.getElementById("teamCount");const teamAssignments=
 const selectedCountElement =
 document.getElementById("selectedCount");
 
-const selectedLettersElement =
-document.getElementById("selectedLetters");
+const selectedLettersElement = document.getElementById("selectedLetters");
+const selectedCount = selectedCountElement;
 
 const startGameButton =
 document.getElementById("startGame");
