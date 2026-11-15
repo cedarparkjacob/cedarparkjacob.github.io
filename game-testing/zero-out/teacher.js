@@ -18,8 +18,22 @@ document.addEventListener("click",event=>{if(assignMode&&!event.target.closest("
 async function teamClicked(teamId){
  if(!game||game.status!=="active")return;
  if(assignMode){if(assignMode==="reassign"&&selectedTeamIds.size&&!selectedTeamIds.has(teamId))selectedTeamIds.clear();if(selectedTeamIds.has(teamId))selectedTeamIds.delete(teamId);else selectedTeamIds.add(teamId);render();return;}
- if(game.pendingPrompt){setStatus("A prompt is already waiting for "+(game.teams.find(t=>t.id===game.pendingPrompt.teamId)?.name||"a team")+".");return;}
- await update(ref(db,"games/"+gameId),{pendingPrompt:{id:crypto.randomUUID(),teamId,value:game.currentValue,createdAt:Date.now()},lastPromptTeamId:teamId});setStatus("Prompt sent to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");
+ if(game.pendingPrompt){
+   const pending=game.pendingPrompt;
+   const destination=game.teams.filter(t=>t.id!==pending.teamId);
+   const randomTeam=destination[Math.floor(Math.random()*destination.length)]||game.teams[Math.floor(Math.random()*game.teams.length)];
+   const result=await runTransaction(ref(db,"games/"+gameId),g=>{
+     if(!g||g.status!=="active"||g.pendingPrompt?.id!==pending.id)return;
+     const target=g.teams.find(t=>t.id===randomTeam.id);if(!target)return;
+     target.score=(Number(target.score)||0)+Number(pending.value);
+     g.lastValue=pending.value;g.lastTeamId=target.id;
+     g.lastAward={value:pending.value,teamId:target.id,source:"teacher-random-fallback",at:Date.now()};
+     g.pendingPrompt=null;g.currentValue=pointValue();return g;
+   });
+   setStatus(result.committed?"Unanswered prompt randomly assigned to "+randomTeam.name+".":"The pending prompt changed; no points were assigned.");
+   return;
+ }
+ await update(ref(db,"games/"+gameId),{pendingPrompt:{id:globalThis.crypto?.randomUUID?.()||("prompt-"+Date.now()),teamId,value:game.currentValue,createdAt:Date.now()},lastPromptTeamId:teamId});setStatus("Prompt sent to "+(game.teams.find(t=>t.id===teamId)?.name||"team")+".");
 }
 async function award(value,teamId,source,expectedPromptId=null){const result=await runTransaction(ref(db,"games/"+gameId),g=>{if(!g||g.status!=="active"||!Array.isArray(g.teams))return;if(expectedPromptId&&g.pendingPrompt?.id!==expectedPromptId)return;const i=g.teams.findIndex(t=>t.id===teamId);if(i<0)return;g.teams[i].score=(Number(g.teams[i].score)||0)+Number(value);g.lastValue=value;g.lastTeamId=teamId;g.lastAward={value,teamId,source,at:Date.now()};g.pendingPrompt=null;g.currentValue=pointValue();return g;});if(!result.committed)setStatus("That point award could not be completed. Refresh and try again.");}
 async function applyDirectAssignment(){const ids=[...selectedTeamIds],value=selectionValue;if(!ids.length||!game)return;const result=await runTransaction(ref(db,"games/"+gameId),g=>{if(!g||g.status!=="active"||!Array.isArray(g.teams))return;for(const id of ids){const t=g.teams.find(x=>x.id===id);if(!t)return;t.score=(Number(t.score)||0)+Number(value);}const lastId=ids[ids.length-1];g.lastValue=value;g.lastTeamId=lastId;g.lastAward={value,teamId:lastId,teamIds:ids,source:"teacher-direct",at:Date.now()};g.pendingPrompt=null;g.currentValue=pointValue();return g;});const names=ids.map(id=>game.teams.find(t=>t.id===id)?.name).filter(Boolean);clearSelection();setStatus(result.committed?"Assigned "+formatScore(value)+" to "+names.join(", ")+".":"The assignment could not be completed.");}
@@ -29,8 +43,9 @@ $("setTimer").onclick=async()=>{const n=(Number($("minutes").value)||0)*60+(Numb
 $("stopTimer").onclick=async()=>{if(timerHandle)clearInterval(timerHandle);timerHandle=null;if(gameId)await update(ref(db,"games/"+gameId),{timerRunning:false,timerSeconds:null});};
 function startTimerLoop(){if(timerHandle)clearInterval(timerHandle);timerHandle=setInterval(async()=>{if(!game||!game.timerRunning||game.timerSeconds==null)return;if(game.timerSeconds<=1){clearInterval(timerHandle);timerHandle=null;await finish();return;}await update(ref(db,"games/"+gameId),{timerSeconds:game.timerSeconds-1});},1000);}
 async function finish(){if(!gameId)return;if(timerHandle)clearInterval(timerHandle);timerHandle=null;await update(ref(db,"games/"+gameId),{status:"finished",started:false,finished:true,timerRunning:false,timerSeconds:null,pendingPrompt:null});}
-$("finish").onclick=()=>{if(confirm("End this game and show the final scoreboard?"))finish();};
-$("newRound").onclick=async()=>{if(!game||!confirm("Reset all team scores and start a new round?"))return;await update(ref(db,"games/"+gameId),{status:"active",started:true,finished:false,teams:game.teams.map(t=>({...t,score:0})),currentValue:pointValue(),lastValue:null,lastTeamId:null,lastAward:null,pendingPrompt:null,timerSeconds:null,timerRunning:false});$("winner").classList.add("hidden");};
-$("newGame").onclick=()=>{if(!confirm("Start a new game? This will leave the current game record intact."))return;if(unsub)unsub();if(timerHandle)clearInterval(timerHandle);game=null;gameId=null;drafts=[];$("setup").classList.remove("hidden");$("lobby").classList.add("hidden");$("controls").classList.add("hidden");$("winner").classList.add("hidden");$("gameCode").textContent="—";$("create").disabled=false;renderDrafts();setStatus("Ready to create another game.");};
+function confirmButton(button,label,action){if(button.dataset.confirm==="yes"){button.dataset.confirm="";button.textContent=label;button.classList.remove("confirm-ready");action();return;}button.dataset.confirm="yes";button.textContent="CONFIRM?";button.classList.add("confirm-ready");}
+$("finish").onclick=()=>confirmButton($("finish"),"END GAME",finish);
+$("newRound").onclick=()=>confirmButton($("newRound"),"NEW ROUND",async()=>{if(!game)return;await update(ref(db,"games/"+gameId),{status:"active",started:true,finished:false,teams:game.teams.map(t=>({...t,score:0})),currentValue:pointValue(),lastValue:null,lastTeamId:null,lastAward:null,pendingPrompt:null,timerSeconds:null,timerRunning:false});$("winner").classList.add("hidden");$("controls").classList.remove("hidden");});
+$("newGame").onclick=()=>confirmButton($("newGame"),"NEW GAME",()=>{if(unsub)unsub();if(timerHandle)clearInterval(timerHandle);game=null;gameId=null;drafts=[];$("setup").classList.remove("hidden");$("lobby").classList.add("hidden");$("controls").classList.add("hidden");$("winner").classList.add("hidden");$("gameCode").textContent="—";$("create").disabled=false;renderDrafts();setStatus("Ready to create another game.");});
 function showWinner(){const w=winners(game.teams);$("lobby").classList.add("hidden");$("controls").classList.add("hidden");$("winner").classList.remove("hidden");$("winnerContent").innerHTML='<div class="team-grid">'+game.teams.slice().sort((a,b)=>Math.abs(a.score)-Math.abs(b.score)).map(t=>'<div class="team-card '+(w.some(x=>x.id===t.id)?"winner-team":"")+'"><div class="emoji">'+t.emoji+'</div><div class="name">'+escapeHtml(t.name)+'</div><div class="score">'+formatScore(t.score)+'</div>'+(w.some(x=>x.id===t.id)?'<strong>WINNER</strong>':'')+'</div>').join("")+'</div>';}
 renderDrafts();
