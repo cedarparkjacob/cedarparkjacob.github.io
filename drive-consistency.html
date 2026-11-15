@@ -58,7 +58,7 @@ const FIELDS="nextPageToken,incompleteSearch,files(id,name,mimeType,parents,crea
 const $=id=>document.getElementById(id);
 let history=loadHistory(),previous=null,busy=false,timer=null,runNumber=history.length;
 function loadHistory(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
-function saveHistory(){try{localStorage.setItem(STORE_KEY,JSON.stringify(history.slice(-100)))}catch(e){setStatus("Local log storage is full or unavailable. Export the log to preserve it.","warn")}}
+function saveHistory(){try{localStorage.setItem(STORE_KEY,JSON.stringify(history.slice(-30)))}catch(e){setStatus("Local log storage is full or unavailable. Export the log to preserve it.","warn")}}
 function setStatus(s,kind){$("status").textContent=s;$("status").className="statusline "+(kind||"")}
 function safe(v){return v==null?"":String(v)}
 function esc(v){return safe(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -178,7 +178,7 @@ async function runCheck(){
    scan.diff={added,removed,changed:altered};
   }else if(prior)changeSummary="No structural or selected metadata differences from previous check.";
   else changeSummary="Baseline check. Future checks will be compared against this result.";
-  const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,rawItems:scan.rawItems,fingerprint:fp};
+  const record={number:++runNumber,startedAt,finishedAt:stamp(),durationMs,folderCount:scan.folders.length,itemCount:scan.items.length,shortcutCount:scan.shortcuts.length,requestCount:scan.requests.length,errorCount:scan.errors.length,changed,changeSummary,incompleteSearch:scan.incompleteSearch,cycles:scan.cycles,errors:scan.errors,rootMetadata:scan.rootMetadata,requests:scan.requests,folders:scan.folders,items:scan.items,fingerprint:fp};
   history.push(record);history=history.slice(-100);saveHistory();previous=record;
   $("statFolders").textContent=record.folderCount;$("statFiles").textContent=record.itemCount-record.folders.length+1;$("statShortcuts").textContent=record.shortcutCount;$("statRequests").textContent=record.requestCount;$("statDuration").textContent=fmt(durationMs);
   $("tree").textContent=buildTree(scan);$("treeStamp").textContent=record.finishedAt;
