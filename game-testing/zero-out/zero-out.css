@@ -11,3 +11,38 @@
 #assignMode.active{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}
 
 .teacher-actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:18px auto}.teacher-actions button{min-width:190px}.team-button.assign-ready{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}.team-button.assign-selected{background:#594b19;border:2px solid #f3cf57;color:#fff8dc;box-shadow:0 0 0 2px rgba(243,207,87,.2)}
+
+/* Teacher controls: keep all three value actions aligned */
+.teacher-actions{display:flex;align-items:stretch;justify-content:center;gap:10px;width:100%;max-width:900px;margin:18px auto}
+.teacher-actions button{flex:1 1 0;min-width:0;white-space:normal}
+.teacher-actions #assignMode.active,.teacher-actions #reassign.active{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}
+.confirm-ready{background:#2474d2!important;border:2px solid #75b5ff!important;color:white!important}
+.teacher-end-actions{display:flex;justify-content:center;align-items:center;gap:16px;margin:26px auto 4px;width:100%;max-width:900px}
+.teacher-end-actions button{flex:1 1 0;min-height:64px;font-size:clamp(1rem,2vw,1.35rem);padding:16px 20px}
+#winner{width:100%}
+#winnerContent{width:100%}
+#winner .team-grid{max-width:100%}
+@media(max-width:700px){
+ body{padding:10px}
+ .wrap{width:100%}
+ .top h1{font-size:1.2rem}
+ #setup .row,#lobby .row{align-items:stretch}
+ #setup .row>* ,#lobby .row>*{max-width:100%}
+ #teamAssignments .row{display:grid;grid-template-columns:65px minmax(0,1fr) auto;gap:7px}
+ #teamAssignments select{width:100%}
+ .teacher-actions{gap:6px;margin:12px auto}
+ .teacher-actions button{font-size:clamp(.62rem,2.6vw,.9rem);padding:10px 5px;line-height:1.15;border-radius:9px}
+ #teacherTeams{grid-template-columns:1fr}
+ .team-button{min-height:58px;padding:10px 12px}
+ .teacher-end-actions{gap:6px;margin-top:18px}
+ .teacher-end-actions button{min-width:0;min-height:64px;padding:10px 4px;font-size:clamp(.68rem,2.8vw,.95rem);line-height:1.15;border-radius:10px}
+ #winner{padding:12px}
+ #winner .team-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #winner .team-card{padding:12px 6px}
+ #winner .team-card .emoji{font-size:2.2rem}
+ #winner .team-card .name{font-size:.95rem}
+ #winner .team-card .score{font-size:1.45rem}
+ #timer{font-size:1.7rem}
+ #minutes,#seconds{flex:1;width:0!important}
+ #setTimer,#stopTimer{flex:1}
+}
