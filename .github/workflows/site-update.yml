@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - "audio-build.json"
+      - "audio-debug-build.json"
       - "travel/last-updated.json"
       - "travel/version.json"
       - ".github/workflows/site-live-notify.yml"
@@ -64,7 +65,7 @@ jobs:
               .split("\n").filter(Boolean);
           } else {
             // Manual workflow dispatch: refresh both app versions.
-            changed = ["travel/photos.js", "audio.html"];
+            changed = ["travel/photos.js", "audio.html", "audio-debug.html"];
           }
 
           const sharedChanged = changed.some(p =>
@@ -74,6 +75,7 @@ jobs:
           const audioChanged = sharedChanged || changed.some(p =>
             p === "audio.html" || p.startsWith("audio/")
           );
+          const audioDebugChanged = changed.includes("audio-debug.html");
 
           if (photosChanged) {
             const versionPath = "travel/version.json";
@@ -103,6 +105,21 @@ jobs:
             console.log("Generated independent audio version v" + audioVersion);
           }
 
+          if (audioDebugChanged) {
+            const debugPath = "audio-debug-build.json";
+            const debugData = JSON.parse(fs.readFileSync(debugPath, "utf8"));
+            const debugMatch = String(debugData.version || "").match(/^v(\\d+)$/);
+            if (!debugMatch) throw new Error("Invalid independent audio debug version in " + debugPath);
+            const debugVersion = Number(debugMatch[1]) + 1;
+            fs.writeFileSync(debugPath, JSON.stringify({
+              version: "v" + debugVersion,
+              run: debugVersion,
+              deployedAt: now,
+              sourceCommit: source
+            }, null, 2) + "\\n");
+            console.log("Generated audio debug version v" + debugVersion);
+          }
+
           fs.writeFileSync("travel/last-updated.json", JSON.stringify({
             updatedAt: now,
             sourceCommit: source
@@ -110,7 +127,7 @@ jobs:
           console.log("Changed files:", changed.join(", ") || "(none)");
           NODE
 
-            git add audio-build.json travel/last-updated.json travel/version.json
+            git add audio-build.json audio-debug-build.json travel/last-updated.json travel/version.json
             git commit -m "Update site timestamp [skip ci]"
 
             if git push origin HEAD:main; then
