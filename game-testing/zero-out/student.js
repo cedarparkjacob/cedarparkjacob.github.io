@@ -1,5 +1,5 @@
 import {db,ref,get,onValue,runTransaction,formatScore,winners,escapeHtml} from "./game-core.js";
-const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=null,unsub=null;
+const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null;
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
 $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")join();};
 async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
