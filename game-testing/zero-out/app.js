@@ -8,177 +8,156 @@ ANIMAL DATABASE - work damnit
 ========================================================= */
 
 const animals = {
-
-A: [
-{ name: "Alligator", emoji: "🐊" },
-{ name: "Ant", emoji: "🐜" },
-{ name: "Antelope", emoji: "🦌" },
-{ name: "Armadillo", emoji: "🦔" },
-{ name: "Axolotl", emoji: "🦎" }
-],
-
-B: [
-{ name: "Bear", emoji: "🐻" },
-{ name: "Beaver", emoji: "🦫" },
-{ name: "Bee", emoji: "🐝" },
-{ name: "Buffalo", emoji: "🦬" },
-{ name: "Butterfly", emoji: "🦋" }
-],
-
-C: [
-{ name: "Cat", emoji: "🐱" },
-{ name: "Cheetah", emoji: "🐆" },
-{ name: "Chicken", emoji: "🐔" },
-{ name: "Crab", emoji: "🦀" },
-{ name: "Crocodile", emoji: "🐊" }
-],
-
-D: [
-{ name: "Deer", emoji: "🦌" },
-{ name: "Dolphin", emoji: "🐬" },
-{ name: "Donkey", emoji: "🫏" },
-{ name: "Duck", emoji: "🦆" },
-{ name: "Dragonfly", emoji: "🪰" }
-],
-
-E: [
-{ name: "Eagle", emoji: "🦅" },
-{ name: "Elephant", emoji: "🐘" },
-{ name: "Elk", emoji: "🦌" },
-{ name: "Eel", emoji: "🐍" }
-],
-
-F: [
-{ name: "Fox", emoji: "🦊" },
-{ name: "Falcon", emoji: "🦅" },
-{ name: "Frog", emoji: "🐸" },
-{ name: "Flamingo", emoji: "🦩" },
-{ name: "Ferret", emoji: "🦦" }
-],
-
-G: [
-{ name: "Giraffe", emoji: "🦒" },
-{ name: "Goat", emoji: "🐐" },
-{ name: "Gorilla", emoji: "🦍" },
-{ name: "Goose", emoji: "🪿" }
-],
-
-H: [
-{ name: "Hedgehog", emoji: "🦔" },
-{ name: "Hippo", emoji: "🦛" },
-{ name: "Horse", emoji: "🐴" },
-{ name: "Hawk", emoji: "🦅" }
-],
-
-I: [
-{ name: "Iguana", emoji: "🦎" },
-{ name: "Impala", emoji: "🦌" },
-{ name: "Ibis", emoji: "🐦" }
-],
-
-J: [
-{ name: "Jaguar", emoji: "🐆" },
-{ name: "Jellyfish", emoji: "🪼" },
-{ name: "Jackal", emoji: "🦊" }
-],
-
-K: [
-{ name: "Kangaroo", emoji: "🦘" },
-{ name: "Koala", emoji: "🐨" },
-{ name: "Kiwi", emoji: "🥝" },
-{ name: "Kingfisher", emoji: "🐦" }
-],
-
-L: [
-{ name: "Lion", emoji: "🦁" },
-{ name: "Leopard", emoji: "🐆" },
-{ name: "Llama", emoji: "🦙" },
-{ name: "Lobster", emoji: "🦞" }
-],
-
-M: [
-{ name: "Monkey", emoji: "🐒" },
-{ name: "Moose", emoji: "🫎" },
-{ name: "Mouse", emoji: "🐭" },
-{ name: "Meerkat", emoji: "🦦" }
-],
-
-N: [
-{ name: "Narwhal", emoji: "🦄" },
-{ name: "Newt", emoji: "🦎" },
-{ name: "Nightingale", emoji: "🐦" }
-],
-
-O: [
-{ name: "Owl", emoji: "🦉" },
-{ name: "Octopus", emoji: "🐙" },
-{ name: "Otter", emoji: "🦦" },
-{ name: "Ostrich", emoji: "🦤" }
-],
-
-P: [
-{ name: "Panda", emoji: "🐼" },
-{ name: "Penguin", emoji: "🐧" },
-{ name: "Pig", emoji: "🐷" },
-{ name: "Porcupine", emoji: "🦔" }
-],
-
-Q: [
-{ name: "Quail", emoji: "🐦" }
-],
-
-R: [
-{ name: "Raccoon", emoji: "🦝" },
-{ name: "Rabbit", emoji: "🐰" },
-{ name: "Raven", emoji: "🐦" },
-{ name: "Reindeer", emoji: "🦌" }
-],
-
-S: [
-{ name: "Snake", emoji: "🐍" },
-{ name: "Shark", emoji: "🦈" },
-{ name: "Seal", emoji: "🦭" },
-{ name: "Sloth", emoji: "🦥" },
-{ name: "Squirrel", emoji: "🐿️" }
-],
-
-T: [
-{ name: "Tiger", emoji: "🐯" },
-{ name: "Turtle", emoji: "🐢" },
-{ name: "Toucan", emoji: "🐦" },
-{ name: "Turkey", emoji: "🦃" }
-],
-
-U: [
-{ name: "Urchin", emoji: "🦔" }
-],
-
-V: [
-{ name: "Vulture", emoji: "🦅" },
-{ name: "Viper", emoji: "🐍" }
-],
-
-W: [
-{ name: "Wolf", emoji: "🐺" },
-{ name: "Whale", emoji: "🐋" },
-{ name: "Walrus", emoji: "🦭" },
-{ name: "Wombat", emoji: "🐾" }
-],
-
-X: [
-{ name: "Xerus", emoji: "🐿️" }
-],
-
-Y: [
-{ name: "Yak", emoji: "🐂" },
-{ name: "Yellowhammer", emoji: "🐦" }
-],
-
-Z: [
-{ name: "Zebra", emoji: "🦓" },
-{ name: "Zebu", emoji: "🐂" }
-]
-
+  A: [
+    { name: "Alligator", emoji: "🐊" },
+    { name: "Ant", emoji: "🐜" },
+    { name: "Armadillo", emoji: "🦔" }
+  ],
+  B: [
+    { name: "Badger", emoji: "🦡" },
+    { name: "Bat", emoji: "🦇" },
+    { name: "Bear", emoji: "🐻" },
+    { name: "Beaver", emoji: "🦫" },
+    { name: "Bee", emoji: "🐝" },
+    { name: "Beetle", emoji: "🪲" },
+    { name: "Bird", emoji: "🐦" },
+    { name: "Bison", emoji: "🦬" },
+    { name: "Blowfish", emoji: "🐡" },
+    { name: "Boar", emoji: "🐗" },
+    { name: "Butterfly", emoji: "🦋" }
+  ],
+  C: [
+    { name: "Camel", emoji: "🐪" },
+    { name: "Cat", emoji: "🐈" },
+    { name: "Caterpillar", emoji: "🐛" },
+    { name: "Chipmunk", emoji: "🐿️" },
+    { name: "Chicken", emoji: "🐔" },
+    { name: "Cow", emoji: "🐄" },
+    { name: "Crab", emoji: "🦀" },
+    { name: "Crocodile", emoji: "🐊" }
+  ],
+  D: [
+    { name: "Deer", emoji: "🦌" },
+    { name: "Dodo", emoji: "🦤" },
+    { name: "Dog", emoji: "🐕" },
+    { name: "Dolphin", emoji: "🐬" },
+    { name: "Donkey", emoji: "🫏" },
+    { name: "Dove", emoji: "🕊️" },
+    { name: "Dragon", emoji: "🐉" },
+    { name: "Dragon Face", emoji: "🐲" },
+    { name: "Duck", emoji: "🦆" }
+  ],
+  E: [
+    { name: "Eagle", emoji: "🦅" },
+    { name: "Elephant", emoji: "🐘" }
+  ],
+  F: [
+    { name: "Falcon", emoji: "🦅" },
+    { name: "Fish", emoji: "🐟" },
+    { name: "Flamingo", emoji: "🦩" },
+    { name: "Fly", emoji: "🪰" },
+    { name: "Fox", emoji: "🦊" },
+    { name: "Frog", emoji: "🐸" }
+  ],
+  G: [
+    { name: "Giraffe", emoji: "🦒" },
+    { name: "Goat", emoji: "🐐" },
+    { name: "Gorilla", emoji: "🦍" },
+    { name: "Goose", emoji: "🪿" }
+  ],
+  H: [
+    { name: "Hamster", emoji: "🐹" },
+    { name: "Hare", emoji: "🐇" },
+    { name: "Hedgehog", emoji: "🦔" },
+    { name: "Hippopotamus", emoji: "🦛" },
+    { name: "Horse", emoji: "🐎" }
+  ],
+  I: [
+    { name: "Insect", emoji: "🐛" }
+  ],
+  J: [
+    { name: "Jellyfish", emoji: "🪼" }
+  ],
+  K: [
+    { name: "Kangaroo", emoji: "🦘" },
+    { name: "Koala", emoji: "🐨" }
+  ],
+  L: [
+    { name: "Leopard", emoji: "🐆" },
+    { name: "Lion", emoji: "🦁" },
+    { name: "Lizard", emoji: "🦎" },
+    { name: "Llama", emoji: "🦙" },
+    { name: "Lobster", emoji: "🦞" }
+  ],
+  M: [
+    { name: "Mammoth", emoji: "🦣" },
+    { name: "Monkey", emoji: "🐒" },
+    { name: "Mosquito", emoji: "🦟" },
+    { name: "Mouse", emoji: "🐁" }
+  ],
+  N: [
+    { name: "Octopus", emoji: "🐙" }
+  ],
+  O: [
+    { name: "Orangutan", emoji: "🦧" },
+    { name: "Orca", emoji: "🫍" },
+    { name: "Ostrich", emoji: "🦤" },
+    { name: "Otter", emoji: "🦦" },
+    { name: "Oyster", emoji: "🦪" }
+  ],
+  P: [
+    { name: "Panda", emoji: "🐼" },
+    { name: "Parrot", emoji: "🦜" },
+    { name: "Peacock", emoji: "🦚" },
+    { name: "Penguin", emoji: "🐧" },
+    { name: "Pig", emoji: "🐖" },
+    { name: "Polar Bear", emoji: "🐻‍❄️" },
+    { name: "Poodle", emoji: "🐩" },
+    { name: "Pufferfish", emoji: "🐡" }
+  ],
+  R: [
+    { name: "Rabbit", emoji: "🐇" },
+    { name: "Raccoon", emoji: "🦝" },
+    { name: "Ram", emoji: "🐏" },
+    { name: "Rat", emoji: "🐀" },
+    { name: "Rhinoceros", emoji: "🦏" }
+  ],
+  S: [
+    { name: "Scorpion", emoji: "🦂" },
+    { name: "Seal", emoji: "🦭" },
+    { name: "Shark", emoji: "🦈" },
+    { name: "Sheep", emoji: "🐑" },
+    { name: "Shrimp", emoji: "🦐" },
+    { name: "Skunk", emoji: "🦨" },
+    { name: "Sloth", emoji: "🦥" },
+    { name: "Snail", emoji: "🐌" },
+    { name: "Snake", emoji: "🐍" },
+    { name: "Spider", emoji: "🕷️" },
+    { name: "Squid", emoji: "🦑" },
+    { name: "Swan", emoji: "🦢" }
+  ],
+  T: [
+    { name: "Tiger", emoji: "🐅" },
+    { name: "T-Rex", emoji: "🦖" },
+    { name: "Tropical Fish", emoji: "🐠" },
+    { name: "Turtle", emoji: "🐢" },
+    { name: "Turkey", emoji: "🦃" }
+  ],
+  U: [
+    { name: "Unicorn", emoji: "🦄" }
+  ],
+  W: [
+    { name: "Whale", emoji: "🐋" },
+    { name: "Worm", emoji: "🪱" },
+    { name: "Water Buffalo", emoji: "🐃" },
+    { name: "Wolf", emoji: "🐺" }
+  ],
+  X: [
+    { name: "X-Ray Tetra", emoji: "🐟" }
+  ],
+  Z: [
+    { name: "Zebra", emoji: "🦓" }
+  ]
 };
 
 /* =========================================================
