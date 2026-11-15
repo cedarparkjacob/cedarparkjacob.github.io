@@ -37,7 +37,7 @@ body[data-theme="listen"]{--bg:#111820;--accent:#d7b58c;--accent2:#a6c4bd;--pane
 <div class="breadcrumb" id="breadcrumb"></div>
 <div class="book-grid" id="book-grid"><div class="empty">Connect a public Google Drive folder to load your books.</div></div>
 <section class="continue-section" aria-labelledby="continue-title"><p class="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h2 id="continue-title">One more page</h2><div class="continue-list" id="continue-list"><div class="continue-empty">Your bookmarks will appear here as you listen.</div></div></section>
-<section class="detail-panel" id="detail-panel"><div class="detail-head"><div><p class="eyebrow">YOUR BOOK / CHAPTERS</p><h2 id="detail-title">Select a book</h2><p id="detail-meta"></p></div><div class="detail-actions"><button class="listen-btn" id="play-book" type="button">▶ PLAY BOOK</button><button class="listen-btn" id="continue-book" type="button" disabled>↗ CONTINUE</button><button class="listen-btn" id="download-book" type="button" disabled>↓ DOWNLOAD BOOK</button><button class="listen-btn" id="close-book" type="button">CLOSE ✕</button></div></div><div class="chapter-list" id="chapter-list"></div></section>
+<section class="detail-panel" id="detail-panel"><div class="detail-head"><div><p class="eyebrow">YOUR BOOK / CHAPTERS</p><h2 id="detail-title">Select a book</h2><p id="detail-meta"></p></div><div class="detail-actions"><button class="listen-btn" id="play-book" type="button">▶ PLAY BOOK</button><button class="listen-btn" id="download-current-chapter" type="button" disabled>↓ DOWNLOAD CHAPTER</button><button class="listen-btn" id="continue-book" type="button" disabled>↗ CONTINUE</button><button class="listen-btn" id="download-book" type="button" disabled>↓ DOWNLOAD BOOK</button><button class="listen-btn" id="close-book" type="button">CLOSE ✕</button></div></div><div class="chapter-list" id="chapter-list"></div></section>
 <footer class="site-footer"><span>© 2026 LUDDEN<br><small id="audio-last-updated">LISTENING ROOM / GOOGLE DRIVE</small></span><span>ONE MORE CHAPTER</span><a href="index.html">BACK TO BASE ↑</a></footer>
 </main></div>
 <audio id="audio" preload="metadata"></audio><iframe id="drive-preview-player" title="Google Drive audiobook player" allow="autoplay" style="display:none;position:fixed;z-index:40;left:0;right:0;bottom:0;width:100%;height:340px;background:#000;border:1px solid #78634e"></iframe>
@@ -125,7 +125,7 @@ function playTrack(index){
  $("now-title").textContent=file.name.replace(audioExt,"");
  $("now-book").textContent=(selectedBook?selectedBook.name:"Google Drive")+" · Google Drive player";
  $("download").disabled=false;
- $("download").onclick=function(){window.open(mediaUrl(file,true),"_blank","noopener");};
+ $("download").onclick=function(){window.open(mediaUrl(file),"_blank","noopener");};$("download-current-chapter").disabled=false;$("download-current-chapter").onclick=function(){window.open(mediaUrl(file),"_blank","noopener");};
  status("Chapter opened in Google Drive's player. Use its controls for playback and speed.","ok");
  renderChapters();
 }
