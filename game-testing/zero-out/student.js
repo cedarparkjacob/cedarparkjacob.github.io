@@ -14,12 +14,12 @@ function choices(){
     button.className="choice";
     button.dataset.teamId=t.id;
     button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(" · SELECT"));
-    button.disabled=busy||game.status!=="lobby";
+    button.disabled=busy;
     button.addEventListener("click",()=>claim(t.id));
     $("teamChoices").append(button);
   });
   $("randomTeamButton").disabled=selectionBusy||game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;
-  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||game.status!=="lobby"||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
+  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
   $("randomTeamStatus").textContent=game.status!=="lobby"?"Team selection is closed because the game has started.":game.teams.length>=26?"The game has reached the 26-team limit.":game.teams.length>=animalCatalog.length?"Every available animal is already in use.":"Spin to create and automatically join a new team.";
 }
 function secureRandomIndex(length){
@@ -45,6 +45,8 @@ async function spinForRandomTeam(){
   selectionBusy=true;button.disabled=true;
   $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=true);
   status.textContent="Spinning for a new team…";wheel.classList.add("spinning");
+  let spinIndex=0;
+  spinHandle=setInterval(()=>{const a=animalCatalog[spinIndex++%animalCatalog.length];wheel.textContent=a.emoji+" "+a.name;},85);
   const newClientId=makeClientId();
   try{
     const initial=await get(ref(db,"games/"+code));
@@ -62,19 +64,17 @@ async function spinForRandomTeam(){
         score:0,position:latest.teams.length,
         connection:{connected:true,clientId:newClientId,joinedAt:Date.now()}
       };
-      const result=await runTransaction(ref(db,"games/"+code+"/teams"),teams=>{
-        if(!Array.isArray(teams)||teams.length>=26)return;
-        if(teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
-        const usedLetters=new Set(teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
+      const result=await runTransaction(ref(db,"games/"+code),g=>{
+        if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||g.teams.length>=26)return;
+        if(g.teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
+        const usedLetters=new Set(g.teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
         const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!usedLetters.has(ch));
         if(!letter)return;
-        team.letter=letter;team.position=teams.length;teams.push(team);return teams;
+        team.letter=letter;team.position=g.teams.length;g.teams.push(team);return g;
       });
       if(result.committed){
-        const freshGame=await get(ref(db,"games/"+code));
-        if(!freshGame.exists()||freshGame.val().status!=="lobby")throw new Error("The game has already started. Rejoin with the current game code.");
-        latest=freshGame.val();
-        created=latest.teams.find(t=>t.id===teamIdNew);
+        latest=result.snapshot.val();
+        created=latest?.teams?.find(t=>t.id===teamIdNew);
         if(created)break;
       }
       const fresh=await get(ref(db,"games/"+code));
@@ -83,7 +83,9 @@ async function spinForRandomTeam(){
       if(latest.status!=="lobby")throw new Error("The teacher has already started the game.");
     }
     if(!created)throw new Error(latest.teams.length>=26?"The game has reached the 26-team limit.":"No unused animal team could be added. Try again.");
-    game=latest;wheel.textContent=created.emoji+" "+created.name;
+    game=latest;
+    if(spinHandle){clearInterval(spinHandle);spinHandle=null;}
+    wheel.textContent=created.emoji+" "+created.name;
     wheel.classList.remove("spinning");
     status.textContent="Joined as "+created.name+".";
     finishClaim(created.id,newClientId);
@@ -99,18 +101,20 @@ async function spinForRandomTeam(){
 }
 $("randomTeamButton").onclick=spinForRandomTeam;
 async function claim(id){
-  if(selectionBusy||game?.status!=="lobby")return;
+  if(selectionBusy||!["lobby","active"].includes(game?.status))return;
   selectionBusy=true;
   const status=$("claimStatus"),buttons=[...$("teamChoices").querySelectorAll("button")];
   buttons.forEach(b=>b.disabled=true);$("randomTeamButton").disabled=true;
   status.textContent="Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
   const newClientId=makeClientId();
   try{
-    const teamIndex=game.teams.findIndex(t=>t.id===id);
-    if(teamIndex<0)throw new Error("That team is no longer in this game.");
-    const result=await runTransaction(ref(db,"games/"+code+"/teams/"+teamIndex+"/connection"),connection=>{
-      if(connection?.connected)return;
-      return {connected:true,clientId:newClientId,joinedAt:Date.now()};
+    if(!game.teams.some(t=>t.id===id))throw new Error("That team is no longer in this game.");
+    const result=await runTransaction(ref(db,"games/"+code),g=>{
+      if(!g||!["lobby","active"].includes(g.status)||!Array.isArray(g.teams))return;
+      const target=g.teams.find(t=>t.id===id);
+      if(!target||target.connection?.connected)return;
+      target.connection={connected:true,clientId:newClientId,joinedAt:Date.now()};
+      return g;
     });
     if(!result.committed){
       const latest=await get(ref(db,"games/"+code));
@@ -119,7 +123,7 @@ async function claim(id){
       return;
     }
     const latest=await get(ref(db,"games/"+code));
-    if(!latest.exists()||latest.val().status!=="lobby")throw new Error("The game has already started.");
+    if(!latest.exists()||!["lobby","active"].includes(latest.val().status))throw new Error("This game is no longer accepting team connections.");
     game=latest.val();
     status.textContent="Connected. Loading team screen…";
     finishClaim(id,newClientId);
