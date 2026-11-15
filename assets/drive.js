@@ -34,7 +34,15 @@
         params.set("includeItemsFromAllDrives", "true");
       }
 
-      const response = await fetch(API_ROOT + "?" + params.toString());
+      const headers = {};
+      if (opts.resourceKey) {
+        headers["X-Goog-Drive-Resource-Keys"] = folderId + "/" + opts.resourceKey;
+      }
+      const response = await fetch(API_ROOT + "?" + params.toString(), {
+        method: "GET",
+        headers,
+        cache: "no-store"
+      });
       let data;
       try {
         data = await response.json();
