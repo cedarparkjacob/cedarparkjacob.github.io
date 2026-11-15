@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - "audio-build.json"
-      - "audio-debug-build.json"
-      - "travel/last-updated.json"
-      - "travel/version.json"
-      - ".github/workflows/site-live-notify.yml"
+    paths:
+      - "travel/**"
+      - "!travel/last-updated.json"
+      - "!travel/version.json"
+      - "audio.html"
+      - "audio/**"
+      - "audio-debug.html"
+      - "assets/drive.js"
+      - "assets/site.css"
+      - "assets/site.js"
   workflow_dispatch:
 
 permissions:
