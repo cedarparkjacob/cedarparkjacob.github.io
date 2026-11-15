@@ -1,3 +1,47 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  get,
+  onValue,
+  set,
+  update
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASer01FF8K3-oqf4QJDG7iMNiykyY549g",
+  authDomain: "zero-out-cedar-park.firebaseapp.com",
+  databaseURL: "https://zero-out-cedar-park-default-rtdb.firebaseio.com",
+  projectId: "zero-out-cedar-park",
+  storageBucket: "zero-out-cedar-park.firebasestorage.app",
+  messagingSenderId: "786796988391",
+  appId: "1:786796988391:web:582f42b8b63184a6719f42",
+  measurementId: "G-28RLDXFREW"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+
+let game = {
+  started: false,
+  currentValue: null,
+  lastValue: null,
+  lastTeamId: null,
+  teams: [],
+  timerSeconds: null,
+  timerRunning: false
+};
+let firebaseGameId = null;
+let gameListener = null;
+let timerInterval = null;
+
+async function saveGameToFirebase() {
+  if (!firebaseGameId || !game) {
+    throw new Error("No active game is connected to Firebase.");
+  }
+  await set(ref(db, "games/" + firebaseGameId), game);
+}
+
 /* =========================================================
 ZERO OUT
 First working version + timer
@@ -235,10 +279,20 @@ async function joinGame() {
 
     if (gameListener) {
       gameListener();
+      gameListener = null;
     }
 
+    game = {
+      started: false,
+      currentValue: null,
+      lastValue: null,
+      lastTeamId: null,
+      teams: [],
+      timerSeconds: null,
+      timerRunning: false
+    };
 
-gameListener =
+    gameListener =
   onValue(
     gameRef,
     snapshot => {
@@ -1252,45 +1306,38 @@ resetGame
 );
 
 function resetGame() {
+  const confirmed = confirm("Start a new game? The current game will be lost.");
+  if (!confirmed) return;
 
-const confirmed =
-confirm(
-"Start a new game? The current game will be lost."
-);
+  stopGameTimer();
 
-if (!confirmed) {
-return;
-}
+  if (gameListener) {
+    gameListener();
+    gameListener = null;
+  }
 
-stopGameTimer();
+  firebaseGameId = null;
+  game = {
+    started: false,
+    currentValue: null,
+    lastValue: null,
+    lastTeamId: null,
+    teams: [],
+    timerSeconds: null,
+    timerRunning: false
+  };
 
-game = {
-
-
-started: false,
-
-currentValue: null,
-
-lastValue: null,
-
-lastTeamId: null,
-
-teams: [],
-
-timerSeconds: null,
-
-timerRunning: false
-
-
-};
-
-teamDrafts=[];renderTeamAssignments();
-
-teamsElement.innerHTML = "";
-
-renderValue();
-
-updateTimerDisplay();
+  teamDrafts = [];
+  renderTeamAssignments();
+  teamsElement.innerHTML = "";
+  teamButtonsElement.innerHTML = "";
+  gameCodeInput.value = "";
+  gameCodeError.textContent = "";
+  gameCodeScreen.classList.remove("hidden");
+  gameControls.classList.add("hidden");
+  setupSection.classList.remove("hidden");
+  renderValue();
+  updateTimerDisplay();
 }
 
 /* =========================================================
