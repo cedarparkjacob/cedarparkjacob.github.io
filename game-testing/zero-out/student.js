@@ -5,18 +5,26 @@ $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")joi
 async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
 function choices(){
   $("claim").classList.remove("hidden");
-  $("teamChoices").innerHTML=game.teams.map(t=>'<button type="button" class="choice" data-id="'+t.id+'">'+t.emoji+' '+escapeHtml(t.name)+(t.connection?.connected?" · IN USE":"")+'</button>').join("");
-  $("teamChoices").querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>claim(button.dataset.id)));
+  $("claimStatus").textContent="Tap an available team to connect this computer.";
+  $("teamChoices").innerHTML=game.teams.map(t=>{
+    const busy=!!t.connection?.connected;
+    return '<button type="button" class="choice" data-id="'+escapeHtml(t.id)+'" '+(busy?'disabled':'')+'>'+t.emoji+' '+escapeHtml(t.name)+(busy?" · IN USE":" · SELECT")+'</button>';
+  }).join("");
+  $("teamChoices").onclick=event=>{
+    const button=event.target.closest("button[data-id]");
+    if(!button||button.disabled)return;
+    claim(button.dataset.id);
+  };
 }
 async function claim(id){
   const status=$("claimStatus");
   const buttons=[...$("teamChoices").querySelectorAll("button")];
   buttons.forEach(b=>b.disabled=true);
-  status.textContent="Claiming team…";
+  status.textContent="Connecting to that team…";
   try{
-    clientId=crypto.randomUUID();
+    clientId=(globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2)));
     const result=await runTransaction(ref(db,"games/"+code),g=>{
-      if(!g||g.status!=="lobby")return;
+      if(!g||g.status!=="lobby"||!Array.isArray(g.teams))return;
       const t=g.teams.find(x=>x.id===id);
       if(!t||t.connection?.connected)return;
       t.connection={connected:true,clientId,joinedAt:Date.now()};
@@ -25,8 +33,13 @@ async function claim(id){
     if(!result.committed){
       const latest=await get(ref(db,"games/"+code));
       game=latest.val();
-      const current=game?.teams?.find(t=>t.id===id);
-      status.textContent=game?.status!=="lobby"?"The teacher has already started the game. Ask the teacher to create a new game.":current?.connection?.connected?"That team is already connected. Choose a different team.":"The team could not be claimed. Please try again.";
+      if(!game)throw new Error("The game record could not be read.");
+      const current=game.teams?.find(t=>t.id===id);
+      status.textContent=game.status!=="lobby"
+        ?"The game is no longer in the lobby. Ask the teacher to create a new game."
+        :current?.connection?.connected
+          ?"That team is already marked as connected. Choose another available team."
+          :"Firebase did not accept the team connection. Check the database write rules.";
       choices();
       return;
     }
@@ -35,8 +48,8 @@ async function claim(id){
     $("claim").classList.add("hidden");
     connect();
   }catch(error){
-    console.error("Team claim failed:",error);
-    status.textContent="Could not select this team: "+(error?.message||String(error));
+    console.error("Zero Out team selection failed:",error);
+    status.textContent="Team selection failed: "+(error?.message||String(error));
     buttons.forEach(b=>b.disabled=false);
   }
 }
