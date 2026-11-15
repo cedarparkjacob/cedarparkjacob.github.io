@@ -2,7 +2,7 @@ name: Notify when site is live
 
 on:
   workflow_run:
-    workflows: ["Site update status"]
+    workflows: ["Generate site metadata"]
     types: [completed]
 
 permissions:
