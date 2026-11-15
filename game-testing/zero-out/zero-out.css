@@ -9,3 +9,5 @@
 .team-button.assign-ready{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}
 .team-button.assign-selected{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}
 #assignMode.active{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}
+
+.teacher-actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:18px auto}.teacher-actions button{min-width:190px}.team-button.assign-ready{background:#594b19;border:2px solid #f3cf57;color:#fff8dc}.team-button.assign-selected{background:#594b19;border:2px solid #f3cf57;color:#fff8dc;box-shadow:0 0 0 2px rgba(243,207,87,.2)}
