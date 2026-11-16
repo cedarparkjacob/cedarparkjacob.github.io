@@ -1,7 +1,7 @@
 import {db,ref,get,update,onValue,runTransaction,animalCatalog,formatScore,winners,escapeHtml} from "./game-core.js";
 const $=id=>document.getElementById(id);
 let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,selectionBusy=false;
-let heartbeatHandle=null,countdownHandle=null,countdownToken="",countdownDeadline=0,teamScreenOpen=false;
+let heartbeatHandle=null,countdownHandle=null,countdownToken="",countdownDeadline=0,teamScreenOpen=false,lastConflictAt=0;
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
 function makeClientId(){return globalThis.crypto?.randomUUID?.()||("screen-"+Date.now()+"-"+Math.random().toString(36).slice(2));}
 function saveClient(){localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId:teamId||null,clientId}));}
@@ -29,6 +29,7 @@ async function join(){
   unsub=onValue(ref(db,"games/"+code),s=>{
    game=s.val();if(!game)return;
    const p=game.participants?.[clientId];
+   if(p?.conflictAt&&p.conflictAt!==lastConflictAt){lastConflictAt=p.conflictAt;$("claimStatus").textContent="Two students selected the same team at nearly the same time. The other student won the random tie-break; please choose another team.";}
    if(game.status==="active"&&p?.teamId){if(!teamScreenOpen||teamId!==p.teamId){teamId=p.teamId;saveClient();finishClaim(teamId,clientId);}return;}
    if(game.status==="finished"){if(teamId)connect();return;}
    if(p?.teamId&&game.teamReservations?.[p.teamId]?.clientId!==clientId){teamId="";saveClient();stopCountdown();$("claimStatus").textContent="Another student won that team in a simultaneous selection. Please choose a different team.";}
@@ -89,15 +90,15 @@ async function selectTeam(id){
  finally{selectionBusy=false;renderChoices();}
 }
 async function lockSelection(id=game?.participants?.[clientId]?.teamId,selectedAt=game?.participants?.[clientId]?.selectedAt){
- if(!id||!clientId||game?.status!=="lobby")return;stopCountdown();
+ if(!id||!clientId||game?.status!=="lobby")return;stopCountdown();countdownToken=id+":"+selectedAt;
  try{
   const result=await runTransaction(ref(db,"games/"+code),g=>{
    if(!g||g.status!=="lobby")return;const p=g.participants?.[clientId],r=g.teamReservations?.[id];
    if(!p||p.teamId!==id||p.locked||r?.clientId!==clientId||Number(p.selectedAt)!==Number(selectedAt))return;
    p.locked=true;r.locked=true;p.lastSeen=Date.now();return g;
   });
-  if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}
- }catch(e){$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
+  if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}else{countdownToken="";syncCountdown(game?.participants?.[clientId]);}
+ }catch(e){countdownToken="";$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
 }
 $("lockInButton").onclick=()=>lockSelection();
 async function spinForRandomTeam(){
