@@ -35,13 +35,15 @@ $("start").onclick=async()=>{
    const limit=Math.max(1,Math.min(26,Number(g.teamLimit)||g.teams.length));
    const online=Object.entries(g.participants).filter(([,p])=>now-Number(p.lastSeen||0)<20000);
    const onlineIds=new Set(online.map(([id])=>id));
-   Object.keys(g.teamReservations).forEach(id=>{const r=g.teamReservations[id];if(!onlineIds.has(r.clientId))delete g.teamReservations[id];});
+   Object.keys(g.teamReservations).forEach(id=>{const r=g.teamReservations[id];if(!r.locked&&!onlineIds.has(r.clientId))delete g.teamReservations[id];});
    const locked=[];
+   Object.entries(g.teamReservations).forEach(([teamId,reservation])=>{
+    const participant=g.participants[reservation.clientId];
+    if(reservation.locked&&participant?.locked&&participant.teamId===teamId){const team=g.teams.find(team=>team.id===teamId);if(team&&!locked.some(x=>x.id===team.id))locked.push(team);}
+   });
    online.forEach(([id,p])=>{
     const reservation=p.teamId&&g.teamReservations[p.teamId];
-    if(p.locked&&reservation?.clientId===id&&reservation.locked){
-     const team=g.teams.find(team=>team.id===p.teamId);if(team&&!locked.some(x=>x.id===team.id))locked.push(team);
-    }else{
+    if(!(p.locked&&reservation?.clientId===id&&reservation.locked)){
      if(p.teamId&&g.teamReservations[p.teamId]?.clientId===id)delete g.teamReservations[p.teamId];
      p.teamId=null;p.locked=false;
     }
