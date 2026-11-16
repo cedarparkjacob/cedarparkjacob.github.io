@@ -15,15 +15,25 @@ async function join(){
   const prior=game.participants?.[clientId];
   if(game.status!=="lobby"&&prior?.teamId){teamId=prior.teamId;saveClient();$("join").classList.add("hidden");finishClaim(teamId,clientId);return;}
   if(game.status!=="lobby"){$("joinStatus").textContent="This game has already started.";return;}
-  const result=await runTransaction(ref(db,"games/"+code),g=>{
-   if(!g||g.status!=="lobby")return;
-   g.participants=g.participants||{};
-   const p=g.participants[clientId]||{joinedAt:Date.now(),teamId:null,locked:false};
-   p.lastSeen=Date.now();g.participants[clientId]=p;g.teamReservations=g.teamReservations||{};
-   return g;
+  // Register this screen at its own participant path. A transaction on the
+  // whole game can abort immediately when this browser has no local cache yet.
+  const participantRef=ref(db,"games/"+code+"/participants/"+clientId);
+  const priorParticipant=game.participants?.[clientId]||{joinedAt:Date.now(),teamId:null,locked:false};
+  const result=await runTransaction(participantRef,current=>{
+   if(current&&typeof current==="object")return {...priorParticipant,...current,lastSeen:Date.now()};
+   return {...priorParticipant,lastSeen:Date.now()};
   });
-  if(!result.committed)throw new Error("The teacher has already begun the game.");
-  game=result.snapshot.val();teamId=game.participants?.[clientId]?.teamId||"";saveClient();
+  if(!result.committed)throw new Error("Could not register this student screen. Check the game code and Firebase connection.");
+  const latest=await get(ref(db,"games/"+code));
+  if(!latest.exists())throw new Error("The game no longer exists.");
+  game=latest.val();
+  if(game.status!=="lobby"){
+   const assigned=game.participants?.[clientId]?.teamId;
+   if(assigned){teamId=assigned;saveClient();$("join").classList.add("hidden");finishClaim(teamId,clientId);return;}
+   throw new Error("The teacher started the game before this screen joined. Ask the teacher to start a new game.");
+  }
+  game.teamReservations=game.teamReservations||{};
+  teamId=game.participants?.[clientId]?.teamId||"";saveClient();
   $("join").classList.add("hidden");$("claim").classList.remove("hidden");
   if(unsub)unsub();
   unsub=onValue(ref(db,"games/"+code),s=>{
