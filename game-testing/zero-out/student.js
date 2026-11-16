@@ -76,7 +76,7 @@ function renderChoices(){
  $("lockInButton").disabled=!p.teamId||!!p.locked;$("lockInButton").textContent=p.locked?"LOCKED IN":"LOCK IN";
  const spinsUsed=Math.min(2,Math.max(0,Number(p.randomTeamSpins)||0)),spinsLeft=2-spinsUsed;
  $("randomTeamRemaining").textContent="("+spinsLeft+"/2 remaining)";
- $("randomTeamButton").disabled=!!p.locked||selectionBusy||spinsLeft<=0||game.teams.length>=26||game.teams.length>=animalCatalog.length;
+ $("randomTeamButton").disabled=!!p.locked||selectionBusy||wheelAnimating||spinsLeft<=0||game.teams.length>=26||game.teams.length>=animalCatalog.length;
  $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":p.locked?"Your selection is locked.":spinsLeft<=0?"You've used both new-team spins.":"Create a new animal team and select it.";
 }
 async function selectTeam(id){
@@ -133,7 +133,7 @@ async function animateRandomTeamWheel(finalTeam){
  });
 }
 async function spinForRandomTeam(){
- if(selectionBusy||game?.status!=="lobby"||game.participants?.[clientId]?.locked||(Number(game.participants?.[clientId]?.randomTeamSpins)||0)>=2)return;
+ if(selectionBusy||wheelAnimating||game?.status!=="lobby"||game.participants?.[clientId]?.locked||(Number(game.participants?.[clientId]?.randomTeamSpins)||0)>=2)return;
  selectionBusy=true;$("randomTeamButton").disabled=true;$("randomTeamStatus").textContent="Choosing a new animal…";
  try{
   let created=null,latest=game;
