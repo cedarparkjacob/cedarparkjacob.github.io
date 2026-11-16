@@ -1,141 +1,145 @@
-import {db,ref,get,onValue,runTransaction,animalCatalog,formatScore,winners,escapeHtml} from "./game-core.js";
-const $=id=>document.getElementById(id);let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,spinHandle=null,selectionBusy=false;
+import {db,ref,get,update,onValue,runTransaction,animalCatalog,formatScore,winners,escapeHtml} from "./game-core.js";
+const $=id=>document.getElementById(id);
+let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,selectionBusy=false;
+let heartbeatHandle=null,countdownHandle=null,countdownToken="",countdownDeadline=0,teamScreenOpen=false;
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
+function makeClientId(){return globalThis.crypto?.randomUUID?.()||("screen-"+Date.now()+"-"+Math.random().toString(36).slice(2));}
+function saveClient(){localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId:teamId||null,clientId}));}
 $("joinButton").onclick=join;$("codeInput").onkeydown=e=>{if(e.key==="Enter")join();};
-async function join(){code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}game=snap.val();$("join").classList.add("hidden");const prev=saved();if(prev?.code===code&&game.teams.some(t=>t.id===prev.teamId)){teamId=prev.teamId;clientId=prev.clientId;connect();}else choices();}
-function choices(){
-  $("claim").classList.remove("hidden");
-  $("claimStatus").textContent="Choose a team. Click one of the buttons above.";
-  $("teamChoices").innerHTML="";
-  game.teams.forEach(t=>{
-    const busy=!!t.connection?.connected;
-    const button=document.createElement("button");
-    button.type="button";
-    button.className="choice";
-    button.dataset.teamId=t.id;
-    button.textContent=t.emoji+" "+t.name+(busy?" · IN USE":(" · SELECT"));
-    button.disabled=busy;
-    button.addEventListener("click",()=>claim(t.id));
-    $("teamChoices").append(button);
+async function join(){
+ code=$("codeInput").value.trim().toUpperCase();$("joinStatus").textContent="Connecting…";
+ if(!/^[A-Z0-9]{6}$/.test(code)){$("joinStatus").textContent="Enter the six-character code.";return;}
+ try{
+  const snap=await get(ref(db,"games/"+code));if(!snap.exists()){$("joinStatus").textContent="Game not found. Check the code.";return;}
+  game=snap.val();const prev=saved();clientId=prev?.code===code&&prev.clientId?prev.clientId:makeClientId();
+  const prior=game.participants?.[clientId];
+  if(game.status!=="lobby"&&prior?.teamId){teamId=prior.teamId;saveClient();$("join").classList.add("hidden");finishClaim(teamId,clientId);return;}
+  if(game.status!=="lobby"){$("joinStatus").textContent="This game has already started.";return;}
+  const result=await runTransaction(ref(db,"games/"+code),g=>{
+   if(!g||g.status!=="lobby")return;
+   g.participants=g.participants||{};
+   const p=g.participants[clientId]||{joinedAt:Date.now(),teamId:null,locked:false};
+   p.lastSeen=Date.now();g.participants[clientId]=p;g.teamReservations=g.teamReservations||{};
+   return g;
   });
-  $("randomTeamButton").disabled=selectionBusy||game.status!=="lobby"||game.teams.length>=26||game.teams.length>=animalCatalog.length;
-  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=selectionBusy||!!game.teams.find(t=>t.id===b.dataset.teamId)?.connection?.connected);
-  $("randomTeamStatus").textContent=game.status!=="lobby"?"Team selection is closed because the game has started.":game.teams.length>=26?"The game has reached the 26-team limit.":game.teams.length>=animalCatalog.length?"Every available animal is already in use.":"Spin to create and automatically join a new team.";
+  if(!result.committed)throw new Error("The teacher has already begun the game.");
+  game=result.snapshot.val();teamId=game.participants?.[clientId]?.teamId||"";saveClient();
+  $("join").classList.add("hidden");$("claim").classList.remove("hidden");
+  if(unsub)unsub();
+  unsub=onValue(ref(db,"games/"+code),s=>{
+   game=s.val();if(!game)return;
+   const p=game.participants?.[clientId];
+   if(game.status==="active"&&p?.teamId){if(!teamScreenOpen||teamId!==p.teamId){teamId=p.teamId;saveClient();finishClaim(teamId,clientId);}return;}
+   if(game.status==="finished"){if(teamId)connect();return;}
+   if(p?.teamId&&game.teamReservations?.[p.teamId]?.clientId!==clientId){teamId="";saveClient();stopCountdown();$("claimStatus").textContent="Another student won that team in a simultaneous selection. Please choose a different team.";}
+   else teamId=p?.teamId||"";
+   renderChoices();syncCountdown(p);
+  },e=>{$("claimStatus").textContent="Connection error: "+(e?.message||"check your connection");});
+  heartbeatHandle=setInterval(()=>{if(code&&clientId&&game?.status==="lobby")update(ref(db,"games/"+code+"/participants/"+clientId),{lastSeen:Date.now()}).catch(()=>{});},5000);
+  renderChoices();syncCountdown(game.participants?.[clientId]);
+ }catch(e){$("joinStatus").textContent="Could not join: "+(e?.message||String(e));}
 }
-function secureRandomIndex(length){
-  if(length<=1)return 0;
-  const values=new Uint32Array(1);
-  if(globalThis.crypto?.getRandomValues)globalThis.crypto.getRandomValues(values);
-  else values[0]=Math.floor(Math.random()*4294967296);
-  return values[0]%length;
+function stopCountdown(){if(countdownHandle)clearInterval(countdownHandle);countdownHandle=null;countdownToken="";countdownDeadline=0;}
+function syncCountdown(p){
+ if(!p?.teamId||p.locked){stopCountdown();$("lockInButton").disabled=true;$("selectionCountdown").textContent=p?.locked?"LOCKED IN":"Choose a team";return;}
+ const token=p.teamId+":"+p.selectedAt;if(countdownToken===token)return;
+ stopCountdown();countdownToken=token;countdownDeadline=Number(p.selectedAt||Date.now())+5000;$("lockInButton").disabled=false;
+ countdownHandle=setInterval(()=>{
+  const left=Math.max(0,countdownDeadline-Date.now());$("selectionCountdown").textContent="Auto-locking in "+(left/1000).toFixed(1)+" seconds";
+  if(left<=0){stopCountdown();lockSelection(p.teamId,Number(p.selectedAt));}
+ },100);
 }
-function makeClientId(){
-  return globalThis.crypto?.randomUUID?.()||("client-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+function renderChoices(){
+ if(!game||game.status!=="lobby")return;
+ const p=game.participants?.[clientId]||{},reservations=game.teamReservations||{};$("teamChoices").innerHTML="";
+ game.teams.forEach(t=>{
+  const reservation=reservations[t.id],mine=reservation?.clientId===clientId,locked=!!p.locked;
+  const button=document.createElement("button");button.type="button";button.className="choice team-choice";
+  if(mine)button.classList.add("my-choice");if(reservation&&!mine)button.classList.add("reserved-choice");if(locked&&!mine)button.classList.add("dimmed-choice");
+  button.disabled=locked||!!(reservation&&!mine);
+  button.innerHTML='<span class="choice-animal">'+t.emoji+'</span><span class="choice-name">'+escapeHtml(t.name)+'</span><span class="choice-state">'+(mine?(locked?"LOCKED IN":"YOUR SELECTION"):reservation?"TAKEN":"AVAILABLE")+'</span>';
+  button.onclick=()=>selectTeam(t.id);$("teamChoices").append(button);
+ });
+ const selected=game.teams.find(t=>t.id===p.teamId);
+ $("selectionSummary").textContent=selected?(selected.emoji+" "+selected.name+(p.locked?" · LOCKED IN":" · SELECTED")):"No team selected yet.";
+ $("lockInButton").disabled=!p.teamId||!!p.locked;$("lockInButton").textContent=p.locked?"LOCKED IN":"LOCK IN";
+ $("randomTeamButton").disabled=!!p.locked||selectionBusy||game.teams.length>=26||game.teams.length>=animalCatalog.length;
+ $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":p.locked?"Your selection is locked.":"Create a new animal team and select it.";
 }
-function finishClaim(id,newClientId){
-  teamId=id;clientId=newClientId;
-  localStorage.setItem("zeroOutTeam",JSON.stringify({code,teamId,clientId}));
-  $("claim").classList.add("hidden");
-  $("teamScreen").classList.remove("hidden");
-  connect();
+async function selectTeam(id){
+ if(selectionBusy||game?.status!=="lobby")return;
+ const priority=Math.random(),now=Date.now();selectionBusy=true;
+ try{
+  const result=await runTransaction(ref(db,"games/"+code),g=>{
+   if(!g||g.status!=="lobby"||!g.participants?.[clientId]||!Array.isArray(g.teams))return;
+   const p=g.participants[clientId];if(p.locked||!g.teams.some(t=>t.id===id))return;
+   g.teamReservations=g.teamReservations||{};const current=g.teamReservations[id];
+   if(current&&current.clientId!==clientId){
+    const near=Math.abs(now-Number(current.selectedAt||0))<=700;
+    if(current.locked||!near||priority>=Number(current.priority??1))return;
+    const displaced=g.participants[current.clientId];if(displaced){displaced.teamId=null;displaced.locked=false;displaced.conflictAt=now;}
+   }
+   if(p.teamId&&p.teamId!==id&&g.teamReservations[p.teamId]?.clientId===clientId)delete g.teamReservations[p.teamId];
+   p.teamId=id;p.locked=false;p.selectedAt=now;p.lastSeen=now;
+   g.teamReservations[id]={clientId,selectedAt:now,locked:false,priority};return g;
+  });
+  if(!result.committed){$("claimStatus").textContent="That team is already selected by another student. Choose a different team.";return;}
+  game=result.snapshot.val();teamId=id;saveClient();renderChoices();syncCountdown(game.participants[clientId]);
+ }catch(e){$("claimStatus").textContent="Selection failed: "+(e?.message||String(e));}
+ finally{selectionBusy=false;renderChoices();}
 }
+async function lockSelection(id=game?.participants?.[clientId]?.teamId,selectedAt=game?.participants?.[clientId]?.selectedAt){
+ if(!id||!clientId||game?.status!=="lobby")return;stopCountdown();
+ try{
+  const result=await runTransaction(ref(db,"games/"+code),g=>{
+   if(!g||g.status!=="lobby")return;const p=g.participants?.[clientId],r=g.teamReservations?.[id];
+   if(!p||p.teamId!==id||p.locked||r?.clientId!==clientId||Number(p.selectedAt)!==Number(selectedAt))return;
+   p.locked=true;r.locked=true;p.lastSeen=Date.now();return g;
+  });
+  if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}
+ }catch(e){$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
+}
+$("lockInButton").onclick=()=>lockSelection();
 async function spinForRandomTeam(){
-  const button=$("randomTeamButton"),status=$("randomTeamStatus"),wheel=$("randomTeamWheel");
-  if(selectionBusy||button.disabled||game?.status!=="lobby")return;
-  selectionBusy=true;button.disabled=true;
-  $("teamChoices").querySelectorAll("button").forEach(b=>b.disabled=true);
-  status.textContent="Spinning for a new team…";wheel.classList.add("spinning");
-  let spinIndex=0;
-  spinHandle=setInterval(()=>{const a=animalCatalog[spinIndex++%animalCatalog.length];wheel.textContent=a.emoji+" "+a.name;},85);
-  const newClientId=makeClientId();
-  try{
-    const initial=await get(ref(db,"games/"+code));
-    if(!initial.exists())throw new Error("The game no longer exists.");
-    let latest=initial.val();
-    let created=null;
-    for(let attempt=0;attempt<animalCatalog.length;attempt++){
-      const available=animalCatalog.filter(a=>!latest.teams.some(t=>t.name===a.name));
-      if(!available.length||latest.teams.length>=26)break;
-      const candidate=available[secureRandomIndex(available.length)];
-      const slug=candidate.name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
-      const teamIdNew="random-"+slug+"-"+newClientId.replace(/[^a-z0-9]/gi,"").slice(-12);
-      const team={
-        id:teamIdNew,letter:"",name:candidate.name,emoji:candidate.emoji,
-        score:0,position:latest.teams.length,
-        connection:{connected:true,clientId:newClientId,joinedAt:Date.now()}
-      };
-      const result=await runTransaction(ref(db,"games/"+code),g=>{
-        if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||g.teams.length>=26)return;
-        if(g.teams.some(t=>t.name===candidate.name||t.id===teamIdNew))return;
-        const usedLetters=new Set(g.teams.map((t,i)=>t.letter||String.fromCharCode(65+i)));
-        const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!usedLetters.has(ch));
-        if(!letter)return;
-        team.letter=letter;team.position=g.teams.length;g.teams.push(team);return g;
-      });
-      if(result.committed){
-        latest=result.snapshot.val();
-        created=latest?.teams?.find(t=>t.id===teamIdNew);
-        if(created)break;
-      }
-      const fresh=await get(ref(db,"games/"+code));
-      if(!fresh.exists())throw new Error("The game no longer exists.");
-      latest=fresh.val();
-      if(latest.status!=="lobby")throw new Error("The teacher has already started the game.");
-    }
-    if(!created)throw new Error(latest.teams.length>=26?"The game has reached the 26-team limit.":"No unused animal team could be added. Try again.");
-    game=latest;
-    if(spinHandle){clearInterval(spinHandle);spinHandle=null;}
-    wheel.textContent=created.emoji+" "+created.name;
-    wheel.classList.remove("spinning");
-    status.textContent="Joined as "+created.name+".";
-    finishClaim(created.id,newClientId);
-  }catch(error){
-    status.textContent=error?.message||String(error);
-    selectionBusy=false;
-    try{const fresh=await get(ref(db,"games/"+code));if(fresh.exists()){game=fresh.val();choices();}else button.disabled=false;}
-    catch{button.disabled=false;}
-  }finally{
-    if(spinHandle){clearInterval(spinHandle);spinHandle=null;}
-    wheel.classList.remove("spinning");
+ if(selectionBusy||game?.status!=="lobby"||game.participants?.[clientId]?.locked)return;
+ selectionBusy=true;$("randomTeamButton").disabled=true;$("randomTeamStatus").textContent="Choosing a new animal…";
+ try{
+  let created=null,latest=game;
+  for(let attempt=0;attempt<animalCatalog.length;attempt++){
+   const available=animalCatalog.filter(a=>!latest.teams.some(t=>t.name===a.name));
+   if(!available.length||latest.teams.length>=26)break;
+   const candidate=available[Math.floor(Math.random()*available.length)],id="team-"+clientId.replace(/[^a-z0-9]/gi,"").slice(-12)+"-"+Date.now().toString(36);
+   const now=Date.now(),priority=Math.random();
+   const result=await runTransaction(ref(db,"games/"+code),g=>{
+    if(!g||g.status!=="lobby"||!g.participants?.[clientId]||g.participants[clientId].locked||!Array.isArray(g.teams)||g.teams.length>=26||g.teams.some(t=>t.name===candidate.name))return;
+    g.teamReservations=g.teamReservations||{};const p=g.participants[clientId];
+    if(p.teamId&&g.teamReservations[p.teamId]?.clientId===clientId)delete g.teamReservations[p.teamId];
+    const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!g.teams.some((t,i)=>t.letter===ch||(!t.letter&&String.fromCharCode(65+i)===ch)));
+    if(!letter)return;
+    const team={id,letter,name:candidate.name,emoji:candidate.emoji,score:0,position:g.teams.length,connection:null};
+    g.teams.push(team);p.teamId=id;p.locked=false;p.selectedAt=now;p.lastSeen=now;
+    g.teamReservations[id]={clientId,selectedAt:now,locked:false,priority};return g;
+   });
+   if(result.committed){latest=result.snapshot.val();created=latest.teams.find(t=>t.id===id);break;}
+   const fresh=await get(ref(db,"games/"+code));if(!fresh.exists())throw new Error("Game not found.");latest=fresh.val();
   }
+  if(!created)throw new Error("No unused animal team is available.");
+  game=latest;teamId=created.id;saveClient();$("randomTeamWheel").textContent=created.emoji+" "+created.name;
+  $("randomTeamStatus").textContent="Selected "+created.name+".";renderChoices();syncCountdown(game.participants[clientId]);
+ }catch(e){$("randomTeamStatus").textContent=e?.message||String(e);}
+ finally{selectionBusy=false;renderChoices();}
 }
 $("randomTeamButton").onclick=spinForRandomTeam;
-async function claim(id){
-  if(selectionBusy||!["lobby","active"].includes(game?.status))return;
-  selectionBusy=true;
-  const status=$("claimStatus"),buttons=[...$("teamChoices").querySelectorAll("button")];
-  buttons.forEach(b=>b.disabled=true);$("randomTeamButton").disabled=true;
-  status.textContent="Connecting to "+(game.teams.find(t=>t.id===id)?.name||"team")+"…";
-  const newClientId=makeClientId();
-  try{
-    if(!game.teams.some(t=>t.id===id))throw new Error("That team is no longer in this game.");
-    const result=await runTransaction(ref(db,"games/"+code),g=>{
-      if(!g||!["lobby","active"].includes(g.status)||!Array.isArray(g.teams))return;
-      const target=g.teams.find(t=>t.id===id);
-      if(!target||target.connection?.connected)return;
-      target.connection={connected:true,clientId:newClientId,joinedAt:Date.now()};
-      return g;
-    });
-    if(!result.committed){
-      const latest=await get(ref(db,"games/"+code));
-      if(latest.exists()){game=latest.val();selectionBusy=false;choices();}
-      status.textContent="That team is already connected or the game has started. Choose another team.";
-      return;
-    }
-    const latest=await get(ref(db,"games/"+code));
-    if(!latest.exists()||!["lobby","active"].includes(latest.val().status))throw new Error("This game is no longer accepting team connections.");
-    game=latest.val();
-    status.textContent="Connected. Loading team screen…";
-    finishClaim(id,newClientId);
-  }catch(error){
-    console.error("Zero Out team selection failed:",error);
-    status.textContent="Connection failed: "+(error?.message||String(error));
-    selectionBusy=false;
-    try{const latest=await get(ref(db,"games/"+code));if(latest.exists()){game=latest.val();choices();}else{buttons.forEach(b=>b.disabled=false);$("randomTeamButton").disabled=false;}}
-    catch{buttons.forEach(b=>b.disabled=false);$("randomTeamButton").disabled=false;}
-  }
+function finishClaim(id,newClientId){
+ teamId=id;clientId=newClientId;saveClient();teamScreenOpen=true;stopCountdown();
+ if(heartbeatHandle)clearInterval(heartbeatHandle);heartbeatHandle=null;
+ $("claim").classList.add("hidden");$("teamScreen").classList.remove("hidden");
+ if(unsub)unsub();connect();
 }
-function connect(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t){$("waiting").textContent="Your team is no longer in this game. Rejoin with the game code.";return;}if(t.connection?.clientId&&t.connection.clientId!==clientId){$("waiting").textContent="This team is connected on another computer.";return;}render(t);},error=>{$("waiting").textContent="Live connection lost: "+(error?.message||"check your connection");});}
+function connect(){
+ if(unsub)unsub();
+ unsub=onValue(ref(db,"games/"+code),s=>{game=s.val();if(!game)return;const t=game.teams.find(x=>x.id===teamId);if(!t){$("waiting").textContent="Your team is no longer in this game. Rejoin with the game code.";return;}render(t);},error=>{$("waiting").textContent="Live connection lost: "+(error?.message||"check your connection");});
+}
 function card(t,button=false){const cls="team-card "+(t.id===teamId?"own-team ":"")+(t.id===selectedRecipientId?"selected-team":"");const inner='<div class="emoji">'+t.emoji+'</div><div class="name">'+escapeHtml(t.name)+'</div><div class="score">'+formatScore(t.score)+'</div>';return button?'<button type="button" class="'+cls+' recipient-team" data-id="'+escapeHtml(t.id)+'">'+inner+'</button>':'<div class="'+cls+'" data-id="'+escapeHtml(t.id)+'">'+inner+'</div>';}
 function render(t){
   $("teamScreen").classList.remove("hidden");
