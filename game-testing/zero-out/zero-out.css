@@ -53,11 +53,21 @@
 @keyframes emoji-swirl{from{transform:translate(-50%,-50%) rotate(0deg) scale(.72)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.08)}to{transform:translate(-50%,-50%) rotate(360deg) scale(.72)}}
 @media(prefers-reduced-motion:reduce){.emoji-orbit{animation:none}}
 
-.random-team-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:18px auto 4px;padding:16px;border:1px dashed var(--accent);border-radius:16px;text-align:center;max-width:520px}.random-team-wheel{min-height:76px;min-width:min(100%,280px);display:grid;place-items:center;padding:12px 24px;border-radius:50px;background:var(--panel2);font-size:1.35rem;font-weight:800}.random-team-wheel.spinning{animation:random-spin .55s linear infinite;box-shadow:0 0 22px rgba(155,140,255,.45)}
-@keyframes random-spin{from{transform:rotate(0deg) scale(.96)}to{transform:rotate(360deg) scale(1.04)}}
+.random-team-picker{display:flex;flex-direction:column;align-items:center;gap:10px;margin:18px auto 4px;padding:16px;border:1px dashed var(--accent);border-radius:16px;text-align:center;max-width:520px}.random-team-wheel{min-height:76px;min-width:min(100%,280px);display:grid;place-items:center;padding:12px 24px;border-radius:50px;background:var(--panel2);font-size:1.35rem;font-weight:800}.random-team-wheel{border:2px solid var(--accent);border-radius:18px;min-height:76px;min-width:min(100%,280px);background:linear-gradient(145deg,#283858,#17233c);letter-spacing:.08em}
 
 /* Assignment confirmation overlay */
 .team-button{position:relative;overflow:hidden}
 .teacher-team-wrap{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:3px}
 .holding-value{width:100%;text-align:center;font-size:1rem;font-weight:800;line-height:1.2;color:#f3cf57;letter-spacing:.02em}
 .team-confirm-overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(12,20,38,.94);border:2px solid #f3cf57;border-radius:10px;color:#fff2bd;font-weight:900;letter-spacing:.04em;text-align:center;padding:8px;z-index:2}
+
+/* Student team selection and reservation states */
+.team-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:112px;padding:12px;transition:transform .15s,border-color .15s,opacity .15s}
+.team-choice .choice-animal{font-size:2.1rem}.team-choice .choice-name{font-size:1.05rem;font-weight:800}.team-choice .choice-state{font-size:.68rem;letter-spacing:.08em;color:var(--muted)}
+.team-choice.my-choice{grid-column:span 1;min-height:145px;transform:scale(1.035);border:2px solid var(--green);background:#153b32;box-shadow:0 0 0 2px rgba(99,214,155,.16)}
+.team-choice.my-choice .choice-animal{font-size:3rem}.team-choice.my-choice .choice-state{color:var(--green)}
+.team-choice.reserved-choice,.team-choice.dimmed-choice{opacity:.28;filter:grayscale(1)}
+.selection-footer{display:flex;flex-direction:column;align-items:center;gap:8px;margin:18px auto 4px;padding:16px;border:1px solid var(--line);border-radius:14px;max-width:520px;text-align:center}
+.selection-summary{font-size:1.3rem;font-weight:900}.selection-footer #lockInButton{min-width:190px}
+#randomTeamButton{min-width:210px;font-size:1.05rem;letter-spacing:.05em}
+@media(max-width:600px){.team-choice{min-height:95px;padding:8px}.team-choice .choice-animal{font-size:1.8rem}.team-choice.my-choice{min-height:125px}}
