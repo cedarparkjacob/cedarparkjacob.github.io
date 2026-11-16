@@ -80,3 +80,11 @@
 .random-team-wheel.spinning{border-color:var(--cyan);box-shadow:0 0 18px rgba(100,216,232,.22)}
 @keyframes random-team-slide{from{transform:translateY(110%);opacity:.35}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){.random-team-wheel-content{animation:none}}
+
+/* Solo Mode additions */
+.applicant,.student-card{width:100%;text-align:left}.applicant{min-height:56px}.applicant:focus,.student-card:focus{outline:2px solid var(--accent)}
+.student-card .holding-value{display:inline-block;color:#f3cf57;margin-left:8px}
+#assignTeams{margin:12px 0 20px}#assignTeams .team-button{min-height:58px}
+#miniGame{margin-top:22px;text-align:center}.mini-game .big-value{font-size:clamp(2.5rem,8vw,4rem)}
+#spinner{min-height:120px;display:grid;place-items:center}
+#teamTargets button{min-height:70px}
