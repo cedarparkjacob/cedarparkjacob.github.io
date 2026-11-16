@@ -53,8 +53,9 @@ async function join(){
 function stopCountdown(){if(countdownHandle)clearInterval(countdownHandle);countdownHandle=null;countdownToken="";countdownDeadline=0;}
 function syncCountdown(p){
  if(!p?.teamId||p.locked){stopCountdown();$("lockInButton").disabled=true;$("selectionCountdown").textContent=p?.locked?"LOCKED IN":"Choose a team";return;}
+ if(wheelAnimating){stopCountdown();$("lockInButton").disabled=false;$("selectionCountdown").textContent="Team selected — waiting for the spin";return;}
  const token=p.teamId+":"+p.selectedAt;if(countdownToken===token)return;
- stopCountdown();countdownToken=token;countdownDeadline=Number(p.selectedAt||Date.now())+5000;$("lockInButton").disabled=false;
+ stopCountdown();countdownToken=token;countdownDeadline=Date.now()+5000;$("lockInButton").disabled=false;
  countdownHandle=setInterval(()=>{
   const left=Math.max(0,countdownDeadline-Date.now());$("selectionCountdown").textContent="Auto-locking in "+(left/1000).toFixed(1)+" seconds";
   if(left<=0){stopCountdown();lockSelection(p.teamId,Number(p.selectedAt));}
@@ -125,7 +126,7 @@ async function animateRandomTeamWheel(finalTeam){
   const tick=()=>{
    const elapsed=performance.now()-start;
    if(elapsed>=2500){wheel.innerHTML='<span class="random-team-wheel-content">'+finalTeam.emoji+' '+escapeHtml(finalTeam.name)+'</span>';wheel.classList.remove("spinning");resolve();return;}
-   const animal=pool[index++%pool.length],delay=45+270*Math.pow(elapsed/2500,2);
+   const animal=pool[index++%pool.length],delay=90+540*Math.pow(elapsed/2500,2);
    wheel.innerHTML='<span class="random-team-wheel-content">'+animal.emoji+' '+escapeHtml(animal.name)+'</span>';
    setTimeout(tick,Math.min(delay,2500-elapsed));
   };
@@ -157,7 +158,7 @@ async function spinForRandomTeam(){
   }
   if(!created)throw new Error("No unused animal team is available.");
   game=latest;teamId=created.id;saveClient();selectionBusy=false;wheelAnimating=true;renderChoices();syncCountdown(game.participants[clientId]);
-  await animateRandomTeamWheel(created);$("randomTeamStatus").textContent="Selected "+created.name+".";
+  await animateRandomTeamWheel(created);$("randomTeamStatus").textContent="Selected "+created.name+".";countdownToken="";syncCountdown(game?.participants?.[clientId]);
  }catch(e){$("randomTeamStatus").textContent=e?.message||String(e);}
  finally{selectionBusy=false;wheelAnimating=false;renderChoices();}
 }
