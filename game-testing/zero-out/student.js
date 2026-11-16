@@ -74,8 +74,10 @@ function renderChoices(){
  const selected=game.teams.find(t=>t.id===p.teamId);
  $("selectionSummary").textContent=selected?(selected.emoji+" "+selected.name+(p.locked?" · LOCKED IN":" · SELECTED")):"No team selected yet.";
  $("lockInButton").disabled=!p.teamId||!!p.locked;$("lockInButton").textContent=p.locked?"LOCKED IN":"LOCK IN";
- $("randomTeamButton").disabled=!!p.locked||selectionBusy||game.teams.length>=26||game.teams.length>=animalCatalog.length;
- $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":p.locked?"Your selection is locked.":"Create a new animal team and select it.";
+ const spinsUsed=Math.min(2,Math.max(0,Number(p.randomTeamSpins)||0)),spinsLeft=2-spinsUsed;
+ $("randomTeamRemaining").textContent="("+spinsLeft+"/2 remaining)";
+ $("randomTeamButton").disabled=!!p.locked||selectionBusy||spinsLeft<=0||game.teams.length>=26||game.teams.length>=animalCatalog.length;
+ $("randomTeamStatus").textContent=game.teams.length>=26?"The game has reached the 26-team limit.":p.locked?"Your selection is locked.":spinsLeft<=0?"You've used both new-team spins.":"Create a new animal team and select it.";
 }
 async function selectTeam(id){
  if(selectionBusy||game?.status!=="lobby")return;
@@ -116,8 +118,22 @@ async function lockSelection(id=game?.participants?.[clientId]?.teamId,selectedA
  }catch(e){countdownToken="";$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
 }
 $("lockInButton").onclick=()=>lockSelection();
+async function animateRandomTeamWheel(finalTeam){
+ const wheel=$("randomTeamWheel");wheel.classList.add("spinning");
+ const pool=animalCatalog.slice();let index=0,start=performance.now();
+ return new Promise(resolve=>{
+  const tick=()=>{
+   const elapsed=performance.now()-start;
+   if(elapsed>=2500){wheel.innerHTML='<span class="random-team-wheel-content">'+finalTeam.emoji+' '+escapeHtml(finalTeam.name)+'</span>';wheel.classList.remove("spinning");resolve();return;}
+   const animal=pool[index++%pool.length],delay=45+270*Math.pow(elapsed/2500,2);
+   wheel.innerHTML='<span class="random-team-wheel-content">'+animal.emoji+' '+escapeHtml(animal.name)+'</span>';
+   setTimeout(tick,Math.min(delay,2500-elapsed));
+  };
+  tick();
+ });
+}
 async function spinForRandomTeam(){
- if(selectionBusy||game?.status!=="lobby"||game.participants?.[clientId]?.locked)return;
+ if(selectionBusy||game?.status!=="lobby"||game.participants?.[clientId]?.locked||(Number(game.participants?.[clientId]?.randomTeamSpins)||0)>=2)return;
  selectionBusy=true;$("randomTeamButton").disabled=true;$("randomTeamStatus").textContent="Choosing a new animal…";
  try{
   let created=null,latest=game;
@@ -127,13 +143,13 @@ async function spinForRandomTeam(){
    const candidate=available[Math.floor(Math.random()*available.length)],id="team-"+clientId.replace(/[^a-z0-9]/gi,"").slice(-12)+"-"+Date.now().toString(36);
    const now=Date.now(),priority=Math.random();
    const result=await runTransaction(ref(db,"games/"+code),g=>{
-    if(!g||g.status!=="lobby"||!g.participants?.[clientId]||g.participants[clientId].locked||!Array.isArray(g.teams)||g.teams.length>=26||g.teams.some(t=>t.name===candidate.name))return;
+    if(!g||g.status!=="lobby"||!g.participants?.[clientId]||g.participants[clientId].locked||(Number(g.participants[clientId].randomTeamSpins)||0)>=2||!Array.isArray(g.teams)||g.teams.length>=26||g.teams.some(t=>t.name===candidate.name))return;
     g.teamReservations=g.teamReservations||{};const p=g.participants[clientId];
     if(p.teamId&&g.teamReservations[p.teamId]?.clientId===clientId)delete g.teamReservations[p.teamId];
     const letter="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(ch=>!g.teams.some((t,i)=>t.letter===ch||(!t.letter&&String.fromCharCode(65+i)===ch)));
     if(!letter)return;
     const team={id,letter,name:candidate.name,emoji:candidate.emoji,score:0,position:g.teams.length,connection:null};
-    g.teams.push(team);p.teamId=id;p.locked=false;p.selectedAt=now;p.lastSeen=now;
+    g.teams.push(team);p.teamId=id;p.locked=false;p.selectedAt=now;p.lastSeen=now;p.randomTeamSpins=(Number(p.randomTeamSpins)||0)+1;
     g.teamReservations[id]={clientId,selectedAt:now,locked:false,priority};return g;
    });
    if(result.committed){latest=result.snapshot.val();created=latest.teams.find(t=>t.id===id);break;}
