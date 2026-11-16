@@ -1,27 +1,62 @@
 import {db,ref,get,set,update,onValue,runTransaction,animalCatalog,makeCode,pointValue,formatScore,formatTime,winners,escapeHtml} from "./game-core.js";
 const $=id=>document.getElementById(id);
-let drafts=[],game=null,gameId=null,unsub=null,timerHandle=null,assignMode=null,selectedTeamIds=new Set(),selectionValue=null,pendingTimerSeconds=null,promptWrite=null;
-function randomAnimal(exclude=[]){const a=animalCatalog.filter(x=>!exclude.includes(x.name));return a[Math.floor(Math.random()*a.length)];}
-function renderDrafts(){const count=Math.max(1,Math.min(26,animalCatalog.length,Number($("teamCount").value)||4));$("teamCount").value=count;const old=drafts.slice();drafts=Array.from({length:count},(_,i)=>old[i]&&animalCatalog.some(a=>a.name===old[i])?old[i]:null);drafts.forEach((v,i)=>{if(!v)drafts[i]=randomAnimal(drafts.filter(Boolean)).name;});$("teamAssignments").innerHTML="";drafts.forEach((name,i)=>{const row=document.createElement("div");row.className="row";row.style.margin="8px 0";const label=document.createElement("label");label.textContent="Team "+(i+1);const select=document.createElement("select");select.setAttribute("aria-label","Animal for team "+(i+1));animalCatalog.forEach(a=>{const o=document.createElement("option");o.value=a.name;o.textContent=a.emoji+" "+a.name;select.append(o);});select.value=name;select.onchange=()=>{if(drafts.some((x,j)=>j!==i&&x===select.value)){select.value=drafts[i];return;}drafts[i]=select.value;renderDrafts();};const random=document.createElement("button");random.textContent="Random";random.onclick=()=>{drafts[i]=randomAnimal(drafts.filter((x,j)=>j!==i)).name;renderDrafts();};row.append(label,select,random);$("teamAssignments").append(row);});}
-$("teamCount").onchange=renderDrafts;$("randomize").onclick=()=>{const a=[...animalCatalog];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}drafts=a.slice(0,drafts.length).map(x=>x.name);renderDrafts();};
+let game=null,gameId=null,unsub=null,timerHandle=null,assignMode=null,selectedTeamIds=new Set(),selectionValue=null,pendingTimerSeconds=null,promptWrite=null;
+function shuffled(items){const a=items.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+$("teamCount").onchange=()=>{$("teamCount").value=Math.max(1,Math.min(26,Number($("teamCount").value)||4));};
 function setStatus(s){$("status").textContent=s;}
-async function createGame(){ $("create").disabled=true;try{let code,exists;for(let i=0;i<25;i++){code=makeCode();exists=await get(ref(db,"games/"+code));if(!exists.exists())break;code=null;}if(!code)throw Error("Could not generate a unique game code.");gameId=code;const teams=drafts.map((name,i)=>{const a=animalCatalog.find(x=>x.name===name);return{id:"team-"+(i+1),letter:String.fromCharCode(65+i),name:a.name,emoji:a.emoji,score:0,position:i,connection:null};});const initial={schemaVersion:2,mode:$("mode").value,status:"lobby",started:false,finished:false,createdAt:Date.now(),currentValue:pointValue(),lastValue:null,lastTeamId:null,pendingPrompts:{},directMode:false,teams,individuals:{},assignment:{strategy:null,joinSequence:0},timerSeconds:pendingTimerSeconds,timerRunning:false};await set(ref(db,"games/"+code),initial);$("setup").classList.add("hidden");$("lobby").classList.remove("hidden");$("gameCode").textContent=code;$("lobbyCode").textContent=code;listen();setStatus("Game created. Students can join before or after the game starts.");}catch(e){console.error(e);setStatus("Could not create game: "+e.message);$("create").disabled=false;}}
-$("create").onclick=()=>{if(new Set(drafts).size!==drafts.length){setStatus("Each team must have a different animal.");return;}createGame();};
+async function createGame(){
+ $("create").disabled=true;
+ try{
+  const count=Math.max(1,Math.min(26,animalCatalog.length,Number($("teamCount").value)||4));
+  let code=null;
+  for(let i=0;i<25;i++){const candidate=makeCode();const exists=await get(ref(db,"games/"+candidate));if(!exists.exists()){code=candidate;break;}}
+  if(!code)throw Error("Could not generate a unique game code.");
+  gameId=code;const animals=shuffled(animalCatalog).slice(0,count);
+  const teams=animals.map((a,i)=>({id:"team-"+(i+1),letter:String.fromCharCode(65+i),name:a.name,emoji:a.emoji,score:0,position:i,connection:null}));
+  const initial={schemaVersion:2,mode:$("mode").value,status:"lobby",started:false,finished:false,createdAt:Date.now(),currentValue:pointValue(),lastValue:null,lastTeamId:null,pendingPrompts:{},directMode:false,teams,individuals:{},participants:{},teamReservations:{},assignment:{strategy:null,joinSequence:0},timerSeconds:pendingTimerSeconds,timerRunning:false};
+  await set(ref(db,"games/"+code),initial);
+  $("setup").classList.add("hidden");$("lobby").classList.remove("hidden");$("gameCode").textContent=code;$("lobbyCode").textContent=code;
+  listen();setStatus("Teams created. Students can select a team or choose NEW TEAM? before you begin.");
+ }catch(e){console.error(e);setStatus("Could not create game: "+e.message);$("create").disabled=false;}
+}
+$("create").onclick=()=>createGame();
 function listen(){if(unsub)unsub();unsub=onValue(ref(db,"games/"+gameId),s=>{game=s.val();if(!game)return;render();});}
 $("openBoard").onclick=()=>window.open("index.html?code="+encodeURIComponent(gameId),"_blank","noopener");
 function pendingMap(g){const map={...(g?.pendingPrompts||{})};if(g?.pendingPrompt?.teamId&&!map[g.pendingPrompt.teamId])map[g.pendingPrompt.teamId]=g.pendingPrompt;return map;}
-function render(){if(!game)return;const pending=pendingMap(game);const pendingCount=Object.keys(pending).length;const connected=game.teams.filter(t=>t.connection?.connected).length;$("connections").innerHTML=game.teams.map(t=>'<div class="team-card"><div class="emoji">'+t.emoji+'</div><strong>'+escapeHtml(t.name)+'</strong><p class="muted">'+(t.connection?.connected?"Connected":"Waiting")+'</p></div>').join("");if(game.status==="lobby"){$("lobby").classList.remove("hidden");$("controls").classList.add("hidden");$("start").disabled=!game.teams.length; $("start").textContent="START GAME ("+connected+"/"+game.teams.length+" CONNECTED)";}else{$("lobby").classList.add("hidden");$("controls").classList.remove("hidden");} $("valueButton").textContent=game.currentValue==null?"—":formatScore(game.currentValue);$("assignMode").classList.toggle("active",assignMode==="assign");$("reassign").classList.toggle("active",assignMode==="reassign");$("assignMode").textContent=assignMode==="assign"?"CANCEL ASSIGNMENT":"ASSIGN TO TEAM";$("reassign").textContent=assignMode==="reassign"?"CANCEL REASSIGNMENT":"REASSIGN LAST VALUE";$("directHint").textContent=assignMode?(assignMode==="assign"?"Click a team once to select it. Click the same team again to confirm.":"Click a destination team once. Click that same team again to confirm the reassignment."):"Choose a team to send a value, or use ASSIGN TO TEAM for direct points. "+pendingCount+" value(s) waiting for team choices."; $("teacherTeams").innerHTML=game.teams.map(t=>{const holding=pending[t.id];return '<div class="teacher-team-wrap">'+(holding?'<div class="holding-value">HOLDING '+formatScore(holding.value)+'</div>':"")+'<button class="team-button '+(selectedTeamIds.has(t.id)?"confirm-team":"")+'" data-id="'+t.id+'"><span class="left"><span class="emoji">'+t.emoji+'</span>'+escapeHtml(t.name)+(t.connection?.connected?" ●":"")+'</span><strong class="score">'+formatScore(t.score)+'</strong>'+(selectedTeamIds.has(t.id)?'<span class="team-confirm-overlay">CONFIRM '+formatScore(selectionValue)+' POINTS?</span>':"")+'</button></div>';}).join("");$("teacherTeams").querySelectorAll("button").forEach(b=>{b.classList.toggle("assign-ready",!!assignMode);b.classList.toggle("assign-selected",selectedTeamIds.has(b.dataset.id));b.onclick=()=>teamClicked(b.dataset.id);});$("timer").textContent=game.timerSeconds==null?"No timer":formatTime(game.timerSeconds);$("timer").classList.toggle("warning",game.timerSeconds!=null&&game.timerSeconds<=60);if(game.timerRunning&&timerHandle===null)startTimerLoop();$("timerPanel").classList.toggle("hidden",game.status==="finished");$("timerButtons").classList.toggle("hidden",game.status!=="active");$("setTimer").textContent=game.status==="active"?"START TIMER":"SET TIMER";$("teacherGameActions").classList.toggle("hidden",game.status!=="active"&&game.status!=="finished");$("finish").classList.toggle("hidden",game.status==="finished");if(game.status==="finished")showWinner();}
+function render(){if(!game)return;const pending=pendingMap(game);const pendingCount=Object.keys(pending).length;const participants=game.participants||{},reservations=game.teamReservations||{},online=Object.values(participants).filter(p=>Date.now()-Number(p.lastSeen||0)<20000).length;$("connections").innerHTML=game.teams.map(t=>{const r=reservations[t.id];return '<div class="team-card"><div class="emoji">'+t.emoji+'</div><strong>'+escapeHtml(t.name)+'</strong><p class="muted">'+(r?(r.locked?"Locked in":"Selected"):"Available")+'</p></div>';}).join("");if(game.status==="lobby"){$("lobby").classList.remove("hidden");$("controls").classList.add("hidden");$("start").disabled=!game.teams.length;$("start").textContent="BEGIN GAME ("+online+" SCREENS)";}else{$("lobby").classList.add("hidden");$("controls").classList.remove("hidden");} $("valueButton").textContent=game.currentValue==null?"—":formatScore(game.currentValue);$("assignMode").classList.toggle("active",assignMode==="assign");$("reassign").classList.toggle("active",assignMode==="reassign");$("assignMode").textContent=assignMode==="assign"?"CANCEL ASSIGNMENT":"ASSIGN TO TEAM";$("reassign").textContent=assignMode==="reassign"?"CANCEL REASSIGNMENT":"REASSIGN LAST VALUE";$("directHint").textContent=assignMode?(assignMode==="assign"?"Click a team once to select it. Click the same team again to confirm.":"Click a destination team once. Click that same team again to confirm the reassignment."):"Choose a team to send a value, or use ASSIGN TO TEAM for direct points. "+pendingCount+" value(s) waiting for team choices."; $("teacherTeams").innerHTML=game.teams.map(t=>{const holding=pending[t.id];return '<div class="teacher-team-wrap">'+(holding?'<div class="holding-value">HOLDING '+formatScore(holding.value)+'</div>':"")+'<button class="team-button '+(selectedTeamIds.has(t.id)?"confirm-team":"")+'" data-id="'+t.id+'"><span class="left"><span class="emoji">'+t.emoji+'</span>'+escapeHtml(t.name)+(t.connection?.connected?" ●":"")+'</span><strong class="score">'+formatScore(t.score)+'</strong>'+(selectedTeamIds.has(t.id)?'<span class="team-confirm-overlay">CONFIRM '+formatScore(selectionValue)+' POINTS?</span>':"")+'</button></div>';}).join("");$("teacherTeams").querySelectorAll("button").forEach(b=>{b.classList.toggle("assign-ready",!!assignMode);b.classList.toggle("assign-selected",selectedTeamIds.has(b.dataset.id));b.onclick=()=>teamClicked(b.dataset.id);});$("timer").textContent=game.timerSeconds==null?"No timer":formatTime(game.timerSeconds);$("timer").classList.toggle("warning",game.timerSeconds!=null&&game.timerSeconds<=60);if(game.timerRunning&&timerHandle===null)startTimerLoop();$("timerPanel").classList.toggle("hidden",game.status==="finished");$("timerButtons").classList.toggle("hidden",game.status!=="active");$("setTimer").textContent=game.status==="active"?"START TIMER":"SET TIMER";$("teacherGameActions").classList.toggle("hidden",game.status!=="active"&&game.status!=="finished");$("finish").classList.toggle("hidden",game.status==="finished");if(game.status==="finished")showWinner();}
 $("start").onclick=async()=>{
  if(!game||game.status!=="lobby")return;
- const button=$("start");button.disabled=true;button.textContent="STARTING…";
+ const button=$("start");button.disabled=true;button.textContent="ASSIGNING TEAMS…";
+ const now=Date.now();let shortage=null;
  try{
   const result=await runTransaction(ref(db,"games/"+gameId),g=>{
    if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||!g.teams.length)return;
+   g.participants=g.participants||{};g.teamReservations=g.teamReservations||{};
+   const online=Object.entries(g.participants).filter(([,p])=>now-Number(p.lastSeen||0)<20000);
+   const onlineIds=new Set(online.map(([id])=>id));
+   Object.keys(g.teamReservations).forEach(id=>{const r=g.teamReservations[id];if(!onlineIds.has(r.clientId))delete g.teamReservations[id];});
+   const needing=[];
+   online.forEach(([id,p])=>{
+    const reservation=p.teamId&&g.teamReservations[p.teamId];
+    if(reservation?.clientId===id){reservation.locked=true;p.locked=true;}
+    else{p.teamId=null;p.locked=false;needing.push([id,p]);}
+   });
+   const available=g.teams.filter(team=>!g.teamReservations[team.id]);
+   if(available.length<needing.length){shortage={screens:needing.length,teams:available.length};return;}
+   const shuffled=available.slice();
+   for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+   needing.forEach(([id,p],i)=>{
+    const team=shuffled[i];p.teamId=team.id;p.locked=true;p.selectedAt=now;
+    g.teamReservations[team.id]={clientId:id,selectedAt:now,locked:true,priority:Math.random()};
+   });
    g.status="active";g.started=true;g.currentValue=pointValue();g.timerRunning=g.timerSeconds!=null&&g.timerSeconds>0;return g;
   });
-  if(!result.committed){setStatus("The game could not start. Refresh the page and try again.");return;}
+  if(!result.committed){
+   setStatus(shortage?"There are "+shortage.screens+" open screens without a team but only "+shortage.teams+" teams available. Increase the team count or have students select teams.":"Could not begin the game. Refresh and try again.");
+   return;
+  }
   game=result.snapshot.val();render();$("lobby").classList.add("hidden");
- }catch(error){setStatus("Could not start game: "+(error?.message||String(error)));}
+ }catch(error){setStatus("Could not begin game: "+(error?.message||String(error)));}
  finally{if(game?.status==="lobby")render();}
 };
 function clearSelection(){assignMode=null;selectedTeamIds.clear();selectionValue=null;render();}
