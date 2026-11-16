@@ -59,6 +59,9 @@ $("start").onclick=async()=>{
     const team=available[i];assignedIds.add(team.id);p.teamId=team.id;p.locked=true;p.selectedAt=now;
     g.teamReservations[team.id]={clientId:id,selectedAt:now,locked:true,priority:Math.random()};
    });
+   const remaining=g.teams.filter(team=>!assignedIds.has(team.id));
+   for(let i=remaining.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[remaining[i],remaining[j]]=[remaining[j],remaining[i]];}
+   remaining.slice(0,Math.max(0,limit-assignedIds.size)).forEach(team=>assignedIds.add(team.id));
    g.teams=g.teams.filter(team=>assignedIds.has(team.id));
    g.teams.forEach((team,i)=>{team.position=i;});
    g.status="active";g.started=true;g.currentValue=pointValue();g.timerRunning=g.timerSeconds!=null&&g.timerSeconds>0;return g;
