@@ -101,13 +101,18 @@ async function selectTeam(id){
 }
 async function lockSelection(id=game?.participants?.[clientId]?.teamId,selectedAt=game?.participants?.[clientId]?.selectedAt){
  if(!id||!clientId||game?.status!=="lobby")return;stopCountdown();countdownToken=id+":"+selectedAt;
+ let limitReached=false;
  try{
   const result=await runTransaction(ref(db,"games/"+code),g=>{
    if(!g||g.status!=="lobby")return;const p=g.participants?.[clientId],r=g.teamReservations?.[id];
    if(!p||p.teamId!==id||p.locked||r?.clientId!==clientId||Number(p.selectedAt)!==Number(selectedAt))return;
+   const limit=Math.max(1,Math.min(26,Number(g.teamLimit)||g.teams?.length||1));
+   const lockedCount=Object.entries(g.teamReservations||{}).filter(([teamId,reservation])=>reservation.locked&&g.participants?.[reservation.clientId]?.teamId===teamId).length;
+   if(lockedCount>=limit){limitReached=true;return;}
    p.locked=true;r.locked=true;p.lastSeen=Date.now();return g;
   });
-  if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}else{countdownToken="";syncCountdown(game?.participants?.[clientId]);}
+  if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}
+  else{countdownToken="";if(limitReached)$("claimStatus").textContent="The teacher's team limit has been reached. You can keep changing your selection, but it cannot be locked in.";syncCountdown(game?.participants?.[clientId]);}
  }catch(e){countdownToken="";$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
 }
 $("lockInButton").onclick=()=>lockSelection();
