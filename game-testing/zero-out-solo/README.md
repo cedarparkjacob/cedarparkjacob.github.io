@@ -4,4 +4,18 @@ This isolated application uses Firebase Realtime Database path `soloGames/{six-c
 
 ## Firebase rules prerequisite
 
-The currently deployed rules authorize `games/$gameCode` only. Before testing, add an equivalent narrowly scoped `soloGames/$gameCode` rule block in Firebase Console. Keep the six-character uppercase-alphanumeric key validation and require an existing game record for writes. The repository does not contain the deployed rules source, so this permission cannot be safely changed from this repository.
+The repository does not contain the deployed Realtime Database rules. The currently known rules authorize `games/$gameCode` only, so the new `soloGames` path will be denied until an equivalent rule is added in Firebase Console.
+
+Add a narrowly scoped sibling rule under the root rules object; do not change the global default-deny rules:
+
+```json
+"soloGames": {
+  "$gameCode": {
+    ".read": "$gameCode.matches(/^[A-Z0-9]{6}$/)",
+    ".write": "$gameCode.matches(/^[A-Z0-9]{6}$/) && newData.exists()",
+    ".validate": "newData.hasChildren(['started', 'teams'])"
+  }
+}
+```
+
+Keep the existing team validation requirements as well: every team includes `id`, `letter`, `name`, `emoji`, `score`, and `position`. The Solo app writes those fields. Publish the rules in Firebase Console before trying to create or join a Solo game.
