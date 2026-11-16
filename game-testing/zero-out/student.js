@@ -112,7 +112,7 @@ async function lockSelection(id=game?.participants?.[clientId]?.teamId,selectedA
    p.locked=true;r.locked=true;p.lastSeen=Date.now();return g;
   });
   if(result.committed){game=result.snapshot.val();renderChoices();$("selectionCountdown").textContent="LOCKED IN";}
-  else{countdownToken="";if(limitReached)$("claimStatus").textContent="The teacher's team limit has been reached. You can keep changing your selection, but it cannot be locked in.";syncCountdown(game?.participants?.[clientId]);}
+  else{countdownToken="";if(limitReached){$("claimStatus").textContent="The teacher's team limit has been reached. You can keep changing your selection, but it cannot be locked in.";$("selectionCountdown").textContent="Team limit reached";}else syncCountdown(game?.participants?.[clientId]);}
  }catch(e){countdownToken="";$("claimStatus").textContent="Could not lock selection: "+(e?.message||String(e));}
 }
 $("lockInButton").onclick=()=>lockSelection();
