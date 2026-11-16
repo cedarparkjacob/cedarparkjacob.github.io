@@ -1,6 +1,6 @@
 import {db,ref,get,update,onValue,runTransaction,animalCatalog,formatScore,winners,escapeHtml} from "./game-core.js";
 const $=id=>document.getElementById(id);
-let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,selectionBusy=false;
+let code="",teamId="",clientId="",game=null,unsub=null,selectedRecipientId=null,selectionBusy=false,wheelAnimating=false;
 let heartbeatHandle=null,countdownHandle=null,countdownToken="",countdownDeadline=0,teamScreenOpen=false,lastConflictAt=0;
 function saved(){try{return JSON.parse(localStorage.getItem("zeroOutTeam")||"null");}catch{return null;}}
 function makeClientId(){return globalThis.crypto?.randomUUID?.()||("screen-"+Date.now()+"-"+Math.random().toString(36).slice(2));}
@@ -156,10 +156,10 @@ async function spinForRandomTeam(){
    const fresh=await get(ref(db,"games/"+code));if(!fresh.exists())throw new Error("Game not found.");latest=fresh.val();
   }
   if(!created)throw new Error("No unused animal team is available.");
-  game=latest;teamId=created.id;saveClient();$("randomTeamWheel").textContent=created.emoji+" "+created.name;
-  $("randomTeamStatus").textContent="Selected "+created.name+".";renderChoices();syncCountdown(game.participants[clientId]);
+  game=latest;teamId=created.id;saveClient();selectionBusy=false;wheelAnimating=true;renderChoices();syncCountdown(game.participants[clientId]);
+  await animateRandomTeamWheel(created);$("randomTeamStatus").textContent="Selected "+created.name+".";
  }catch(e){$("randomTeamStatus").textContent=e?.message||String(e);}
- finally{selectionBusy=false;renderChoices();}
+ finally{selectionBusy=false;wheelAnimating=false;renderChoices();}
 }
 $("randomTeamButton").onclick=spinForRandomTeam;
 function finishClaim(id,newClientId){
