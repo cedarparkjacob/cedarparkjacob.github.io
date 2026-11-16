@@ -71,3 +71,12 @@
 .selection-summary{font-size:1.3rem;font-weight:900}.selection-footer #lockInButton{min-width:190px}
 #randomTeamButton{min-width:210px;font-size:1.05rem;letter-spacing:.05em}
 @media(max-width:600px){.team-choice{min-height:95px;padding:8px}.team-choice .choice-animal{font-size:1.8rem}.team-choice.my-choice{min-height:125px}}
+
+
+/* New-team spins: count and fixed slot-machine window */
+.random-team-remaining{margin-top:-4px;color:var(--muted);font-size:.88rem;font-weight:700;font-variant-numeric:tabular-nums}
+.random-team-wheel{height:76px;overflow:hidden;position:relative;white-space:nowrap}
+.random-team-wheel-content{display:block;line-height:48px;animation:random-team-slide .12s cubic-bezier(.2,.7,.2,1) both}
+.random-team-wheel.spinning{border-color:var(--cyan);box-shadow:0 0 18px rgba(100,216,232,.22)}
+@keyframes random-team-slide{from{transform:translateY(110%);opacity:.35}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.random-team-wheel-content{animation:none}}
