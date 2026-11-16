@@ -13,7 +13,7 @@ async function createGame(){
   if(!code)throw Error("Could not generate a unique game code.");
   gameId=code;const animals=shuffled(animalCatalog).slice(0,count);
   const teams=animals.map((a,i)=>({id:"team-"+(i+1),letter:String.fromCharCode(65+i),name:a.name,emoji:a.emoji,score:0,position:i,connection:null}));
-  const initial={schemaVersion:2,mode:$("mode").value,status:"lobby",started:false,finished:false,createdAt:Date.now(),currentValue:pointValue(),lastValue:null,lastTeamId:null,pendingPrompts:{},directMode:false,teams,individuals:{},participants:{},teamReservations:{},assignment:{strategy:null,joinSequence:0},timerSeconds:pendingTimerSeconds,timerRunning:false};
+  const initial={schemaVersion:2,mode:$("mode").value,teamLimit:count,status:"lobby",started:false,finished:false,createdAt:Date.now(),currentValue:pointValue(),lastValue:null,lastTeamId:null,pendingPrompts:{},directMode:false,teams,individuals:{},participants:{},teamReservations:{},assignment:{strategy:null,joinSequence:0},timerSeconds:pendingTimerSeconds,timerRunning:false};
   await set(ref(db,"games/"+code),initial);
   $("setup").classList.add("hidden");$("lobby").classList.remove("hidden");$("gameCode").textContent=code;$("lobbyCode").textContent=code;
   listen();setStatus("Teams created. Students can select a team or choose NEW TEAM? before you begin.");
@@ -32,27 +32,39 @@ $("start").onclick=async()=>{
   const result=await runTransaction(ref(db,"games/"+gameId),g=>{
    if(!g||g.status!=="lobby"||!Array.isArray(g.teams)||!g.teams.length)return;
    g.participants=g.participants||{};g.teamReservations=g.teamReservations||{};
+   const limit=Math.max(1,Math.min(26,Number(g.teamLimit)||g.teams.length));
    const online=Object.entries(g.participants).filter(([,p])=>now-Number(p.lastSeen||0)<20000);
    const onlineIds=new Set(online.map(([id])=>id));
    Object.keys(g.teamReservations).forEach(id=>{const r=g.teamReservations[id];if(!onlineIds.has(r.clientId))delete g.teamReservations[id];});
-   const needing=[];
+   const locked=[];
    online.forEach(([id,p])=>{
     const reservation=p.teamId&&g.teamReservations[p.teamId];
-    if(reservation?.clientId===id){reservation.locked=true;p.locked=true;}
-    else{p.teamId=null;p.locked=false;needing.push([id,p]);}
+    if(p.locked&&reservation?.clientId===id&&reservation.locked){
+     const team=g.teams.find(team=>team.id===p.teamId);if(team&&!locked.some(x=>x.id===team.id))locked.push(team);
+    }else{
+     if(p.teamId&&g.teamReservations[p.teamId]?.clientId===id)delete g.teamReservations[p.teamId];
+     p.teamId=null;p.locked=false;
+    }
    });
-   const available=g.teams.filter(team=>!g.teamReservations[team.id]);
-   if(available.length<needing.length){shortage={screens:needing.length,teams:available.length};return;}
-   const shuffled=available.slice();
-   for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+   if(locked.length>limit){shortage={reason:"locked",locked:locked.length,limit};return;}
+   const assignedIds=new Set(locked.map(team=>team.id));
+   const needing=online.filter(([id,p])=>!(p.locked&&p.teamId&&assignedIds.has(p.teamId)));
+   const available=g.teams.filter(team=>!assignedIds.has(team.id));
+   const slots=limit-locked.length;
+   if(needing.length>slots||needing.length>available.length){shortage={reason:"capacity",screens:needing.length,teams:Math.min(slots,available.length),limit};return;}
+   for(let i=available.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[available[i],available[j]]=[available[j],available[i]];}
    needing.forEach(([id,p],i)=>{
-    const team=shuffled[i];p.teamId=team.id;p.locked=true;p.selectedAt=now;
+    const team=available[i];assignedIds.add(team.id);p.teamId=team.id;p.locked=true;p.selectedAt=now;
     g.teamReservations[team.id]={clientId:id,selectedAt:now,locked:true,priority:Math.random()};
    });
+   g.teams=g.teams.filter(team=>assignedIds.has(team.id));
+   g.teams.forEach((team,i)=>{team.position=i;});
    g.status="active";g.started=true;g.currentValue=pointValue();g.timerRunning=g.timerSeconds!=null&&g.timerSeconds>0;return g;
   });
   if(!result.committed){
-   setStatus(shortage?"There are "+shortage.screens+" open screens without a team but only "+shortage.teams+" teams available. Increase the team count or have students select teams.":"Could not begin the game. Refresh and try again.");
+   if(shortage?.reason==="locked")setStatus(shortage.locked+" teams are locked, but the game limit is "+shortage.limit+". Increase the team count or change selections before starting.");
+   else if(shortage?.reason==="capacity")setStatus(shortage.screens+" student screens need teams, but only "+shortage.teams+" unused team slot(s) remain within the "+shortage.limit+"-team limit. Increase the team count or have fewer screens join.");
+   else setStatus("Could not begin the game. Refresh and try again.");
    return;
   }
   game=result.snapshot.val();render();$("lobby").classList.add("hidden");
