@@ -1,0 +1,36 @@
+name: Build Forest Flight
+
+on:
+  push:
+    paths:
+      - "forest/source/**"
+      - ".github/workflows/build-forest.yml"
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install build dependencies
+        run: npm install --prefix forest/source
+      - name: Build standalone forest page
+        run: npm run build --prefix forest/source
+      - name: Commit generated page
+        run: |
+          if git diff --quiet -- forest/index.html; then
+            echo "No generated page changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add forest/index.html
+          git commit -m "Build Forest Flight page"
+          git push
