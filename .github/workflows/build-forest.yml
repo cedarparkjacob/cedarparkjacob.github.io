@@ -11,11 +11,20 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: forest-flight-build
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Use the latest main branch before building
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
       - uses: actions/setup-node@v4
         with:
           node-version: 20
