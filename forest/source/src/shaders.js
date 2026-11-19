@@ -328,11 +328,13 @@ fn tri(p: vec3f, n: vec3f, s: f32) -> TP {
     alb *= (.22 + 1.3 * hgt) * mix(1., .62 + .76 * F.h, fk);
     sgro = -ss(.14, .0, sf) * (1. - abs(on.y)) * 1.2;
     if (mat == 0) {
-      alb = mix(alb, vec3f(.13, .15, .14) * (.55 + .6 * B.h), flt * gm.a * .7);
-      let mg = flt * sat(gm.r * 1.5 - .45 + (B.c - .5) * 1.6) * ss(.35, .6, A.h) * ss(-34., -40., i.wp.y);
-      alb = mix(alb, vec3f(.20, .02, .12) * (.4 + .9 * B.h), mg * .8);
-      flu = mg * .35;
-      alb = mix(alb, alb * vec3f(.85, .8, 1.4) + vec3f(.015, .0, .05), gm.b * .8);
+      let soil = mix(vec3f(.105, .070, .040), vec3f(.24, .16, .085), sat(A.h * .85 + B.c * .35));
+      let litter = ss(.48, .68, big * .55 + C.c * .45) * (.22 + .22 * F.h);
+      soil = mix(soil, vec3f(.29, .19, .095), litter);
+      let moss = ss(.35, .72, B.c * .62 + big * .38) * ss(-.12, .72, n0.y);
+      soil = mix(soil, vec3f(.045, .115, .038) * (.75 + .5 * A.h), moss * .82);
+      alb = soil * (.72 + .62 * hgt);
+      bump = 1.0; gloss = .035;
     }
   } else if (mat == 2) {
     // whale fluke: smooth pale stone with dark streaks running along its length
