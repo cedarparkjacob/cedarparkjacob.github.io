@@ -142,7 +142,7 @@ function makeWorld(D, T, flyPts, POSES) {
     for (let k = 0; k < roots; k++) {
       const a = k * TAU / roots + lean + rr(-0.18, 0.18), L = rr(2.1, 3.8) * sc;
       const dx = cos(a) * L * 0.88, dz = sin(a) * L * 0.88, dy = -L * rr(0.08, 0.18);
-      solid(trunkMesh, x, y + 0.12, z, L, qFromY(dx / L, (L + dy) / L, dz / L), 3, rnd(), 1, 0);
+      const rl = hypot(dx, L + dy, dz); solid(trunkMesh, x, y + 0.12, z, L, qFromY(dx / rl, (L + dy) / rl, dz / rl), 3, rnd(), 1, 0);
     }
     const branches = kind === 1 ? 6 : kind === 2 ? 10 : 8;
     for (let k = 0; k < branches; k++) {
@@ -151,7 +151,7 @@ function makeWorld(D, T, flyPts, POSES) {
       const L = H * rr(kind === 1 ? 0.12 : 0.15, kind === 2 ? 0.29 : 0.24) * sc;
       const dx = cos(yaw) * L * 0.9, dz = sin(yaw) * L * 0.9, dy = L * rr(0.24, 0.52);
       const bx = x + leanX * h * 0.035, by = y + h, bz = z + leanZ * h * 0.035;
-      solid(trunkMesh, bx, by, bz, L, qFromY(dx / L, dy / L, dz / L), 3, rnd(), 1, 0);
+      const bl = hypot(dx, dy, dz); solid(trunkMesh, bx, by, bz, L, qFromY(dx / bl, dy / bl, dz / bl), 3, rnd(), 1, 0);
       for (let j = 0; j < (kind === 1 ? 2 : 3); j++) {
         const a = yaw + rr(-0.55, 0.55);
         leaf(big, bx + dx + cos(a) * rr(0.2, 1.5), by + dy + rr(-0.2, 1.8), bz + dz + sin(a) * rr(0.2, 1.5),
@@ -336,7 +336,7 @@ function makeWorld(D, T, flyPts, POSES) {
   // Marine set pieces are intentionally omitted in the forest version.
   // barrel sponges in front of viewpoint 4, small sponges around the fluke base
   rseed(12);
-  for (const b of [[7, 3.2, 1.3, 4], [8.4, 4.6, 1.0, 6], [9.6, 2.6, 1.5, 4], [11, 5, 1.1, 5], [8, -3.6, 1.2, 4], [12.5, 2, 1.2, 6], [9, 3.9, 0.8, 4]]) { const p = rel(3, b[0], b[1]), c = POSES[3]; let ux = (c[0] - p[0]) * 0.07, uz = (c[2] - p[1]) * 0.07; const l = hypot(ux, 1, uz); solid(b[3], p[0], gy(p[0], p[1]) - 0.1, p[1], b[2], qFromY(ux / l, 1 / l, uz / l), 4, rnd(), 1, 0); }
+  // Former viewpoint sponge props are omitted; meshes 4–6 are now tree wood.
   // No barrel sponges in the woodland scene.
 
   // --- bubbles
