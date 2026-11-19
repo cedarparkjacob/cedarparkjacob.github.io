@@ -196,7 +196,7 @@ const KD = vec3f(.003, .004, .0025);
 const WCOL = vec3f(.16, .20, .12);
 const KDZ = vec3f(.0025, .0035, .002);
 const PCOL = vec3f(.34, .39, .27);
-const SUNC = vec3f(1.0, .94, .78);
+const SUNC = vec3f(.84, .80, .68);
 const TAU = 6.2831853;
 const LOW = ${LV > 1};
 fn sat(x: f32) -> f32 { return clamp(x, 0., 1.); }
@@ -490,7 +490,7 @@ struct GO { @builtin(position) cp: vec4f, @location(0) uv: vec2f, @location(1) @
   var c = E * .9 * (alb * max(ndl, 0.) + trc * tr * .15) + alb * am;
   let H = normalize(V + L);
   c += E * pow(sat(dot(n, H)), 28.) * .08 + am * ir * i.pr.z * pow(1. - ndv, 3.) * .12;
-  c += E * trc * i.pr.y * pow(sat(dot(-V, L)), 3.) * 1.2;
+  c += E * trc * i.pr.y * pow(sat(dot(-V, L)), 3.) * .12;
   c += alb * i.pr.w * (.5 + 3. * dot(am + E * .3, vec3f(.1, .5, .5)));
   // sparkle: whole-leaf glints that twinkle slowly
   let tw = pow(.5 + .5 * sin(g.cam.w * (.5 + i.sd.y * 1.4) + i.sd.x * 90.), 5.);
@@ -764,7 +764,7 @@ fn sat3(x: vec3f) -> vec3f { return clamp(x, vec3f(0.), vec3f(1.)); }
   }
   var c = textureLoad(tS, px, 0).rgb + acc / ws;
   let bl = textureSampleLevel(tB, sC, uv, 0.).rgb;
-  c = mix(c, bl, .06) + bl * .03;
+  c = mix(c, bl, .025) + bl * .01;
   c *= g.mis.x;
   let q = uv - .5;
   c *= 1. - dot(q, q) * .55;
