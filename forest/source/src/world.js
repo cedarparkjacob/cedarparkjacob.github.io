@@ -89,7 +89,7 @@ function makeWorld(D, T, flyPts, POSES) {
   const nCells = CELLS * CELLS;
   const cellOf = (x, z) => clamp(floor((x - OX) / CELLW), 0, CELLS - 1) + CELLS * clamp(floor((z - OZ) / CELLW), 0, CELLS - 1);
   const big = Array.from({ length: nCells }, () => []), small = Array.from({ length: nCells }, () => []);
-  // Medium and Low keep every 2nd / 4th leaf (but every kelp stem), made wider; the random stream is the same
+  // Medium and Low keep every 2nd / 4th leaf (but every tree trunk), made wider; the random stream is the same
   let nth = 0;
   const leaf = (L, x, y, z, len, yaw, tilt, wid, hA, type, s1, s2, bend) => { if (type === 1 || !(nth++ % THIN)) L[cellOf(x, z)].push(x, y, z, len, yaw, tilt, type === 1 ? wid : wid * (1 + LV / 2), hA, type, s1, s2, bend); };
   const glint = (...a) => { nth++ % THIN || glints.push(...a); };
@@ -99,7 +99,7 @@ function makeWorld(D, T, flyPts, POSES) {
   const chunks = Array.from({ length: NCHUNK }, () => Array.from({ length: nCells }, () => []));
   const glints = [];
   const rel = (i, f, r) => { const p = POSES[i]; let fx = p[3] - p[0], fz = p[5] - p[2]; const l = hypot(fx, fz); fx /= l; fz /= l; return [p[0] + fx * f - fz * r, p[2] + fz * f + fx * r]; };
-  const bubbles = [], kelpAbs = new Float32Array((NX / 2) * (NY / 2) * (NZ / 2));
+  const bubbles = [], canopyAbs = new Float32Array((NX / 2) * (NY / 2) * (NZ / 2));
 
   // --- surface queries
   const fl = [];
@@ -131,32 +131,49 @@ function makeWorld(D, T, flyPts, POSES) {
   const tangent = (n) => { let t = abs(n[1]) < 0.9 ? [n[2], 0, -n[0]] : [1, 0, 0]; const l = hypot(...t); t = t.map((v) => v / l); return [t, [n[1] * t[2] - n[2] * t[1], n[2] * t[0] - n[0] * t[2], n[0] * t[1] - n[1] * t[0]]]; };
   const nearFly = (x, y, z, r) => { for (const p of flyPts) if (hypot(x - p[0], z - p[2]) < r && y < p[1] + 3 && y > p[1] - 13) return true; return false; };
   const nearPose = (x, z, r = 3) => { for (const p of POSES) if (hypot(x - p[0], z - p[2]) < r) return true; return false; };
-  // --- kelp columns
+  // --- woodland tree groves
+  // --- procedural woodland trees: tapered bark columns, branching limbs and layered crowns
   const column = (x, y, z, H, kind, dens = 1) => {
-    const strands = 2 + (rnd() < 0.6) + (rnd() < 0.3), ph = rnd() * TAU, tw = rr(0.1, 0.28), sr = rr(0.2, 0.55), sc = rr(0.75, 1.25);
-    const la = rnd() * TAU, lm = rr(0, 0.11), full = rr(0.55, 1.3) * dens;
-    const stem = (s, h) => { const a = ph + s * TAU / strands + h * tw, r = sr * (1 - 0.6 * h / H), ln = lm * h * h / H; return [x + cos(a) * r + cos(la) * ln, z + sin(a) * r + sin(la) * ln, a]; };
-    for (let s = 0; s < strands; s++) for (let h = 0; h < H - 1; h += 1.7) { const p = stem(s, h); leaf(big, p[0], y + h, p[1], 2.1, p[2] + PI / 2, 0.1, 0.17, h, 1, rnd(), rnd(), 0.3); }
-    const n = floor(H * 30 * full);
-    for (let i = 0; i < n; i++) {
-      const t = pow(rnd(), 0.9), h = t * H, p = stem((rnd() * strands) | 0, h);
-      const L = ((0.55 + 0.75 * rnd() * rnd()) * (1 - 0.5 * t * t) * sc + 0.25) * (kind === 1 ? 1.25 : 1.15);
-      const tilt = mix(rr(0.4, 1.0), rr(0.15, 0.45), t);
-      const type = kind === 1 ? (rnd() < 0.8 ? 3 : 4) : kind === 2 ? (rnd() < 0.5 ? 4 : 0) : 0;
-      leaf(big, p[0], y + h, p[1], L, rnd() * TAU, tilt, L * (kind === 1 ? rr(0.09, 0.13) : rr(0.15, 0.21)) + 0.03, h, type, rnd(), rnd(), rr(0.38, 0.95));
+    const sc = rr(0.82, 1.22), crown = H * rr(0.68, 0.82);
+    const lean = rnd() * TAU, leanX = cos(lean), leanZ = sin(lean);
+    const radius = rr(0.34, 0.62) * sc;
+    for (let k = 0; k < 7; k++) {
+      const yaw = k * TAU / 7 + rr(-0.08, 0.08);
+      const ox = cos(yaw) * radius * 0.18, oz = sin(yaw) * radius * 0.18;
+      leaf(big, x + ox, y, z + oz, H, yaw, rr(0.015, 0.055), radius * rr(0.72, 1.05), 0, 8, rnd(), rnd(), 0.08);
     }
-    for (let i = floor(H * (kind === 1 ? 16 : 13)); i > 0; i--) { const h = rnd() * H, a = rnd() * TAU, r = rr(0.15, 0.8) * (1 - 0.5 * h / H), ln = lm * h * h / H; glint(x + cos(a) * r + cos(la) * ln, y + h, z + sin(a) * r + sin(la) * ln, h, rnd(), kind === 1 ? rnd() : rnd() * 0.6, rr(0.018, 0.05), 0); }
-    // light absorption footprint for the skylight bake
-    const hx = round((x - OX) / VS / 2), hz = round((z - OZ) / VS / 2);
-    for (let hy = floor((y - OY) / VS / 2); hy <= floor((y + H - OY) / VS / 2); hy++) {
-      if (hy >= 0 && hy < NY / 2 && hx > 0 && hx < NX / 2 - 1 && hz > 0 && hz < NZ / 2 - 1) kelpAbs[hx + NX / 2 * (hy + NY / 2 * hz)] += 0.17;
+    for (let k = 0; k < 5; k++) {
+      const yaw = k * TAU / 5 + lean;
+      leaf(big, x + cos(yaw) * radius * 0.2, y + 0.05, z + sin(yaw) * radius * 0.2,
+        rr(1.2, 2.4) * sc, yaw, rr(0.95, 1.25), rr(0.12, 0.22) * sc, 0, 8, rnd(), rnd(), 0.05);
+    }
+    const branches = 5 + (rnd() * 4 | 0);
+    for (let k = 0; k < branches; k++) {
+      const yaw = k * TAU / branches + rr(-0.35, 0.35) + lean;
+      const h = crown * rr(0.72, 0.98), L = rr(3.0, 6.2) * sc;
+      leaf(big, x + leanX * h * 0.12, y + h, z + leanZ * h * 0.12,
+        L, yaw, rr(0.9, 1.2), rr(0.12, 0.2), h, 8, rnd(), rnd(), 0.16);
+    }
+    const count = floor((70 + H * 2.8) * dens);
+    for (let i = 0; i < count; i++) {
+      const t = rnd(), h = crown + (rnd() - 0.5) * H * 0.30;
+      const ang = rnd() * TAU, r = pow(rnd(), 0.62) * rr(3.2, 6.8) * sc;
+      const branch = t < 0.26, L = branch ? rr(2.0, 4.1) * sc : rr(1.2, 2.8) * sc;
+      const tilt = branch ? rr(0.75, 1.28) : rr(0.5, 1.25);
+      leaf(big, x + cos(ang) * r + leanX * h * 0.12, y + h, z + sin(ang) * r + leanZ * h * 0.12,
+        L, ang + rr(-0.8, 0.8), tilt, L * rr(0.22, 0.42), h, 9, rnd(), rnd(), rr(0.65, 1.15));
+    }
+    for (let i = 0; i < 18; i++) {
+      const ang = rnd() * TAU, h = crown + rr(-H * 0.12, H * 0.08);
+      leaf(big, x + cos(ang) * rr(0.5, 2.8), y + h, z + sin(ang) * rr(0.5, 2.8),
+        rr(2.0, 3.4), ang, rr(0.3, 0.8), rr(0.55, 0.9), h, 9, rnd(), rnd(), 0.9);
     }
   };
-  const KELPZ = [[-32, -5, 13, 0.85], [0, -86, 46, 1], [72, -26, 27, 0.9], [-60, -4, 11, 0.8], [0, -36, 12, 0.55], [-17, -8, 6, 0.8], [15, -8, 6, 0.8], [-4, 120, 20, 0.4], [-45, -63, 15, 0.9], [62, -26, 12, 0.9], [-100, 70, 30, 0.8], [100, 60, 30, 0.8], [-95, -90, 32, 0.8], [105, -85, 30, 0.7]];
-  const NOKELP = [[-5, -106.5, 8], [4.6, -109.4, 10], [14.2, -112.3, 12], [-26, -100, 6], [-20.5, -101.7, 4.5], [-14.8, -104.5, 6], [-7.5, -107.8, 7], [4, 112, 11], [2, 4, 15], [42, 22, 12], [6, 78, 19], [-58, -16, 8], [9, -66, 9], [8, -76, 8]];
-  const kelpDens = (x, z) => {
+  const KELPZ = [[-32, -5, 24, 0.95], [0, -86, 48, 1], [72, -26, 34, 0.95], [-60, -4, 24, 0.9], [0, -36, 28, 0.85], [-17, -8, 20, 0.9], [15, -8, 20, 0.9], [-4, 120, 28, 0.75], [-45, -63, 26, 0.9], [62, -26, 25, 0.9], [-100, 70, 34, 0.8], [100, 60, 34, 0.8], [-95, -90, 35, 0.8], [105, -85, 34, 0.8]];
+  const CLEARINGS = [[-5, -106.5, 8], [4.6, -109.4, 10], [14.2, -112.3, 12], [-26, -100, 6], [-20.5, -101.7, 4.5], [-14.8, -104.5, 6], [-7.5, -107.8, 7], [4, 112, 11], [2, 4, 15], [42, 22, 12], [6, 78, 19], [-58, -16, 8], [9, -66, 9], [8, -76, 8]];
+  const forestDens = (x, z) => {
     for (const p of NOKELP) if (hypot(x - p[0], z - p[1]) < p[2]) return 0;
-    let d = sstep(0.52, 0.64, fbm(x * 0.022, 4, z * 0.022, 3)) * 0.5;
+    let d = sstep(0.48, 0.62, fbm(x * 0.018, 4, z * 0.018, 3)) * 0.68;
     for (const p of KELPZ) d = max(d, p[3] * sstep(p[2], p[2] * 0.75, hypot(x - p[0], z - p[1])));
     return d;
   };
@@ -172,7 +189,7 @@ function makeWorld(D, T, flyPts, POSES) {
     if (grad(x, y, z)[1] < 0.55) return;
     if (!force && flyPts.some((p) => hypot(x - p[0], z - p[2]) < 5)) return;
     occ.add(key);
-    column(x, y - 0.3, z, min(f[i + 1] - rr(0.8, 5), force ? rr(30, 42) : rr(15, 40)), kind, dens);
+    column(x, y - 0.3, z, min(f[i + 1] - rr(0.8, 5), force ? rr(25, 36) : rr(18, 34)), kind, dens);
   };
   // hand-placed columns framing the viewpoints: x, z, kind, density
   for (const p of [[...rel(0, 11, -8.5), 0], [...rel(0, 16, -10.5), 0], [...rel(0, 21, -9), 0], [...rel(0, 9, 7), 0], [...rel(0, 14, 9.5), 0], [...rel(0, 19, 8), 0], [...rel(0, 26, 6), 0],
