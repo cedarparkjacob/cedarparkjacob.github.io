@@ -983,6 +983,18 @@ struct VO { @builtin(position) cp: vec4f, @location(0) wp: vec3f, @location(1) n
 // ---------------------------------------------------------------- water surface seen from below
 const W_SURF = S_B + /*wgsl*/`
 struct VO { @builtin(position) cp: vec4f, @location(0) wp: vec3f };
+fn sky(rd0: vec3f) -> vec3f {
+  let rd = normalize(rd0);
+  let h = sat(rd.y);
+  let horizon = vec3f(.48, .59, .40);
+  let zenith = vec3f(.075, .17, .115);
+  let base = mix(horizon, zenith, pow(h, .72));
+  let sunDir = normalize(g.sun.xyz);
+  let sun = pow(max(dot(rd, sunDir), 0.), 420.);
+  let glow = pow(max(dot(rd, sunDir), 0.), 12.);
+  let haze = pow(1. - h, 5.);
+  return base + vec3f(1., .82, .52) * sun * 5. + vec3f(.95, .66, .36) * glow * .18 + vec3f(.18, .22, .12) * haze;
+}
 @vertex fn vs(@builtin(vertex_index) i: u32) -> VO {
   var o: VO;
   let p = vec2f(f32(i & 1u), f32(i >> 1u)) * 2. - 1.;
@@ -991,24 +1003,9 @@ struct VO { @builtin(position) cp: vec4f, @location(0) wp: vec3f };
   return o;
 }
 @fragment fn fs(i: VO) -> @location(0) vec4f {
-  let v = i.wp - g.cam.xyz; let d = length(v); let V = v / d;
-  let fl = ss(260., 60., d);
-  let s = (textureSample(tW, sR, i.wp.xz / 13.).ba + textureSample(tW, sR, i.wp.zx / 4.7 + .2).ba * .7 + textureSample(tW, sR, i.wp.xz / 37. + .6).ba * .8) * fl;
-  let n = normalize(vec3f(-s.x * .8, -1., -s.y * .8));
-  let ci = sat(dot(V, -n));
-  let k = 1. - 1.769 * (1. - ci * ci);
-  let win = ss(0., .22, k);
-  let rr = refract(V, n, 1.33);
-  let sd = max(dot(rr, g.sun.xyz), 0.);
-  let fr = pow(1. - sqrt(max(k, 0.)), 5.);
-  let sky = (vec3f(.30, .78, 1.) * 1.3 * clamp(1. + 3.8 * (s.x * .6 - s.y * .8), .25, 3.) + vec3f(1., .95, .85) * (pow(sd, 60.) * 1.3 + pow(sd, 500.) * 12.)) * (1. - fr);
-  let z = zone(i.wp);
-  let R = reflect(V, n);
-  let refl = fogIn(i.wp, R, 300., z, g.sun.xyz) * 1.15;
-  let c = mix(refl, sky, win);
-  return fin(fog(c, i.wp, z));
+  return fin(sky(i.wp - g.cam.xyz));
 }
-// behind everything: where no terrain is drawn (it stops at ~240 m) the water looks as it does at that distance
+// Background pass for pixels beyond the terrain mesh.
 @vertex fn vsB(@builtin(vertex_index) i: u32) -> VO {
   var o: VO;
   let p = vec2f(f32(i & 1u), f32(i >> 1u)) * 2. - 1.;
@@ -1017,11 +1014,9 @@ struct VO { @builtin(position) cp: vec4f, @location(0) wp: vec3f };
   return o;
 }
 @fragment fn fsB(i: VO) -> @location(0) vec4f {
-  let p = g.cam.xyz + normalize(i.wp - g.cam.xyz) * 240.;
-  return fin(fog(vec3f(0.), p, zone(p)));
+  return fin(sky(i.wp - g.cam.xyz));
 }
 `;
-
 // ---------------------------------------------------------------- sprites: bubbles (alpha) and drifting particles (additive)
 const W_SPR = S_B + /*wgsl*/`
 struct VO { @builtin(position) cp: vec4f, @location(0) uv: vec2f, @location(1) @interpolate(flat) pr: vec4f, @location(2) wp: vec3f };
