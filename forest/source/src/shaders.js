@@ -411,6 +411,8 @@ fn pal(h: f32) -> vec3f {
   let hsel = hs(s1 * 13.7 + s2 * 71.3);
   switch ty {
     case 0 { col = mix(vec3f(.11, .125, .022), vec3f(.04, .10, .04), s1); col = mix(col, vec3f(.25, .17, .025), step(.72, s2)); pr = vec4f(.24, .9, 0., 0.); spc = pal(hsel * .72); shp = vec2f(.5, .32); wav = 1.9; }
+    case 8 { col = mix(vec3f(.16, .085, .035), vec3f(.30, .16, .065), s1); col = mix(col, vec3f(.38, .25, .12), step(.82, s2)); pr = vec4f(.02, .12, 0., 0.); spc = vec3f(.16, .12, .07); shp = vec2f(.12, .16); wav = .22; fls = .18; }
+    case 9 { col = mix(vec3f(.045, .16, .045), vec3f(.12, .29, .075), s1); col = mix(col, vec3f(.22, .34, .10), step(.78, s2)); pr = vec4f(.035, .78, .02, 0.); spc = vec3f(.22, .30, .12); shp = vec2f(.55, .42); wav = 1.15; fls = .7; }
     case 1 { col = vec3f(.10, .11, .035); pr = vec4f(0., .2, 0., 0.); shp = vec2f(.05, .1); wav = .3; fls = .3; }
     case 2 { col = mix(vec3f(.05, .20, .16), vec3f(.12, .26, .22), s1); col = mix(col, vec3f(.30, .14, .24), step(.85, s2)); pr = vec4f(.05, 1.0, .25, 0.); spc = vec3f(.6, 1., .9); shp = vec2f(.45, .35); wav = 2.2; }
     case 3 { col = mix(vec3f(.02, .05, .065), vec3f(.05, .03, .08), s1); col = mix(col, vec3f(.09, .03, .09), step(.8, s2)); pr = vec4f(.2, .85, .55, .02); spc = mix(vec3f(.5, .35, 1.), vec3f(.2, 1., .7), step(.6, hsel)); shp = vec2f(.7, .6); wav = 2.4; }
