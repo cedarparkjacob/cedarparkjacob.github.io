@@ -38,8 +38,8 @@ fn seg3(p: vec3f, a: vec3f, b: vec3f) -> f32 { let pa = p - a; let ba = b - a; l
 fn dens(p: vec3f) -> f32 {
   let w = vec3f(fbm(p * .04 + 11., 3), fbm(p * .04 + 47., 3), fbm(p * .04 + 83., 3)) - .5;
   let q = p + w * vec3f(15., 6., 15.);
-  let g0 = -45.5 + 7. * (fbm(vec3f(q.xz * .011, 3.), 4) - .5) + 1.6 * (fbm(vec3f(q.xz * .07, 9.), 3) - .5);
-  let tn = 3. * (fbm(vec3f(q.xz * .09, 2.), 3) - .5);
+  let g0 = -45.5 + 1.6 * (fbm(vec3f(q.xz * .011, 3.), 4) - .5) + .35 * (fbm(vec3f(q.xz * .07, 9.), 3) - .5);
+  let tn = .55 * (fbm(vec3f(q.xz * .035, 2.), 3) - .5);
   var dm = -1e3; var de = 1e3;
   var k = 0u;
   for (var i = 0u; i < u.c.x; i++) {
@@ -73,8 +73,8 @@ fn dens(p: vec3f) -> f32 {
   }
   let hg = p.y - g0;
   let rk = mix(.25, 1., ss(.5, 5., hg));
-  d += rk * ((.5 - wor(p * .17 + w * 2.)) * 3.4 + (.5 - wor(p * .41 + 7.)) * 1.3 + (fbm(p * .3, 3) - .5) * 2.2);
-  d += rk * 2.2 * (abs(fract(p.y * .21 + w.y * 2.2) - .5) - .25);
+  d += rk * ((.5 - wor(p * .10 + w * 2.)) * .45 + (.5 - wor(p * .24 + 7.)) * .18 + (fbm(p * .18, 3) - .5) * .35);
+  d += rk * .25 * (abs(fract(p.y * .12 + w.y * .8) - .5) - .25);
   for (var i = 0u; i < u.c.z; i++) {
     let a = P[k]; let b = P[k + 1u]; k += 2u;
     d = smin(d, seg3(p + w * 2., a.xyz, b.xyz) - a.w, 2.);
@@ -191,12 +191,12 @@ const WK = array<vec3f, 10>(vec3f(1., 2., 1.), vec3f(-2., 1., .9), vec3f(3., 1.,
 // ---------------------------------------------------------------- shared scene code
 const S_G = /*wgsl*/`
 struct G { vp: mat4x4f, sm: mat4x4f, cam: vec4f, right: vec4f, up: vec4f, fwd: vec4f, sun: vec4f, res: vec4f, mis: vec4f };
-const SIG = vec3f(.018, .027, .016);
-const KD = vec3f(.024, .035, .019);
-const WCOL = vec3f(.20, .30, .17);
-const KDZ = vec3f(.020, .030, .018);
-const PCOL = vec3f(.66, .76, .57);
-const SUNC = vec3f(1.7, 1.6, 1.45);
+const SIG = vec3f(.0035, .0045, .003);
+const KD = vec3f(.003, .004, .0025);
+const WCOL = vec3f(.16, .20, .12);
+const KDZ = vec3f(.0025, .0035, .002);
+const PCOL = vec3f(.34, .39, .27);
+const SUNC = vec3f(1.0, .94, .78);
 const TAU = 6.2831853;
 const LOW = ${LV > 1};
 fn sat(x: f32) -> f32 { return clamp(x, 0., 1.); }
@@ -213,7 +213,7 @@ fn fogIn(ro: vec3f, rd: vec3f, d: f32, z: f32, sun: vec3f) -> vec3f {
   let I = (1. - exp(-a * d)) / a;
   let mu = max(dot(rd, sun), 0.);
   let m2 = mu * mu;
-  return mix(WCOL, PCOL, z) * sg(z) * exp(k * ro.y) * I * (1.22 + .3 * m2 * m2);
+  return mix(WCOL, PCOL, z) * (1. - exp(-.0018 * d)) * (.22 + .08 * m2);
 }
 `;
 
@@ -247,12 +247,12 @@ fn caus(p: vec3f, d: f32) -> vec3f {
   let a = vec3f(textureSample(tW, sR, q / 3.3 + o).r, textureSample(tW, sR, q / 3.3).r, textureSample(tW, sR, q / 3.3 - o).r);
   let b = textureSample(tW, sR, q.yx / 6.9 + .37).r;
   let c = min(pow(a, vec3f(2.3)) * 5. * (.45 + b * 1.3), vec3f(4.));
-  return mix(c, vec3f(.33), ss(35., 100., d));
+  return vec3f(.33);
 }
 fn caus2(p: vec3f, d: f32) -> f32 {
   let q = cuv(p);
   let c = min(pow(textureSample(tW, sR, q / 4.1).r, 1.4) * 2.6 * (.45 + textureSample(tW, sR, q.yx / 6.9 + .37).r * 1.3), 2.6);
-  return mix(c, .33, ss(35., 100., d));
+  return .33;
 }
 fn sunE(y: f32, z: f32) -> vec3f { return SUNC * (0.88 + 0.12 * sat(y / 45.)); }
 fn vol(p: vec3f) -> vec4f { return textureSampleLevel(tV, sC, (p - vec3f(-192., -56., -192.)) / vec3f(384., 60., 384.), 0.); }
@@ -265,7 +265,7 @@ fn side(p: vec3f, n: vec3f, open: f32, z: f32) -> vec3f { return mix(WCOL, PCOL,
 // skylight at most 150 m along the ray: past that, terrain and the background behind it (vsB) get the same haze
 fn fog(c: vec3f, wp: vec3f, z: f32) -> vec3f {
   let v = wp - g.cam.xyz; let d = length(v); let rd = v / d;
-  return c * exp(-sg(z) * d) * ss(230., 185., d) + fogIn(g.cam.xyz, rd, d, z, g.sun.xyz) * (.58 + .42 * vol(g.cam.xyz + rd * min(d, 150.)).g);
+  return mix(c, vec3f(.19, .23, .15), 1. - exp(-.0012 * d));
 }
 fn qrot(q: vec4f, v: vec3f) -> vec3f { return v + 2. * cross(q.xyz, cross(q.xyz, v) + q.w * v); }
 `;
@@ -371,11 +371,11 @@ fn tri(p: vec3f, n: vec3f, s: f32) -> TP {
   let E = sunE(i.wp.y, z) * shadow9(i.wp + n0 * .35);
   let ndl = sat(dot(N, L));
   let am = (amb(i.wp, N, v1.g, z) + side(i.wp, N, sat((v2.r - .5) * 2.7), z)) * ao;
-  let dl = E * ndl * (.10 + mix(vec3f(.33), ca, ss(.1, .45, dot(n0, L))) * 2.5);
+  let dl = E * ndl * .9;
   var c = alb * (dl + am) + emi + alb * flu * dot(dl + am, vec3f(.1, .5, .5));
   let H = normalize(V + L);
-  c += E * (.25 + ca) * pow(sat(dot(N, H)), mix(10., 70., gloss)) * gloss * ndl * 1.8;
-  c += (amb(i.wp, reflect(-V, N), v1.g, z) + side(i.wp, reflect(-V, N), sat((v2.r - .5) * 2.7), z)) * ao * (.08 + gloss) * .6 * pow(1. - sat(dot(N, V)), 2.5);
+  c += E * .08 * pow(sat(dot(N, H)), mix(18., 48., gloss)) * gloss * ndl;
+  c += amb(i.wp, reflect(-V, N), v1.g, z) * ao * .025 * pow(1. - sat(dot(N, V)), 2.5);
   return fin(fog(c, i.wp, z));
 }
 `;
@@ -487,9 +487,9 @@ struct GO { @builtin(position) cp: vec4f, @location(0) uv: vec2f, @location(1) @
   let trc = alb * mix(vec3f(1.), vec3f(1.5, 1.4, .75), sat(i.pr.y) * (1. - i.pr.z));
   let aov = sat((vv.r - .5) * 6.) * mix(.4, 1., i.uv.y);
   let am = (amb(i.wp, n, vv.g, z) + amb(i.wp, -n, vv.g, z) * i.pr.y * .55 * vec3f(1.1, 1.15, .7) + side(i.wp, n, sat((vv.r - .5) * 4.), z) * .6) * (.3 + .7 * aov);
-  var c = E * (.06 + ca * 1.5) * (alb * max(ndl, 0.) + trc * tr) + alb * am;
+  var c = E * .9 * (alb * max(ndl, 0.) + trc * tr * .15) + alb * am;
   let H = normalize(V + L);
-  c += E * (pow(sat(dot(n, H)), 40.) * (.45 + ir * i.pr.z * 2.) + pow(sat(dot(n, H)), 9.) * .07) + am * ir * i.pr.z * pow(1. - ndv, 3.) * 1.5;
+  c += E * pow(sat(dot(n, H)), 28.) * .08 + am * ir * i.pr.z * pow(1. - ndv, 3.) * .12;
   c += E * trc * i.pr.y * pow(sat(dot(-V, L)), 3.) * 1.2;
   c += alb * i.pr.w * (.5 + 3. * dot(am + E * .3, vec3f(.1, .5, .5)));
   // sparkle: whole-leaf glints that twinkle slowly
@@ -717,8 +717,8 @@ const W_RAYS = S_G + W_FS + /*wgsl*/`
   }
   let mu = max(dot(rd, sx), 0.);
   let ph = mix(.2 + 2.0 * mu * mu * mu, .8, g.sun.w);
-  let wc = mix(WCOL + vec3f(.04, .07, .05), PCOL + vec3f(.28, .16, .12), g.sun.w);
-  return vec4f(min(acc * dt * sgz * wc * SUNC * ph * g.mis.y * (1. - .55 * g.sun.w), vec3f(20.)), zl);
+  let wc = vec3f(.12, .16, .09);
+  return vec4f(min(acc * dt * sgz * wc * SUNC * ph * g.mis.y * .08, vec3f(2.)), zl);
 }
 `;
 // depth-aware 3x3 blur of the half-res shafts (hides the sampling dither)
