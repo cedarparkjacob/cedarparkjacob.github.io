@@ -59,10 +59,10 @@ fn dens(p: vec3f) -> f32 {
   let rad = length(p.xz) + w.x * 14.;
   let n = fbm(vec3f(q.xz * .0125, 1.7), 4);
   let ring = ss(156., 172., rad);
-  let plat = max(ss(.5, .565, n) * (1. - clr), ring);
-  let th = g0 + plat * mix(26. + 17. * fbm(vec3f(q.xz * .03, 5.), 2), 60., ring);
+  // Forest ground: one continuous, gently rolling surface. The old underwater
+  // terrain's raised plateaus and perimeter shelf made the trees and rocks sit
+  // on the wrong height layer, leaving the props visibly suspended.
   var d = smax(g0 + 4.5 * ss(10., 0., de) - p.y, dm, 3.);
-  d = smax(d, (th - p.y) * .7, 3.);
   k = u.c.x * 2u;
   for (var i = 0u; i < u.c.y; i++) {
     let a = P[k]; let b = P[k + 1u]; k += 2u;
