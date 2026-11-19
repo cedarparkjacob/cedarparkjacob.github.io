@@ -177,7 +177,7 @@ function makeWorld(D, T, flyPts, POSES) {
   const KELPZ = [[-32, -5, 24, 0.95], [0, -86, 48, 1], [72, -26, 34, 0.95], [-60, -4, 24, 0.9], [0, -36, 28, 0.85], [-17, -8, 20, 0.9], [15, -8, 20, 0.9], [-4, 120, 28, 0.75], [-45, -63, 26, 0.9], [62, -26, 25, 0.9], [-100, 70, 34, 0.8], [100, 60, 34, 0.8], [-95, -90, 35, 0.8], [105, -85, 34, 0.8]];
   const CLEARINGS = [[-5, -106.5, 8], [4.6, -109.4, 10], [14.2, -112.3, 12], [-26, -100, 6], [-20.5, -101.7, 4.5], [-14.8, -104.5, 6], [-7.5, -107.8, 7], [4, 112, 11], [2, 4, 15], [42, 22, 12], [6, 78, 19], [-58, -16, 8], [9, -66, 9], [8, -76, 8]];
   const forestDens = (x, z) => {
-    for (const p of NOKELP) if (hypot(x - p[0], z - p[1]) < p[2]) return 0;
+    for (const p of CLEARINGS) if (hypot(x - p[0], z - p[1]) < p[2]) return 0;
     let d = sstep(0.48, 0.62, fbm(x * 0.018, 4, z * 0.018, 3)) * 0.68;
     for (const p of KELPZ) d = max(d, p[3] * sstep(p[2], p[2] * 0.75, hypot(x - p[0], z - p[1])));
     return d;
@@ -207,7 +207,7 @@ function makeWorld(D, T, flyPts, POSES) {
   rseed(2);
   for (let i = 0; i < 15000; i++) {
     const a = rnd() * TAU, r = sqrt(rnd()) * 170, x = cos(a) * r, z = sin(a) * r;
-    if (rnd() < kelpDens(x, z)) tryColumn(x, z, zoneP(x, z) > 0.5 && rnd() < 0.5 ? 1 : rnd() < 0.03 ? 2 : 0);
+    if (rnd() < forestDens(x, z)) tryColumn(x, z, zoneP(x, z) > 0.5 && rnd() < 0.5 ? 1 : rnd() < 0.03 ? 2 : 0);
   }
 
   // --- clusters of ribbon leaves on the ground
@@ -371,7 +371,7 @@ function makeWorld(D, T, flyPts, POSES) {
       const g0 = gi(x * 2, y * 2, z * 2);
       const d = (D[g0] + D[g0 + 1] + D[g0 + NX] + D[g0 + NX + 1] + D[g0 + NX * NY] + D[g0 + NX * NY + 1] + D[g0 + NX * NY + NX] + D[g0 + NX * NY + NX + 1]) * 0.125;
       const o = x + hx * (y + hy * z);
-      const l = b * clamp(0.5 - d / 1.5, 0, 1) * (1 - min(kelpAbs[o], 0.5));
+      const l = b * clamp(0.5 - d / 1.5, 0, 1) * (1 - min(canopyAbs[o], 0.5));
       Ln[i] = l;
       volD[o * 2] = clamp(0.5 - d / 12, 0, 1) * 255; volD[o * 2 + 1] = min(1, b) * 255;
     }
