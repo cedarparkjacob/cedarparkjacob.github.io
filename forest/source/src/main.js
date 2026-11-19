@@ -275,9 +275,9 @@ await say('Building the forest…', 0.94, 1200);
 // mesh ids: 0-3 boulders, 4-6 sponges, 7-8 coral, 9 tube sponge, 10 whale fluke, 11 ship, 12 manta, 13 fish,
 // 14-20 rock chunks + pebbles, 21-22 coral LOD, 23-25 far LOD of the large rock chunks
 const meshes = [meshChunk(1, 3), meshChunk(7, 3), meshChunk(13, 3), meshChunk(22, 3),
-  meshLathe([[0, 0, 0.5], [0.34, 0, 0.6], [0.5, 0.2, 0.85], [0.6, 0.6, 1], [0.55, 0.95, 1], [0.47, 1.08, 1], [0.38, 1.1, 0.9], [0.3, 1.0, 0.45], [0.26, 0.6, 0.15], [0, 0.35, 0.05]], 18, 0.3, 9),
-  meshLathe([[0, 0, 0.5], [0.2, 0, 0.6], [0.26, 0.5, 0.85], [0.4, 1.25, 1], [0.4, 1.42, 1], [0.33, 1.48, 0.9], [0.26, 1.38, 0.4], [0.18, 0.8, 0.12], [0, 0.5, 0.05]], 16, 0.35, 8),
-  meshLathe([[0, 0, 0.5], [0.5, 0, 0.7], [0.72, 0.18, 1], [0.74, 0.38, 1], [0.62, 0.5, 0.9], [0.48, 0.42, 0.45], [0.4, 0.2, 0.15], [0, 0.14, 0.06]], 18, 0.25, 10),
+  meshLathe([[0, 0, 0.5], [0.050, 0, 0.75], [0.041, 0.08, 1], [0.030, 0.34, 1], [0.022, 0.72, 1], [0.014, 1, 1], [0, 1, 1]], 14, 0.035, 7),
+  meshLathe([[0, 0, 0.5], [0.030, 0, 0.75], [0.027, 0.12, 1], [0.022, 0.42, 1], [0.016, 0.78, 1], [0.010, 1, 1], [0, 1, 1]], 12, 0.025, 5),
+  meshLathe([[0, 0, 0.5], [0.068, 0, 0.8], [0.052, 0.10, 1], [0.040, 0.30, 1], [0.031, 0.66, 1], [0.018, 1, 1], [0, 1, 1]], 16, 0.045, 9),
   meshCoral(0), meshCoral(1), meshTubes()].map((m) => m.build());
 meshes.push(meshFluke(), meshShip().build(), meshManta().build(), meshFish().build(),
   meshChunk(3).build(), meshChunk(11).build(), meshChunk(29).build(), meshChunk(5, 3).build(), meshChunk(17, 3).build(), meshChunk(41, 3).build(), meshChunk(9, 1).build(), meshCoral(0, 1).build(), meshCoral(1, 1).build(), meshChunk(5, 2, 1).build(), meshChunk(17, 2, 1).build(), meshChunk(41, 2, 1).build());
@@ -294,7 +294,7 @@ const ibChunk = Wd.chunks.map((c) => buf(c.data, BU.VERTEX)), ibProp = Wd.props.
 const ibBig = buf(new Uint8Array(Wd.big.buf), BU.VERTEX), ibBigF = buf(new Uint8Array(Wd.bigF.buf), BU.VERTEX), ibSmall = buf(new Uint8Array(Wd.small.buf), BU.VERTEX);
 const ibFish = buf(Wd.fish, BU.VERTEX), ibManta = buf(Wd.mantas, BU.VERTEX), ibBubbles = buf(Wd.bubbles, BU.VERTEX), ibSnowB = buf(Wd.snow, BU.VERTEX);
 const ibGl = buf(Wd.glints, BU.VERTEX), nGl = Wd.glints.length / 8;
-const nFish = Wd.fish.length / 8, nManta = Wd.mantas.length / 8, nBub = Wd.bubbles.length / 8, nSnow = Wd.snow.length / 4;
+const nFish = 0, nManta = 0, nBub = 0, nSnow = Wd.snow.length / 4;
 const MANTA = meshes[12], FISH = meshes[13];
 Q.writeTexture({ texture: tVol }, Wd.volD, { bytesPerRow: NX, rowsPerImage: NY / 2 }, [NX / 2, NY / 2, NZ / 2]);
 Q.writeTexture({ texture: tMap }, Wd.gm, { bytesPerRow: 2048 }, [512, 512]);
