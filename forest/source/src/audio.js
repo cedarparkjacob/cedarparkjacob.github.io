@@ -3,7 +3,7 @@
 // ============================================================================
 // A fixed Web Audio graph, built on the first click / key / touch and driven by a 10 Hz timer, not the frame loop.
 // Layers: rumble, surface wash, water rush (follows camera speed), drone, bubbles, chimes and distant whale calls.
-let AC, OUT, muted = false;
+let AC, OUT, muted = true;
 const VOL = 0.78; // master level: about -18.5 LUFS, peaks near -5.5 dBFS
 function mkSound(ac) {
   const sr = ac.sampleRate;
@@ -41,7 +41,7 @@ function mkSound(ac) {
   };
   const NOTES = [0, 2, 5, 7, 9, 12, 14, 17, 19]; // D major pentatonic, in semitones above A4
   let lt = ac.currentTime, tB = lt + 1.5, tC = lt + 5, tW = lt + 12, lx = F[CX], ly = F[CY], lz = F[CZ];
-  out.gain.setTargetAtTime(VOL, lt, 1);
+  out.gain.setTargetAtTime(muted ? 0 : VOL, lt, 1);
   return () => {
     const now = ac.currentTime, t = now + 0.05, dt = now - lt;
     if (dt <= 0) return;
