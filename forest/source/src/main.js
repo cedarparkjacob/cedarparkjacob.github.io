@@ -266,12 +266,12 @@ function flyAt() {
 for (let t = 0; t <= FLYT; t += 0.1) { F[FLT] = t; flyAt(); flyPts.push([F[CX], F[CY], F[CZ]]); }
 for (const p of POSES) flyPts.push([p[0], -40, p[2]]);
 
-await say('Growing kelp…', 0.73, 2500);
+await say('Growing the forest canopy…', 0.73, 2500);
 const Wd = makeWorld(D, T, flyPts, POSES);
 for (const p of POSES) p[1] += Wd.gy(p[0], p[2]);
 D = Wd.gy = T.smp = null; // with gy goes the generator's working memory (about 200 MB)
 
-await say('Building set pieces…', 0.94, 1200);
+await say('Building the forest…', 0.94, 1200);
 // mesh ids: 0-3 boulders, 4-6 sponges, 7-8 coral, 9 tube sponge, 10 whale fluke, 11 ship, 12 manta, 13 fish,
 // 14-20 rock chunks + pebbles, 21-22 coral LOD, 23-25 far LOD of the large rock chunks
 const meshes = [meshChunk(1, 3), meshChunk(7, 3), meshChunk(13, 3), meshChunk(22, 3),
