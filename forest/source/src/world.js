@@ -2,37 +2,11 @@
 // world layout + procedural content generation (load-time only)
 // ============================================================================
 
-// designed rock masses: ax, az, bx, bz, radius, top, overhang, waist
-const MESAS = [
-  [-37, -42, -33, -22, 9, -7, 3.5, 2], [-29, -15, -33, 5, 12, -14, 3, 2], [-36, 11, -30, 27, 9, -5, 4, 2],   // west wall of the main canyon
-  [30, -45, 35, -27, 9, -9, 4, 2], [37, -20, 31, -3, 11, -16, 3, 2], [32, 5, 35, 9, 7, -8, 4, 2],          // east wall
-  [19, -15, 19, -15, 4.4, -6, 2, 1.5],   // pillar with window
-  [6, -88, 6, -88, 10, -34, 0, 0],       // mound in the kelp basin
-  [0, -106, 0, -106, 8, 3, 2, 2],        // pillar reaching the surface
-  [44, 6, 47, -8, 7, -17, 3, 1],         // ship supports
-  [33, 29, 37, 12, 9, -19, -6.5, 0],     // sloped sunlit wall beside the wreck
-  [74, 14, 74, 14, 8, -15, 3, 1],
-  [-84, -34, -80, -12, 10, -7, 6, 2], [-78, -6, -83, 12, 12, -13, 5, 2], [-82, 18, -79, 32, 9, -8, 6, 2],   // sponge canyon west wall
-  [-17, 62, -19, 78, 10, -6, 9, 3], [-21, 84, -18, 100, 11, -9, 8, 3],     // grotto overhang cliff
-  [22, 67, 24, 80, 7, -11, 6, 2],        // grotto coral rock
-  [-16, 122, 34, 122, 9, -27, 3, 2],     // grotto far wall
-];
-// vertical ring arches: cx, cy, cz, yaw, major radius, minor radius, y squash
-const ARCHES = [
-  [-23, -9.5, -16, 0.3, 4.2, 1.4, 1.2],
-  [0, -45, -34, 1.57, 14, 2.7, 1.2],
-  [-40, -45, 44, 1.57, 10, 2.2, 1.3],
-];
-// carved tunnels: ax, ay, az, radius, bx, by, bz
-const HOLES = [
-  [19, -21, -23, 2.5, 19, -21, -7],
-  [9, -37, 108, 4.2, 9, -34, 136],
-];
-// regions kept free of random mesas: ax, az, bx, bz, radius, softness
-const CLEARS = [
-  [0, -45, 0, 35, 22, 10], [0, -86, 0, -86, 46, 12], [42, 24, 74, 6, 22, 10], [72, -26, 72, -26, 26, 10],
-  [-60, -36, -60, 36, 13, 8], [-60, 42, -18, 46, 12, 8], [4, 58, 8, 100, 24, 10], [-34, -74, -56, -46, 11, 8],
-];
+// Forest terrain is intentionally broad and gently rolling; large boulders are placed as props below.
+const MESAS = [];
+const ARCHES = [];
+const HOLES = [];
+const CLEARS = [];
 const PURPLE = [6, 84];
 const zoneP = (x, z) => sstep(44, 26, hypot(x - PURPLE[0], z - PURPLE[1]));
 const MAGENTA = [[14, 6, 13], [-4, 20, 9], [6, 84, 30], [-58, 8, 10], [50, 30, 12], [8, -70, 10], [-12, -98, 9], [-36, 44, 9], [-46, -60, 9], [24, 42, 8], [-56, 26, 9], [-44, 38, 8], [-10, 44, 8], [12, 24, 8], [-50, -45, 8]];
@@ -298,38 +272,21 @@ function makeWorld(D, T, flyPts, POSES) {
     }
   }
   }
-  // --- rocks: floating boulder clusters + scattered ground rocks
-  const BOULD = [[-11, -11, -105, 14, 5], [-56, -19, -18, 18, 6], [10, -13, -88, 22, 7], [24, -15, -24, 22, 7], [-18, -12, 4, 14, 6], [30, -14, 30, 16, 6], [36, -12, -70, 22, 8], [-30, -13, -84, 16, 7], [-58, -14, 0, 14, 6], [19, -13, 98, 18, 6], [62, -9, 34, 14, 6]];
+  // --- a few landmark boulders; no scattered rocks, rubble, or pebbles
+  const BOULDER_SITES = [[-48,-24,9.5],[-18,52,8],[38,38,10],[62,-48,8.5],[-72,-72,9],[8,-118,11]];
   rseed(8);
-  for (let i = 0; i < 9; i++) { const a = rnd() * TAU, r = rr(60, 150); BOULD.push([cos(a) * r, rr(-20, -9), sin(a) * r, 10 + rnd() * 12 | 0, rr(5, 9)]); }
-  for (const b of BOULD) for (let i = 0; i < b[3]; i++) {
-    const sc = rnd() < 0.12 ? rr(1.8, 3.2) : rr(0.35, 1.5);
-    const x = b[0] + rr(-1, 1) * b[4], y = b[1] + rr(-1, 1) * b[4] * 0.6, z = b[2] + rr(-1, 1) * b[4];
-    if (Dw(x, y, z) > -sc) continue;
-    const bob = rr(0.12, 0.4), sd = rnd();
-    solid(rnd() * 4 | 0, x, min(y, -2 - sc), z, sc, qRand(), 1, sd, 1, bob);
-    if (sc > 1.1) for (let j = 0; j < 7; j++) solid(rnd() * 4 | 0, x + rr(-1.6, 1.6) * sc, min(y, -2 - sc) + rr(-1.4, 1) * sc, z + rr(-1.6, 1.6) * sc, rr(0.1, 0.35), qRand(), 1, sd, 1, bob);
-  }
-  rseed(9);
-  for (let i = 0; i < 2600; i++) {
-    const k = pickV(); if (T.wn[k + 1] < 0.7 || hypot(T.wp[k], T.wp[k + 2]) > 170 || nearFly(T.wp[k], T.wp[k + 1], T.wp[k + 2], 6)) continue;
-    const sc = rr(0.25, 1.3) * (rnd() < 0.1 ? 2 : 1);
-    solid(rnd() * 4 | 0, T.wp[k], T.wp[k + 1] + sc * 0.2, T.wp[k + 2], sc, qRand(), 1, rnd(), 1, 0);
-  }
-
-  rseed(10);
-  for (let i = 0; i < 60000; i++) {
-    const k = pickV(), x = T.wp[k], y = T.wp[k + 1], z = T.wp[k + 2], ny = T.wn[k + 1];
-    if (hypot(x, z) > 172 || y > -3 || (ny > 0.8 && rnd() < 0.6) || nearFly(x, y, z, 3.5)) continue;
-    const sc = (0.35 + 2.1 * pow(rnd(), 2.6)) * (ny > 0.8 ? 0.5 : 1), q = qRand();
-    chunks[(sc > 1.15 ? 3 : 0) + (rnd() * 3 | 0)][cellOf(x, z)].push(x - T.wn[k] * sc * 0.3, y - ny * sc * 0.3, z - T.wn[k + 2] * sc * 0.3, sc, q[0], q[1], q[2], q[3], 1, rnd(), sc > 1.15 ? 0 : 96, 0);
-  }
-  rseed(11);
-  for (let i = 0; i < 170000; i++) { // pebbles and rubble on the sea floor
-    const k = pickV(), x = T.wp[k] + rr(-0.4, 0.4), z = T.wp[k + 2] + rr(-0.4, 0.4), y = T.wp[k + 1];
-    if (T.wn[k + 1] < 0.8 || hypot(x, z) > 170 || nearFly(x, y, z, 1.3)) continue;
-    const sc = 0.05 + 0.3 * pow(rnd(), 2), q = qRand();
-    nth++ % THIN || chunks[6][cellOf(x, z)].push(x, y - sc * 0.25, z, sc, q[0], q[1], q[2], q[3], 1, rnd(), 44, 0);
+  for (const site of BOULDER_SITES) {
+    const [cx, cz, radius] = site;
+    const f = floorsAt(cx, cz);
+    const ground = f.length ? f[f.length - 2] : -45;
+    const count = 1 + (rnd() < 0.45 ? 1 : 0);
+    for (let j = 0; j < count; j++) {
+      const sc = radius * (j === 0 ? 1 : rr(0.52, 0.72));
+      const x = cx + (j ? rr(-radius * 0.8, radius * 0.8) : 0);
+      const z = cz + (j ? rr(-radius * 0.8, radius * 0.8) : 0);
+      const y = ground + sc * 0.62;
+      solid(rnd() * 4 | 0, x, y, z, sc, qRand(), 1, rnd(), 1, 0);
+    }
   }
   // --- set pieces
   const gy = (x, z) => { const f = floorsAt(x, z); return f.length ? f[f.length - 2] : -45; };
