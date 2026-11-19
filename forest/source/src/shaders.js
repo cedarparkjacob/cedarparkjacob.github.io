@@ -191,11 +191,11 @@ const WK = array<vec3f, 10>(vec3f(1., 2., 1.), vec3f(-2., 1., .9), vec3f(3., 1.,
 // ---------------------------------------------------------------- shared scene code
 const S_G = /*wgsl*/`
 struct G { vp: mat4x4f, sm: mat4x4f, cam: vec4f, right: vec4f, up: vec4f, fwd: vec4f, sun: vec4f, res: vec4f, mis: vec4f };
-const SIG = vec3f(.058, .0235, .0195);
-const KD = vec3f(.056, .0245, .0170);
-const WCOL = vec3f(.16, .58, .90);
-const KDZ = vec3f(.034, .023, .018);
-const PCOL = vec3f(.58, .66, .98);
+const SIG = vec3f(.018, .027, .016);
+const KD = vec3f(.024, .035, .019);
+const WCOL = vec3f(.20, .30, .17);
+const KDZ = vec3f(.020, .030, .018);
+const PCOL = vec3f(.66, .76, .57);
 const SUNC = vec3f(1.7, 1.6, 1.45);
 const TAU = 6.2831853;
 const LOW = ${LV > 1};
@@ -204,9 +204,9 @@ fn ss(a: f32, b: f32, x: f32) -> f32 { let t = clamp((x - a) / (b - a), 0., 1.);
 fn ign(p: vec2f) -> f32 { return fract(52.9829189 * fract(dot(p, vec2f(.06711056, .00583715)))); }
 fn hs(x: f32) -> f32 { return fract(sin(x * 127.1) * 43758.5453); }
 fn kd(z: f32) -> vec3f { return mix(KD, KDZ, z); }
-fn sg(z: f32) -> vec3f { return mix(SIG, vec3f(.034, .026, .022), z); }
+fn sg(z: f32) -> vec3f { return mix(SIG, vec3f(.018, .026, .017), z); }
 fn fin(c: vec3f) -> vec4f { return vec4f(min(max(c, vec3f(0.)), vec3f(40.)), 1.); }
-const KDF = vec3f(.043, .045, .042);
+const KDF = vec3f(.018, .026, .016);
 fn fogIn(ro: vec3f, rd: vec3f, d: f32, z: f32, sun: vec3f) -> vec3f {
   let k = mix(KD, KDF, z);
   let a = sg(z) - k * rd.y;
@@ -254,11 +254,11 @@ fn caus2(p: vec3f, d: f32) -> f32 {
   let c = min(pow(textureSample(tW, sR, q / 4.1).r, 1.4) * 2.6 * (.45 + textureSample(tW, sR, q.yx / 6.9 + .37).r * 1.3), 2.6);
   return mix(c, .33, ss(35., 100., d));
 }
-fn sunE(y: f32, z: f32) -> vec3f { return SUNC * exp(kd(z) * (min(y, 0.) / g.sun.y)) * (.5 + .5 * sat(-y / 30.)); }
+fn sunE(y: f32, z: f32) -> vec3f { return SUNC * (0.88 + 0.12 * sat(y / 45.)); }
 fn vol(p: vec3f) -> vec4f { return textureSampleLevel(tV, sC, (p - vec3f(-192., -56., -192.)) / vec3f(384., 60., 384.), 0.); }
 fn amb(p: vec3f, n: vec3f, sky: f32, z: f32) -> vec3f {
   let up = n.y * .5 + .5;
-  return mix(vec3f(.22, .60, .80), vec3f(.34, .56, .82), z) * exp(kd(z) * min(p.y, 0.) * 1.2) * (.3 + .7 * sky) * (.24 + .76 * up * up) * 1.3 * (.55 + .45 * sat(-p.y / 30.)) + vec3f(.003, .010, .016);
+  return mix(vec3f(.055, .075, .045), vec3f(.28, .36, .20), up) * (.38 + .62 * sky) * (0.72 + 0.28 * z) + vec3f(.008, .012, .006);
 }
 fn zone(p: vec3f) -> f32 { return mix(g.sun.w, textureSampleLevel(tM, sC, p.xz / 384. + .5, 0.).b, .2); }
 fn side(p: vec3f, n: vec3f, open: f32, z: f32) -> vec3f { return mix(WCOL, PCOL, z) * exp(kd(z) * min(p.y, 0.)) * open * (1. - abs(n.y)) * .7; }
