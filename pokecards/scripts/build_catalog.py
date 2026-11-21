@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 API = "https://api.tcgdex.net/v2"
 LANGUAGES = ("en", "ja")
 OUT = pathlib.Path("pokecards/data/catalog.json")
-HEADERS = {"User-Agent": "Ludden-PokeCards-Catalog/1.0"}
+HEADERS = {"User-Agent": "Ludden-PokeCards-Catalog/1.1"}
 
 def get_json(url, attempts=5):
     last = None
