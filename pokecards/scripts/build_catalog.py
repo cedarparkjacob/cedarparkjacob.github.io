@@ -2,6 +2,8 @@
 """Build a static English/Japanese Pokémon TCG catalog from TCGdex set endpoints."""
 import concurrent.futures, json, pathlib, time, urllib.request
 from datetime import datetime, timezone
+from urllib.parse import quote
+from urllib.error import HTTPError
 
 API = "https://api.tcgdex.net/v2"
 LANGUAGES = ("en", "ja")
@@ -31,7 +33,13 @@ def build_language(lang):
     brief_cards = []
     for item in set_index:
         set_id = item["id"]
-        detail = get_json(f"{API}/{lang}/sets/{set_id}")
+        try:
+            detail = get_json(f"{API}/{lang}/sets/{quote(set_id, safe='')}")
+        except HTTPError as exc:
+            if exc.code == 404:
+                print(f"{lang}: skipping unavailable set endpoint {set_id}", flush=True)
+                continue
+            raise
         sets.append({
             "code": f"{lang}:{set_id}",
             "source_id": set_id,
@@ -49,7 +57,7 @@ def build_language(lang):
         language, set_id, card_id = task
         if not card_id:
             return None
-        data = get_json(f"{API}/{language}/cards/{card_id}")
+        data = get_json(f"{API}/{language}/cards/{quote(card_id, safe='')}")
         image = data.get("image") or ""
         return {
             "id": f"{language}:{data.get('id') or card_id}",
