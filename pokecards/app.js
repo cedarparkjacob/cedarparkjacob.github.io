@@ -163,6 +163,17 @@ function setLanguage(lang){
  render();
 }
 function connect(){$("#github-message").textContent="This version stores its collection locally. Export a JSON backup to move it."}
+function exportData(){
+ const data={schema_version:1,updated_at:new Date().toISOString(),cards:collection.cards||{},binders:Array.isArray(collection.binders)?collection.binders:[],kantoOrder:collection.kantoOrder||{},kantoSelected:collection.kantoSelected||{},binderColumns:collection.binderColumns||{},binderViewColumns:Number(collection.binderViewColumns)||6,binderViewBlanks:!!collection.binderViewBlanks};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="pokecards-collection-"+new Date().toISOString().slice(0,10)+".json";
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const message=$("#github-message");if(message)message.textContent="Collection backup exported.";
+}
 function sync(){exportData()}
 async function importData(f){try{const d=JSON.parse(await f.text());if(!d.cards||typeof d.cards!=="object")throw Error("Not a PokéCards collection file.");collection={schema_version:1,updated_at:new Date().toISOString(),cards:d.cards,binders:Array.isArray(d.binders)?d.binders:[],kantoOrder:d.kantoOrder&&typeof d.kantoOrder==="object"?d.kantoOrder:{},kantoSelected:d.kantoSelected&&typeof d.kantoSelected==="object"?d.kantoSelected:{},binderColumns:d.binderColumns&&typeof d.binderColumns==="object"?d.binderColumns:{},binderViewColumns:Number(d.binderViewColumns)||6,binderViewBlanks:!!d.binderViewBlanks};saveLocal();render();$("#github-message").textContent="Imported into this browser."}catch(e){$("#github-message").textContent=e.message}}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;if(b.dataset.a==="kanto-add"){if(Date.now()<kantoSuppressClickUntil)return;change(b.dataset.id,1);return}if(b.dataset.a==="choose-kanto-version"){showKantoVersionPicker(b.dataset.dex);return}if(b.dataset.a==="close-kanto-picker"){$("#kanto-version-dialog")?.close();return}if(b.dataset.a==="select-kanto-version"){collection.kantoSelected=collection.kantoSelected||{};collection.kantoSelected[String(b.dataset.dex)]=b.dataset.id;saveLocal();$("#kanto-version-dialog")?.close();renderBinders();return}if(b.dataset.a==="plus")change(b.dataset.id,1);if(b.dataset.a==="minus")change(b.dataset.id,-1);if(b.dataset.a==="wish")wish(b.dataset.id);if(b.dataset.a==="binder-create")createBinder();if(b.dataset.a==="binder-toggle")toggleBinderCard(b.dataset.id)});
