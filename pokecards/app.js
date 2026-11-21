@@ -134,18 +134,34 @@ function renderBinderView(){
 function renderStats(){const t=totals(),done=sets.filter(s=>{const g=cards.filter(c=>c.set===s.code);return g.length&&g.every(c=>qty(c.id)>0)}).length,w=cards.filter(c=>wished(c.id)).length,tr=cards.filter(c=>c.card_type==="trainer"&&qty(c.id)>0).length;$("#content").className="stat-grid";$("#content").innerHTML=[["Unique versions owned",t.versions+" / "+t.total],["Total cards owned",t.quantity],["Pokémon represented",t.pokemon],["Expansions completed",done+" / "+sets.length],["Wishlist entries",w],["Trainer versions owned",tr]].map(([a,b])=>'<article class="stat-panel"><strong>'+b+'</strong><span>'+a.toUpperCase()+'</span></article>').join("");$("#result-count").textContent="Collection overview"}
 function render(){if(!catalogReady)return;const t=totals();$("#stat-owned").textContent=t.quantity.toLocaleString();$("#stat-unique").textContent=t.pokemon.toLocaleString();$("#stat-completion").textContent=t.pct+"%";$("#view-caption").textContent=activeView==="kanto151"?"ORIGINAL 151 · ALL CARD VERSIONS":activeView.toUpperCase();$(".toolbar").style.display=["collection","wishlist","binder-view"].includes(activeView)?"grid":"none";if(activeView==="binder-view"){renderBinderView();return}else if(activeView==="kanto151"){renderKanto151();return}else if(activeView==="binders"){renderBinders();return}else if(activeView==="expansions")renderSets();else if(activeView==="pokedex")renderDex();else if(activeView==="stats")renderStats();else{if(activeView==="wishlist")$("#ownership-filter").value="wishlist";else if($("#ownership-filter").value==="wishlist")$("#ownership-filter").value="all";renderCards(filtered())}}
 function view(v){activeView=v;document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===v));$("#search").value="";document.querySelectorAll(".filter-menu input").forEach(o=>o.checked=false);updateFilterLabels();closeFilterMenus();$("#sort-filter").value="name-asc";render()}
-async function loadLanguage(lang){
- const [rawCards,rawSets]=await Promise.all([
-  fetch(API+"/"+lang+"/cards").then(r=>{if(!r.ok)throw Error("Card catalog request failed ("+r.status+")");return r.json()}),
-  fetch(API+"/"+lang+"/sets").then(r=>{if(!r.ok)throw Error("Set catalog request failed ("+r.status+")");return r.json()})
- ]);
- const normalizedSets=rawSets.map(s=>({code:lang+":"+s.id,name:s.name,is_promo:/promo/i.test(s.name||""),language:lang,sourceId:s.id}));
- const setMap=new Map(normalizedSets.map(s=>[s.sourceId,s]));
- const normalizedCards=rawCards.map(c=>({id:lang+":"+c.id,source_id:c.id,language:lang,name:c.name||"Unknown",image:c.image?c.image+"/high.webp":"",set:lang+":"+(c.set?.id||"unknown"),set_name:c.set?.name||setMap.get(c.set?.id)?.name||"Unknown expansion",setName:c.set?.name||"Unknown expansion",number_label:String(c.localId??""),natdex_number:Array.isArray(c.dexId)?c.dexId[0]:null,card_type:(c.category||"").toLowerCase()==="pokemon"?"pokemon":(c.category||"").toLowerCase()==="trainer"?"trainer":"energy",rarity:c.rarity||"",rarity_name:c.rarity||"",illustrator:c.illustrator||"",is_foil:false,is_reprint:false,types:c.types||[]}));
- return {cards:normalizedCards,sets:normalizedSets};
+async function loadCatalog(){
+ const response=await fetch("./data/catalog.json?v=tcgdex-set-catalog-1",{cache:"no-store"});
+ if(!response.ok)throw Error("Prebuilt card catalog is not ready yet ("+response.status+"). Please try again shortly.");
+ const data=await response.json();
+ if(!Array.isArray(data.cards)||!Array.isArray(data.sets))throw Error("The card catalog is incomplete.");
+ return data;
 }
-async function load(){try{const x=await loadLanguage("en");cards=x.cards;sets=x.sets;filters();catalogReady=true;$("#catalog-status").textContent=cards.length.toLocaleString()+" English cards · ready";render()}catch(e){$("#catalog-status").textContent="Catalog unavailable";$("#content").innerHTML='<div class="empty">'+esc(e.message)+'</div>';console.error(e)}}
-async function setLanguage(lang){activeLanguage=lang;try{if(lang==="en"){const x=await loadLanguage("en");cards=x.cards;sets=x.sets}else if(lang==="ja"){const x=await loadLanguage("ja");cards=x.cards;sets=x.sets}else{const [en,ja]=await Promise.all([loadLanguage("en"),loadLanguage("ja")]);cards=en.cards.concat(ja.cards);sets=en.sets.concat(ja.sets)}filters();$("#catalog-status").textContent=cards.length.toLocaleString()+" cards · ready";render()}catch(e){$("#catalog-status").textContent="Language catalog unavailable";console.error(e)}}
+async function load(){
+ try{
+  const data=await loadCatalog();
+  cards=data.cards;
+  sets=data.sets;
+  filters();
+  catalogReady=true;
+  $("#catalog-status").textContent=cards.length.toLocaleString()+" card versions · ready";
+  render();
+ }catch(e){
+  $("#catalog-status").textContent="Catalog unavailable";
+  $("#content").innerHTML='<div class="empty">'+esc(e.message)+'</div>';
+  console.error(e);
+ }
+}
+function setLanguage(lang){
+ activeLanguage=lang;
+ updateFilterLabels();
+ $("#catalog-status").textContent=(lang==="all"?cards.length:cards.filter(c=>c.language===lang).length).toLocaleString()+" "+(lang==="all"?"":"cards · ")+ "ready";
+ render();
+}
 function connect(){$("#github-message").textContent="This version stores its collection locally. Export a JSON backup to move it."}
 function sync(){exportData()}
 async function importData(f){try{const d=JSON.parse(await f.text());if(!d.cards||typeof d.cards!=="object")throw Error("Not a PokéCards collection file.");collection={schema_version:1,updated_at:new Date().toISOString(),cards:d.cards,binders:Array.isArray(d.binders)?d.binders:[],kantoOrder:d.kantoOrder&&typeof d.kantoOrder==="object"?d.kantoOrder:{},kantoSelected:d.kantoSelected&&typeof d.kantoSelected==="object"?d.kantoSelected:{},binderColumns:d.binderColumns&&typeof d.binderColumns==="object"?d.binderColumns:{},binderViewColumns:Number(d.binderViewColumns)||6,binderViewBlanks:!!d.binderViewBlanks};saveLocal();render();$("#github-message").textContent="Imported into this browser."}catch(e){$("#github-message").textContent=e.message}}
