@@ -37,7 +37,7 @@ main{max-width:1400px;margin:auto;padding:12px 24px 50px}
    the matching strip from the base image so it can never appear twice. */
 .seam{left:10%;right:10%;transform:scaleX(0);transform-origin:left center;border-top:2px dashed #fff1c6;opacity:1}
 .stage.go .seam{animation:perforation-draw .32s linear both}
-@keyframes perforation-draw{0%{transform:scaleX(0);opacity:1}100%{transform:scaleX(1);opacity:1}}
+@keyframes perforation-draw{0%{transform:scaleX(0);opacity:1}88%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 .stage.go .pack{animation:hide-torn-strip .01s step-end .32s forwards}
 @keyframes hide-torn-strip{to{clip-path:inset(10% 0 0 0)}}
 .stage.go .top-piece{will-change:transform,opacity,filter}
