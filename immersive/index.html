@@ -12,6 +12,33 @@
 #player{position:fixed;inset:0;z-index:30;background:#03050a;display:none;align-items:center;justify-content:center;overflow:hidden}#player.show{display:flex}.video-wrap{position:absolute;inset:0;display:grid;place-items:center;background:#03050a}.video-wrap video{width:100%;height:100%;object-fit:contain;background:#03050a}#stillCard{max-height:84vh;max-width:min(80vw,480px);object-fit:contain;display:none}.player-top{position:absolute;top:0;left:0;right:0;padding:max(15px,env(safe-area-inset-top)) 16px 45px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(#000c,transparent);z-index:2;pointer-events:none}.player-title{font-size:12px;font-weight:850;text-shadow:0 2px 8px #000}.player-actions{display:flex;gap:8px;pointer-events:auto}.control{border:1px solid #ffffff55;background:#101827dd;color:white;border-radius:999px;padding:10px 15px;font-size:12px;font-weight:800;backdrop-filter:blur(12px);cursor:pointer}.control.exit{background:#7f1d1ddd;border-color:#fca5a5}.player-bottom{position:absolute;left:0;right:0;bottom:0;padding:45px 16px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,#000d);display:flex;justify-content:center;z-index:2;pointer-events:none}.player-message{font-size:12px;color:#e5e7eb;text-align:center;text-shadow:0 2px 8px #000;max-width:500px}.tap-shield{position:absolute;inset:0;z-index:1;background:transparent;cursor:pointer}.player-actions,.player-title{position:relative;z-index:3}.player-top{pointer-events:none}.player-top>*{pointer-events:auto}
 @keyframes fadeIn{to{opacity:1}}@keyframes spinBall{0%{transform:scale(.35) rotate(-220deg)}55%{transform:scale(1.18) rotate(420deg)}100%{transform:scale(1) rotate(720deg)}}
 @media(max-width:600px){main{margin-top:25px}.hero{align-items:start;flex-direction:column}.count{align-self:flex-start}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.player-top{padding-left:12px;padding-right:12px}.control{padding:10px 12px}}
+
+#transition{overflow:hidden;isolation:isolate}
+#transition .fx-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+#transition .ball,#transition .transition-label{z-index:2}
+.fx-particle{position:absolute;left:50%;top:50%;opacity:0;will-change:transform,opacity}
+.fx-particle.fly{animation:fxFly var(--dur,1.25s) cubic-bezier(.12,.68,.2,1) var(--delay,0s) both}
+@keyframes fxFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.15) rotate(0)}12%{opacity:1}78%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(var(--end,.15)) rotate(var(--rot,180deg))}}
+.fx-particle.spark{color:#fff4bd;text-shadow:0 0 10px currentColor;font-size:var(--size,22px)}
+.fx-particle.bubble{border:2px solid #b9f4ff;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff9,transparent 38%);box-shadow:inset -4px -5px 10px #5ee7ed44,0 0 14px #5ee7ed66}
+.fx-particle.flame{font-size:var(--size,28px);filter:drop-shadow(0 0 8px #ff6b22)}
+.fx-particle.balloon{width:25px;height:25px;border:3px solid #fff;border-radius:50%;background:linear-gradient(#ef4444 0 44%,#111827 44% 56%,#f8fafc 56%);box-shadow:0 0 15px #fff8}
+.fx-particle.confetti{width:9px;height:16px;background:var(--particle-color);border-radius:2px}
+.fx-particle.petal{width:13px;height:22px;border-radius:90% 10% 90% 10%;background:var(--particle-color);box-shadow:0 0 10px currentColor}
+.fx-particle.ring{width:32px;height:32px;border:2px solid var(--particle-color);border-radius:50%;box-shadow:0 0 18px var(--particle-color)}
+.fx-particle.bolt{font-size:34px;color:#e0f2fe;text-shadow:0 0 12px #38bdf8}
+.fx-particle.flower{font-size:30px;filter:drop-shadow(0 0 9px #f0abfc)}
+.fx-particle.ray{width:3px;height:60px;background:linear-gradient(transparent,#fff,#a5f3fc,transparent);box-shadow:0 0 14px #fff}
+#transition.fx-1{background:radial-gradient(circle,#642c39 0,#090d18 72%)}
+#transition.fx-2{background:radial-gradient(circle,#4b2c68 0,#090d18 72%)}
+#transition.fx-3{background:radial-gradient(circle,#14516a 0,#090d18 72%)}
+#transition.fx-4{background:radial-gradient(circle,#71351e 0,#090d18 72%)}
+#transition.fx-5{background:radial-gradient(circle,#1d4774 0,#090d18 72%)}
+#transition.fx-6{background:radial-gradient(circle,#4c397e 0,#090d18 72%)}
+#transition.fx-7{background:radial-gradient(circle,#285b55 0,#090d18 72%)}
+#transition.fx-8{background:radial-gradient(circle,#174d67 0,#090d18 72%)}
+#transition.fx-9{background:radial-gradient(circle,#513b83 0,#090d18 72%)}
+#transition.fx-10{background:radial-gradient(circle,#6a315d 0,#090d18 72%)}
 </style>
 </head>
 <body>
@@ -21,7 +48,7 @@
 <div class="notice" id="status" role="status">Loading Mew cards from the Crack Packs catalog…</div>
 <section class="grid" id="cards" aria-label="Mew card versions"><div class="empty">Loading card catalog…</div></section>
 </main>
-<div id="transition" aria-hidden="true"><div class="ball"><span class="ball-line"></span><span class="ball-center"></span></div><div class="transition-label">PREPARING IMMERSIVE VIEW</div></div>
+<div id="transition" aria-hidden="true"><div class="fx-layer" id="fxLayer"></div><div class="ball"><span class="ball-line"></span><span class="ball-center"></span></div><div class="transition-label">PREPARING IMMERSIVE VIEW</div></div>
 <section id="player" aria-label="Immersive card player" aria-hidden="true">
  <div class="video-wrap"><video id="video" playsinline preload="metadata"></video><img id="stillCard" alt="Selected Mew card"></div>
  <div class="tap-shield" id="tapShield" aria-label="Tap to show or hide playback controls"></div>
@@ -35,7 +62,7 @@ const IMG='https://raw.githubusercontent.com/Vociferix/ptcgp-images/master/';
 const MEW_VIDEO='https://images.wikidexcdn.net/mwuploads/wikidex/a/a7/latest/20241031212809/Animaci%C3%B3n_carta_inmersiva_Mew_%28Genes_Formidables_TCG_Pocket%29.webm';
 const $=s=>document.querySelector(s);
 const cardsEl=$('#cards'),statusEl=$('#status'),player=$('#player'),video=$('#video'),still=$('#stillCard'),transition=$('#transition');
-let activeCard=null,longTimer=null,longTriggered=false,controlsTimer=null;
+let activeCard=null,longTimer=null,longTriggered=false,controlsTimer=null,fxTimer=null;\nconst FX_NAMES=['Poké Ball Burst','Fireworks','Bubble Pop','Flame Rush','Thunder Surge','Starfall','Confetti Blast','Water Ripple','Psychic Rings','Petal Bloom'];\nconst FX_TYPES=['balloon','spark','bubble','flame','bolt','spark','confetti','ring','ray','petal'];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cardImage=c=>IMG+String(c.image||'').replace(/^\//,'');
 const cardSet=c=>c.set_name||c.set||'Pokémon TCG Pocket';
@@ -51,7 +78,7 @@ function makeCard(c,i){
  const info=document.createElement('div');info.className='card-info';
  const name=document.createElement('div');name.className='card-name';name.textContent=c.name||'Mew';
  const meta=document.createElement('div');meta.className='card-meta';meta.textContent=cardSet(c)+(cardNumber(c)?' · '+cardNumber(c):'');
- const hint=document.createElement('div');hint.className='card-hint';hint.textContent=hasOfficialVideo(c)?'▶ IMMERSIVE VIDEO AVAILABLE':'◉ VIDEO COMING SOON';
+ const hint=document.createElement('div');hint.className='card-hint';hint.textContent='▶ '+FX_NAMES[i%10].toUpperCase()+' · PLAY VIDEO';
  info.append(name,meta,hint);button.append(img,info);
  const launch=()=>{if(button.dataset.launched==='1')return;button.dataset.launched='1';openCard(c,img.src);setTimeout(()=>button.dataset.launched='0',900)};
  button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;longTriggered=false;clearTimeout(longTimer);longTimer=setTimeout(()=>{longTriggered=true;launch()},480)});
@@ -62,22 +89,49 @@ function makeCard(c,i){
 function showPlayer(c,imageUrl){
  activeCard=c;const title=(c.name||'Mew')+' · '+cardSet(c)+(cardNumber(c)?' · '+cardNumber(c):'');
  $('#playerTitle').textContent=title.toUpperCase();
- $('#pauseBtn').textContent='Ⅱ Pause';
+ $('#pauseBtn').textContent='Ⅱ Pause';$('#pauseBtn').style.display='';
  $('#playerMessage').textContent='Tap the screen to show or hide controls.';
  player.classList.add('show');player.setAttribute('aria-hidden','false');
- if(hasOfficialVideo(c)){
-  still.style.display='none';video.style.display='block';video.src=MEW_VIDEO;video.currentTime=0;video.muted=false;
-  video.onerror=()=>showComingSoon(imageUrl);
-  const p=video.play();if(p&&p.catch)p.catch(()=>{video.muted=true;video.play().catch(()=>showComingSoon(imageUrl));$('#playerMessage').textContent='Tap Play to start the immersive video with sound.'});
- }else showComingSoon(imageUrl);
+ still.style.display='none';video.style.display='block';video.src=MEW_VIDEO;video.currentTime=0;video.muted=false;
+ video.onerror=()=>showComingSoon(imageUrl);
+ const p=video.play();if(p&&p.catch)p.catch(()=>{$('#playerMessage').textContent='Tap Play to start the immersive video with sound.';});
+}
+function playEffect(index){
+ clearTimeout(fxTimer);const layer=$('#fxLayer');layer.innerHTML='';
+ for(let i=0;i<42;i++){
+  const el=document.createElement('span');el.className='fx-particle '+FX_TYPES[index];
+  const angle=(Math.PI*2*i/42)+(Math.random()-.5)*.24;
+  const distance=130+Math.random()*Math.max(innerWidth,innerHeight)*.48;
+  el.style.setProperty('--tx',(Math.cos(angle)*distance)+'px');
+  el.style.setProperty('--ty',(Math.sin(angle)*distance)+'px');
+  el.style.setProperty('--delay',(Math.random()*.22)+'s');
+  el.style.setProperty('--dur',(1.05+Math.random()*.5)+'s');
+  el.style.setProperty('--size',(14+Math.random()*22)+'px');
+  el.style.setProperty('--end',(.15+Math.random()*.5));
+  el.style.setProperty('--rot',(Math.random()*720-360)+'deg');
+  const colors=['#fff1a8','#f9a8d4','#93c5fd','#a7f3d0','#c4b5fd','#fb923c'];
+  el.style.setProperty('--particle-color',colors[i%colors.length]);
+  if(index===0)el.classList.add('balloon');
+  else if(index===1||index===5)el.textContent=index===1?'✦':'✧';
+  else if(index===3)el.textContent=['🔥','✨','🔥'][i%3];
+  else if(index===4)el.textContent='ϟ';
+  else if(index===6)el.style.transform='rotate('+(Math.random()*180)+'deg)';
+  else if(index===9)el.textContent='✿';
+  layer.append(el);
+  requestAnimationFrame(()=>el.classList.add('fly'));
+ }
+ const ball=$('.ball');ball.style.animation='none';void ball.offsetWidth;ball.style.animation='';
 }
 function showComingSoon(imageUrl){
  video.pause();video.removeAttribute('src');video.load();video.style.display='none';still.src=imageUrl;still.style.display='block';
  $('#pauseBtn').style.display='none';$('#playerMessage').textContent='Immersive video coming soon for this Mew card. The full-screen preview is ready for its video file.';
 }
 function openCard(c,imageUrl){
- transition.classList.add('show');transition.setAttribute('aria-hidden','false');
- setTimeout(()=>{transition.classList.remove('show');transition.setAttribute('aria-hidden','true');showPlayer(c,imageUrl)},1050);
+ const index=Math.max(0,Math.min(9,Number(c._immersiveIndex)||0));
+ transition.className='';transition.classList.add('show','fx-'+(index+1));transition.setAttribute('aria-hidden','false');
+ $('.transition-label').textContent='✦ '+FX_NAMES[index].toUpperCase()+' ✦';
+ playEffect(index);
+ setTimeout(()=>{transition.classList.remove('show');transition.setAttribute('aria-hidden','true');showPlayer(c,imageUrl)},1550);
 }
 function exitPlayer(){
  clearTimeout(controlsTimer);video.pause();video.removeAttribute('src');video.load();player.classList.remove('show');player.setAttribute('aria-hidden','true');$('#pauseBtn').style.display='';still.style.display='none';activeCard=null;
@@ -98,8 +152,8 @@ async function init(){
   const mew=catalog.filter(c=>String(c.name||'').trim().toLowerCase()==='mew').slice(0,10);
   if(!mew.length)throw new Error('The catalog loaded, but it did not contain any Mew card entries.');
   $('#cardCount').textContent=mew.length+' / 10';
-  statusEl.textContent='Loaded '+mew.length+' Mew card version'+(mew.length===1?'':'s')+'. '+(mew.length<10?'The catalog currently contains fewer than 10 Mew entries.':'Select any card to test the immersive player.');
-  cardsEl.innerHTML='';mew.forEach((c,i)=>cardsEl.append(makeCard(c,i)));
+  statusEl.textContent='Loaded '+mew.length+' Mew versions. Each card launches the same working Genetic Apex Mew video with its own distinct opening effect: Poké Ball burst, fireworks, bubbles, flames, lightning, starfall, confetti, water ripples, psychic rings, or petals.';
+  cardsEl.innerHTML='';mew.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
   $('#cardCount').textContent='0 / 10';statusEl.textContent='Could not load the Mew card catalog: '+error.message;
   cardsEl.innerHTML='<div class="empty">The card catalog could not be loaded, so the ten real Mew versions cannot be listed yet. The immersive player is ready once the catalog is reachable.</div>';
