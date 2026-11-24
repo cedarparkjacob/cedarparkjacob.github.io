@@ -78,7 +78,7 @@ const VIDEO_FILES={
  '204':'Animación carta inmersiva Palkia ex (Pugna Espaciotemporal 204 TCG Pocket).webm',
  '094':'Animación carta inmersiva Plan Maestro del Team Rocket (La Ambición del Team Rocket 94 TCG Pocket).webm'
 };
-const cardVideoNumber=c=>String(cardNumber(c)).match(/\\d{1,3}/)?.[0]?.padStart(3,'0')||'';
+const cardVideoNumber=c=>String(cardNumber(c)).match(/\d{1,3}/)?.[0]?.padStart(3,'0')||'';
 async function videoForCard(c){
  const number=cardVideoNumber(c);
  if(VIDEO_URLS[number])return VIDEO_URLS[number];
