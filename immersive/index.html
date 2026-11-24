@@ -63,8 +63,7 @@ const MEW_VIDEO='https://images.wikidexcdn.net/mwuploads/wikidex/a/a7/latest/202
 const $=s=>document.querySelector(s);
 const cardsEl=$('#cards'),statusEl=$('#status'),player=$('#player'),video=$('#video'),still=$('#stillCard'),transition=$('#transition');
 let activeCard=null,longTimer=null,longTriggered=false,controlsTimer=null,fxTimer=null;
-const FX_NAMES=['Poké Ball Burst','Fireworks','Bubble Pop','Flame Rush','Thunder Surge','Starfall','Confetti Blast','Water Ripple','Psychic Rings','Petal Bloom'];
-const FX_TYPES=['balloon','spark','bubble','flame','bolt','spark','confetti','ring','ray','petal'];
+const FX_NAME='Fireworks';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cardImage=c=>IMG+String(c.image||'').replace(/^\//,'');
 const cardSet=c=>c.set_name||c.set||'Pokémon TCG Pocket';
@@ -94,9 +93,11 @@ function showPlayer(c,imageUrl){
  $('#pauseBtn').textContent='Ⅱ Pause';$('#pauseBtn').style.display='';
  $('#playerMessage').textContent='Tap the screen to show or hide controls.';
  player.classList.add('show');player.setAttribute('aria-hidden','false');
- still.style.display='none';video.style.display='block';video.src=MEW_VIDEO;video.currentTime=0;video.muted=false;
- video.onerror=()=>showComingSoon(imageUrl);
- const p=video.play();if(p&&p.catch)p.catch(()=>{$('#playerMessage').textContent='Tap Play to start the immersive video with sound.';});
+ if(hasOfficialVideo(c)){
+  still.style.display='none';video.style.display='block';video.src=MEW_VIDEO;video.currentTime=0;video.muted=false;
+  video.onerror=()=>showComingSoon(imageUrl);
+  const p=video.play();if(p&&p.catch)p.catch(()=>{$('#playerMessage').textContent='Tap Play to start the immersive video with sound.';});
+ }else{showComingSoon(imageUrl)}
 }
 function playEffect(){
  clearTimeout(fxTimer);const layer=$('#fxLayer');layer.innerHTML='';
@@ -113,12 +114,7 @@ function playEffect(){
   el.style.setProperty('--rot',(Math.random()*720-360)+'deg');
   const colors=['#fff1a8','#f9a8d4','#93c5fd','#a7f3d0','#c4b5fd','#fb923c'];
   el.style.setProperty('--particle-color',colors[i%colors.length]);
-  if(index===0)el.classList.add('balloon');
-  else if(index===1||index===5)el.textContent=index===1?'✦':'✧';
-  else if(index===3)el.textContent=['🔥','✨','🔥'][i%3];
-  else if(index===4)el.textContent='ϟ';
-  else if(index===6)el.style.transform='rotate('+(Math.random()*180)+'deg)';
-  else if(index===9)el.textContent='✿';
+  el.textContent=['✦','✧','⋆','✴'][i%4];
   layer.append(el);
   requestAnimationFrame(()=>el.classList.add('fly'));
  }
@@ -126,13 +122,12 @@ function playEffect(){
 }
 function showComingSoon(imageUrl){
  video.pause();video.removeAttribute('src');video.load();video.style.display='none';still.src=imageUrl;still.style.display='block';
- $('#pauseBtn').style.display='none';$('#playerMessage').textContent='Immersive video coming soon for this Mew card. The full-screen preview is ready for its video file.';
+ $('#pauseBtn').style.display='none';$('#playerMessage').textContent='Immersive video coming soon for this card. The full-screen preview is ready for its matching video file.';
 }
 function openCard(c,imageUrl){
- const index=Math.max(0,Math.min(9,Number(c._immersiveIndex)||0));
- transition.className='';transition.classList.add('show','fx-'+(index+1));transition.setAttribute('aria-hidden','false');
- $('.transition-label').textContent='✦ '+FX_NAMES[index].toUpperCase()+' ✦';
- playEffect(index);
+ transition.className='';transition.classList.add('show','fx-2');transition.setAttribute('aria-hidden','false');
+ $('.transition-label').textContent='✦ FIREWORKS ✦';
+ playEffect();
  setTimeout(()=>{transition.classList.remove('show');transition.setAttribute('aria-hidden','true');showPlayer(c,imageUrl)},1550);
 }
 function exitPlayer(){
@@ -151,13 +146,14 @@ async function init(){
  try{
   const response=await fetch(CATALOG,{cache:'no-store'});if(!response.ok)throw new Error('Catalog request failed ('+response.status+').');
   const data=await response.json();const catalog=Array.isArray(data)?data:(data.cards||[]);
-  const mew=catalog.filter(c=>String(c.name||'').trim().toLowerCase()==='mew').slice(0,10);
-  if(!mew.length)throw new Error('The catalog loaded, but it did not contain any Mew card entries.');
-  $('#cardCount').textContent=mew.length+' / 10';
-  statusEl.textContent='Loaded '+mew.length+' Mew versions. Each card launches the same working Genetic Apex Mew video with its own distinct opening effect: Poké Ball burst, fireworks, bubbles, flames, lightning, starfall, confetti, water ripples, psychic rings, or petals.';
-  cardsEl.innerHTML='';mew.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
+  const immersive=catalog.filter(c=>String(c.rarity||'').trim().toUpperCase()==='IM'||/immersive/i.test(String(c.rarity_name||'')));
+  if(!immersive.length)throw new Error('The catalog loaded, but it did not contain any cards marked as immersive (IM).');
+  immersive.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''))||String(a.number_label||a.number||'').localeCompare(String(b.number_label||b.number||''),undefined,{numeric:true}));
+  $('#cardCount').textContent=immersive.length;
+  statusEl.textContent='Loaded '+immersive.length+' immersive cards. Every card uses the fireworks opening. The Genetic Apex Mew animation is connected; other cards display a coming-soon preview until their matching video is added.';
+  cardsEl.innerHTML='';immersive.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
-  $('#cardCount').textContent='0 / 10';statusEl.textContent='Could not load the Mew card catalog: '+error.message;
+  $('#cardCount').textContent='0';statusEl.textContent='Could not load the immersive card catalog: '+error.message;
   cardsEl.innerHTML='<div class="empty">The card catalog could not be loaded, so immersive cards cannot be listed yet.</div>';
  }
 }
