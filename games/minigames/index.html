@@ -26,7 +26,7 @@ body{background:var(--mg-bg);color:var(--mg-text);font-family:Manrope,system-ui,
 .mg-hero h1 span{color:var(--mg-purple)}
 .mg-hero p{color:var(--mg-muted);max-width:570px;line-height:1.7;margin:0}
 .mg-count{font:500 11px "DM Mono",monospace;color:var(--mg-muted);white-space:nowrap;padding-bottom:8px}
-.mg-hero{position:relative;z-index:0;isolation:isolate}.game-grid{position:relative;z-index:2;clear:both;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px 0 56px}
+.mg-hero{position:relative;z-index:0;isolation:isolate}.game-grid{position:relative;inset:auto;z-index:2;clear:both;display:grid;background:none;mask-image:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px 0 56px}
 .game-card{border:1px solid var(--mg-line);border-radius:20px;background:linear-gradient(145deg,rgba(17,32,53,.96),rgba(9,20,36,.94));padding:22px;min-height:205px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
 .game-card:hover{border-color:rgba(167,139,250,.5);transform:translateY(-2px)}
 .game-card-top{display:flex;justify-content:space-between;align-items:center}
@@ -110,7 +110,7 @@ button{font:inherit;cursor:pointer}
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 07</span><span class="game-type">FOCUS</span></div><h2>Color Clash</h2><p>Ignore the word. Choose the color of the ink it's written in. Ten rounds of interference.</p><button class="play-btn" data-game="color">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 08</span><span class="game-type">QUICK COUNT</span></div><h2>Quick Count</h2><p>Count the symbols on screen and choose the correct total before the timer runs out.</p><button class="play-btn" data-game="count">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 09</span><span class="game-type">NUMBER LOGIC</span></div><h2>Sequence Solver</h2><p>Spot the rule and fill in the missing number. Ten number patterns to solve.</p><button class="play-btn" data-game="sequence">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 10</span><span class="game-type">SPEED</span></div><h2>Target Tap</h2><p>Hit as many targets as you can in twenty seconds. The target moves after every hit.</p><button class="play-btn" data-game="target">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 10</span><span class="game-type">SPEED</span></div><h2>Target Tap</h2><p>Hit as many targets as you can in ten seconds. The target moves after every hit.</p><button class="play-btn" data-game="target">PLAY <span>↗</span></button></article>
 </section>
 <section class="game-stage" id="gameStage" aria-live="polite">
 <div class="stage-head"><div><div class="mg-kicker" id="stageKicker">GAME</div><h2 id="stageTitle">Game title</h2></div><div class="stage-tools"><span class="score-pill" id="stageScore">SCORE 0</span><span class="timer-pill" id="stageTimer">READY</span><button class="action-btn secondary" id="closeGame">CLOSE ✕</button></div></div>
