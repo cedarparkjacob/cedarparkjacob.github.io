@@ -132,12 +132,12 @@ const games={
 pokemon:{title:"Pokémon or Medicine?",tag:"KNOWLEDGE",instructions:"Select all three Pokémon. You earn 2 points for each Pokémon you correctly select. Selecting a medicine does not earn points. You can change your choices until you submit.",start:startPokemon},
 reflex:{title:"Freeze Frame",tag:"REFLEX",instructions:"The marker moves across the numbered track and bounces back. Press FREEZE whenever you want. Your score is the number under the marker.",start:startReflex},
 memory:{title:"Remember the Pattern",tag:"MEMORY",instructions:"Watch the ten flashes carefully. When the sequence finishes, repeat it by tapping the matching squares in exactly the same order. A wrong tap ends the game.",start:startMemory},
-math:{title:"Ten-Second Maths",tag:"MATHS",instructions:"Choose addition or multiplication. You have ten seconds for each question. There are ten questions and four answer choices per question.",start:startMath},
+math:{title:"Ten-Second Maths",tag:"MATHS",instructions:"Choose addition or multiplication. You have ten seconds total to answer as many questions as possible.",start:startMath},
 odd:{title:"Odd One Out",tag:"OBSERVATION",instructions:"Find as many odd ones out as you can in 15 seconds. Correct answers score; wrong answers are ignored and let you try again.",start:startOdd},
 higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"Predict whether the next card in a shuffled deck will be higher or lower. One point per correct guess; the game ends on your first wrong guess.",start:startHigher},
-color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the INK COLOR, not the word being displayed. Ten rounds; one point for each correct answer.",start:startColor},
-count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. The quantities grow as you progress. One wrong answer ends the game.",start:startCount},
-sequence:{title:"Sequence Solver",tag:"NUMBER LOGIC",instructions:"Find the missing number in each sequence. Choose from four answers. Match all eight pairs using as few turns as possible.",start:startSequence},
+color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the ink color, not the word. Score as many as you can in 15 seconds total.",start:startColor},
+count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. Quantities grow each round. You have 60 seconds total; one wrong answer ends the game.",start:startCount},
+sequence:{title:"Memory Match",tag:"MEMORY",instructions:"Find all eight matching pairs in the 4 × 4 grid. Select two tiles at a time; mismatches flip back. Score is the number of pairs found.",start:startSequence},
 target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in ten seconds. Each hit earns one point.",start:startTarget}
 };
 function setScore(n){score=n;scoreEl.textContent="SCORE "+score}
