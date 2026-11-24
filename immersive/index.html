@@ -59,7 +59,29 @@
 (()=>{'use strict';
 const CATALOG='https://raw.githubusercontent.com/cedarparkjacob/poke/main/data/cards.json';
 const IMG='https://raw.githubusercontent.com/Vociferix/ptcgp-images/master/';
-const MEW_VIDEO='https://images.wikidexcdn.net/mwuploads/wikidex/a/a7/latest/20241031212809/Animaci%C3%B3n_carta_inmersiva_Mew_%28Genes_Formidables_TCG_Pocket%29.webm';
+const VIDEO_FILES=[
+ {name:'Arceus ex',num:'095',file:'Animación carta inmersiva Arceus ex (Luz Triunfal 95 TCG Pocket).webm'},
+ {name:'Buzzwole ex',num:'088',file:'Animación carta inmersiva Buzzwole ex (Crisis Dimensional 88 TCG Pocket).webm'},
+ {name:'Celebi ex',num:'085',file:'Animación carta inmersiva Celebi ex (La Isla Singular 85 TCG Pocket).webm'},
+ {name:'Charizard ex',num:'280',file:'Animación carta inmersiva Charizard ex (Genes Formidables 280 TCG Pocket).webm'},
+ {name:'Dialga ex',num:'207',file:'Animación carta inmersiva Dialga ex (Pugna Espaciotemporal 207 TCG Pocket).webm'},
+ {name:'Eevee ex',num:'092',file:'Animación carta inmersiva Eevee ex (Arboleda de Eevee 92 TCG Pocket).webm'},
+ {name:'Giratina ex',num:'096',file:'Animación carta inmersiva Giratina ex (Festival Brillante 96 TCG Pocket).webm'},
+ {name:'Guzmán',num:'208',file:'Animación carta inmersiva Guzmán (Guardianes Celestiales 208 TCG Pocket).webm'},
+ {name:'Lylia',num:'209',file:'Animación carta inmersiva Lylia (Guardianes Celestiales 209 TCG Pocket).webm'},
+ {name:'Mew',num:'283',file:'Animación carta inmersiva Mew (Genes Formidables TCG Pocket).webm'},
+ {name:'Mewtwo ex',num:'282',file:'Animación carta inmersiva Mewtwo ex (Genes Formidables 282 TCG Pocket).webm'},
+ {name:'Palkia ex',num:'204',file:'Animación carta inmersiva Palkia ex (Pugna Espaciotemporal 204 TCG Pocket).webm'},
+ {name:'Pikachu ex',num:'281',file:'Animación carta inmersiva Pikachu ex (Genes Formidables 281 TCG Pocket).webm'},
+ {name:'Plan Maestro del Team Rocket',num:'094',file:'Animación carta inmersiva Plan Maestro del Team Rocket (La Ambición del Team Rocket 94 TCG Pocket).webm'},
+ {name:'Suicune ex',num:'090',file:'Animación carta inmersiva Suicune ex (Manantial Oculto 90 TCG Pocket).webm'}
+];
+const videoForCard=c=>{
+ const name=String(c.name||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const number=String(cardNumber(c)).match(/\\d{1,3}/)?.[0]?.padStart(3,'0');
+ const entry=VIDEO_FILES.find(v=>v.num===number&&name===v.name.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim());
+ return entry?'https://www.wikidex.net/wiki/Special:Redirect/file/'+encodeURIComponent(entry.file):'';
+};
 const $=s=>document.querySelector(s);
 const cardsEl=$('#cards'),statusEl=$('#status'),player=$('#player'),video=$('#video'),still=$('#stillCard'),transition=$('#transition');
 let activeCard=null,longTimer=null,longTriggered=false,controlsTimer=null,fxTimer=null;
@@ -93,8 +115,9 @@ function showPlayer(c,imageUrl){
  $('#pauseBtn').textContent='Ⅱ Pause';$('#pauseBtn').style.display='';
  $('#playerMessage').textContent='Tap the screen to show or hide controls.';
  player.classList.add('show');player.setAttribute('aria-hidden','false');
- if(hasOfficialVideo(c)){
-  still.style.display='none';video.style.display='block';video.src=MEW_VIDEO;video.currentTime=0;video.muted=false;
+ const source=videoForCard(c);
+ if(source){
+  still.style.display='none';video.style.display='block';video.src=source;video.currentTime=0;video.muted=false;
   video.onerror=()=>showComingSoon(imageUrl);
   const p=video.play();if(p&&p.catch)p.catch(()=>{$('#playerMessage').textContent='Tap Play to start the immersive video with sound.';});
  }else{showComingSoon(imageUrl)}
@@ -150,7 +173,7 @@ async function init(){
   if(!immersive.length)throw new Error('The catalog loaded, but it did not contain any cards marked as immersive (IM).');
   immersive.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''))||String(a.number_label||a.number||'').localeCompare(String(b.number_label||b.number||''),undefined,{numeric:true}));
   $('#cardCount').textContent=immersive.length;
-  statusEl.textContent='Loaded '+immersive.length+' immersive cards. Every card uses the fireworks opening. The Genetic Apex Mew animation is connected; other cards display a coming-soon preview until their matching video is added.';
+  statusEl.textContent='Loaded '+immersive.length+' immersive cards. Every card uses the fireworks opening. Matching immersive animations are connected where available; cards without a matched source show a coming-soon preview.';
   cardsEl.innerHTML='';immersive.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
   $('#cardCount').textContent='0';statusEl.textContent='Could not load the immersive card catalog: '+error.message;
