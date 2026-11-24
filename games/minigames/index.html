@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Ten quick mini-games in the Ludden arcade.">
+<title>Mini Games — Ludden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css">
+<style>
+:root{--mg-bg:#07111f;--mg-panel:rgba(14,26,44,.88);--mg-line:rgba(150,180,220,.16);--mg-text:#edf4ff;--mg-muted:#91a2ba;--mg-purple:#a78bfa;--mg-cyan:#5eead4;--mg-green:#86efac;--mg-red:#fb7185}
+*{box-sizing:border-box}
+body{background:var(--mg-bg);color:var(--mg-text);font-family:Manrope,system-ui,sans-serif}
+.mg-shell{width:min(1180px,calc(100% - 36px));margin:0 auto}
+.mg-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:26px 0;border-bottom:1px solid var(--mg-line)}
+.mg-brand{font-weight:800;letter-spacing:.12em;text-decoration:none;color:var(--mg-text);font-size:15px}
+.mg-brand span{color:var(--mg-purple)}
+.mg-home{font:500 11px "DM Mono",monospace;letter-spacing:.12em;color:var(--mg-muted);text-decoration:none}
+.mg-home:hover{color:white}
+.mg-hero{padding:58px 0 34px;display:flex;justify-content:space-between;align-items:end;gap:24px}
+.mg-eyebrow,.mg-kicker{font:500 10px "DM Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--mg-cyan)}
+.mg-hero h1{font-size:clamp(42px,7vw,76px);line-height:.98;letter-spacing:-.065em;margin:13px 0 14px}
+.mg-hero h1 span{color:var(--mg-purple)}
+.mg-hero p{color:var(--mg-muted);max-width:570px;line-height:1.7;margin:0}
+.mg-count{font:500 11px "DM Mono",monospace;color:var(--mg-muted);white-space:nowrap;padding-bottom:8px}
+.game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px 0 56px}
+.game-card{border:1px solid var(--mg-line);border-radius:20px;background:linear-gradient(145deg,rgba(17,32,53,.96),rgba(9,20,36,.94));padding:22px;min-height:205px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
+.game-card:hover{border-color:rgba(167,139,250,.5);transform:translateY(-2px)}
+.game-card-top{display:flex;justify-content:space-between;align-items:center}
+.game-number{font:500 10px "DM Mono",monospace;color:var(--mg-muted);letter-spacing:.1em}
+.game-type{font:500 9px "DM Mono",monospace;color:var(--mg-cyan);border:1px solid rgba(94,234,212,.2);border-radius:99px;padding:5px 8px}
+.game-card h2{font-size:23px;letter-spacing:-.04em;margin:22px 0 7px}
+.game-card p{font-size:13px;color:var(--mg-muted);line-height:1.6;margin:0 0 20px;max-width:470px}
+.game-card .play-btn{margin-top:auto;align-self:flex-start}
+button{font:inherit;cursor:pointer}
+.play-btn,.action-btn{border:0;border-radius:10px;padding:11px 17px;background:var(--mg-purple);color:#100d20;font-weight:800;font-size:12px;transition:filter .15s,transform .15s}
+.play-btn:hover,.action-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.action-btn.secondary{background:#1d3048;color:var(--mg-text);border:1px solid var(--mg-line)}
+.action-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.game-stage{display:none;border:1px solid var(--mg-line);border-radius:22px;background:var(--mg-panel);padding:clamp(18px,4vw,32px);margin:8px 0 56px;min-height:340px}
+.game-stage.active{display:block}
+.stage-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:20px}
+.stage-head h2{font-size:clamp(23px,4vw,32px);letter-spacing:-.05em;margin:5px 0 0}
+.stage-tools{display:flex;align-items:center;gap:10px}
+.score-pill,.timer-pill{font:500 11px "DM Mono",monospace;color:var(--mg-cyan);background:rgba(94,234,212,.08);border:1px solid rgba(94,234,212,.2);padding:8px 11px;border-radius:9px}
+.stage-instructions{color:var(--mg-muted);font-size:13px;line-height:1.65;margin:0 0 22px}
+.stage-content{min-height:150px}
+.stage-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.feedback{min-height:25px;margin-top:15px;color:var(--mg-muted);font-size:13px}
+.feedback.good{color:var(--mg-green)}.feedback.bad{color:var(--mg-red)}
+.choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.choice{min-height:62px;border:1px solid var(--mg-line);border-radius:12px;background:#14243a;color:var(--mg-text);padding:12px;font-weight:700;font-size:14px}
+.choice:hover:not(:disabled){border-color:var(--mg-purple);background:#1a2d49}
+.choice.selected{border-color:var(--mg-purple);background:rgba(167,139,250,.18)}
+.choice.correct{border-color:var(--mg-green);background:rgba(134,239,172,.12)}
+.choice.wrong{border-color:var(--mg-red);background:rgba(251,113,133,.12)}
+.choice:disabled{cursor:default;opacity:.82}
+.reflex-track{position:relative;margin:48px auto 20px;max-width:760px;height:100px;display:flex;align-items:center;justify-content:space-between;padding:0 5px}
+.reflex-track:before{content:"";position:absolute;left:0;right:0;height:4px;background:#31445f;border-radius:5px;top:50%}
+.reflex-point{position:relative;z-index:1;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#1b2c45;border:1px solid #4b6381;font:700 18px "DM Mono",monospace}
+.reflex-point.active{background:var(--mg-purple);color:#100d20;border-color:#d8c9ff;box-shadow:0 0 25px rgba(167,139,250,.6);transform:scale(1.15)}
+.reflex-ball{width:16px;height:16px;border-radius:50%;background:var(--mg-cyan);position:absolute;top:calc(50% - 8px);left:0;transform:translateX(-50%);box-shadow:0 0 18px rgba(94,234,212,.8);pointer-events:none}
+.pattern-grid{display:grid;grid-template-columns:repeat(3,minmax(70px,110px));gap:9px;justify-content:center}
+.pattern-cell{aspect-ratio:1;border:2px solid rgba(255,255,255,.12);border-radius:14px;color:#07111f;font-size:25px;font-weight:800;display:grid;place-items:center;transition:filter .12s,transform .12s}
+.pattern-cell:disabled{opacity:.95}
+.pattern-cell.flash{outline:4px solid white;outline-offset:3px;filter:brightness(1.4);transform:scale(1.04)}
+.math-options,.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:540px;margin:18px auto}
+.math-question{text-align:center;font-size:clamp(34px,7vw,58px);font-weight:800;letter-spacing:-.06em;padding:18px 0}
+.big-center{text-align:center}
+.big-number{font-size:clamp(54px,10vw,90px);font-weight:800;letter-spacing:-.07em;line-height:1.1}
+.progress-track{height:7px;background:#1b2c45;border-radius:10px;overflow:hidden;margin:15px 0}
+.progress-fill{height:100%;width:0;background:var(--mg-cyan);transition:width .1s linear}
+.word-card{font-size:clamp(34px,7vw,60px);font-weight:800;text-align:center;padding:24px}
+.count-display{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;max-width:580px;margin:20px auto}
+.count-dot{font-size:30px;width:48px;height:48px;display:grid;place-items:center}
+.sequence{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:30px 0}
+.sequence span{font:700 clamp(20px,4vw,30px) "DM Mono",monospace;background:#172941;border:1px solid var(--mg-line);border-radius:10px;padding:12px 15px}
+.sequence .missing{color:var(--mg-cyan);border-style:dashed}
+.target-arena{position:relative;height:260px;border:1px dashed #3a506e;border-radius:16px;overflow:hidden;background:rgba(5,14,26,.45)}
+.target{position:absolute;width:54px;height:54px;border-radius:50%;border:3px solid white;background:var(--mg-purple);box-shadow:0 0 24px rgba(167,139,250,.5);display:grid;place-items:center;color:#100d20;font-size:20px;font-weight:900}
+.result-panel{text-align:center;padding:30px 12px}
+.result-panel h3{font-size:30px;margin:0 0 8px}
+.result-score{font-size:64px;font-weight:800;letter-spacing:-.06em;color:var(--mg-cyan)}
+.mg-footer{border-top:1px solid var(--mg-line);padding:22px 0 30px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--mg-muted);font:10px "DM Mono",monospace;letter-spacing:.1em}
+@media(max-width:700px){.game-grid{grid-template-columns:1fr}.mg-hero{padding-top:42px;display:block}.mg-count{margin-top:20px}.choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.game-card{min-height:185px}.stage-head{align-items:flex-start}.reflex-point{width:34px;height:34px;font-size:15px}.reflex-track{margin:34px 0}}
+</style>
+<script src="../../assets/site.js" defer></script>
+</head>
+<body data-theme="games">
+<div class="mg-shell">
+<header class="mg-header">
+<a class="mg-brand" href="../../index.html">✳ LUDDEN<span>.</span></a>
+<a class="mg-home" href="../">↖ GAME TESTING</a>
+</header>
+<main>
+<section class="mg-hero">
+<div><div class="mg-eyebrow">ZONE 01 / MINI ARCADE</div><h1>Ten games.<br><span>One more go.</span></h1><p>Quick challenges for memory, reflexes, pattern recognition, and a little bit of luck. Pick a game, press play, and see how you do.</p></div>
+<div class="mg-count">10 EXPERIMENTS / BUILD 001</div>
+</section>
+<section class="game-grid" id="gameGrid" aria-label="Mini games">
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 01</span><span class="game-type">KNOWLEDGE</span></div><h2>Pokémon or Medicine?</h2><p>Six names. Three Pokémon and three medicines. Select the Pokémon to score two points each.</p><button class="play-btn" data-game="pokemon">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 02</span><span class="game-type">REFLEX</span></div><h2>Freeze Frame</h2><p>A marker races along the numbers 1–2–3–4–5–4–3–2–1. Freeze it and score the number underneath.</p><button class="play-btn" data-game="reflex">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 03</span><span class="game-type">MEMORY</span></div><h2>Remember the Pattern</h2><p>Watch ten flashes across a 3 × 3 grid, then repeat the exact sequence. One mistake ends the run.</p><button class="play-btn" data-game="memory">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 04</span><span class="game-type">MATHS</span></div><h2>Six-Second Maths</h2><p>Choose addition or multiplication. Answer each question within six seconds using the four choices.</p><button class="play-btn" data-game="math">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 05</span><span class="game-type">OBSERVATION</span></div><h2>Odd One Out</h2><p>Find the item that doesn't belong. Ten quick rounds, one point for each correct choice.</p><button class="play-btn" data-game="odd">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 06</span><span class="game-type">PREDICTION</span></div><h2>Higher or Lower</h2><p>Look at the current number and predict whether the next card will be higher or lower.</p><button class="play-btn" data-game="higher">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 07</span><span class="game-type">FOCUS</span></div><h2>Color Clash</h2><p>Ignore the word. Choose the color of the ink it's written in. Ten rounds of interference.</p><button class="play-btn" data-game="color">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 08</span><span class="game-type">QUICK COUNT</span></div><h2>Quick Count</h2><p>Count the symbols on screen and choose the correct total before the timer runs out.</p><button class="play-btn" data-game="count">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 09</span><span class="game-type">NUMBER LOGIC</span></div><h2>Sequence Solver</h2><p>Spot the rule and fill in the missing number. Ten number patterns to solve.</p><button class="play-btn" data-game="sequence">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 10</span><span class="game-type">SPEED</span></div><h2>Target Tap</h2><p>Hit as many targets as you can in twenty seconds. The target moves after every hit.</p><button class="play-btn" data-game="target">PLAY <span>↗</span></button></article>
+</section>
+<section class="game-stage" id="gameStage" aria-live="polite">
+<div class="stage-head"><div><div class="mg-kicker" id="stageKicker">GAME</div><h2 id="stageTitle">Game title</h2></div><div class="stage-tools"><span class="score-pill" id="stageScore">SCORE 0</span><span class="timer-pill" id="stageTimer">READY</span><button class="action-btn secondary" id="closeGame">CLOSE ✕</button></div></div>
+<p class="stage-instructions" id="stageInstructions"></p>
+<div class="stage-content" id="stageContent"></div>
+<div class="feedback" id="feedback" role="status"></div>
+<div class="stage-actions" id="stageActions"></div>
+</section>
+</main>
+<footer class="mg-footer"><span>© 2026 LUDDEN</span><span>MINI ARCADE / BUILD 001</span><a href="../../index.html" style="color:inherit;text-decoration:none">BACK TO BASE ↑</a></footer>
+</div>
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const stage=$("#gameStage"), content=$("#stageContent"), title=$("#stageTitle"), kicker=$("#stageKicker"), instructions=$("#stageInstructions"), scoreEl=$("#stageScore"), timerEl=$("#stageTimer"), feedback=$("#feedback"), actions=$("#stageActions");
+let cleanup=()=>{}, score=0, activeGame="";
+const games={
+pokemon:{title:"Pokémon or Medicine?",tag:"KNOWLEDGE",instructions:"Select all three Pokémon. You earn 2 points for each Pokémon you correctly select. Selecting a medicine does not earn points. You can change your choices until you submit.",start:startPokemon},
+reflex:{title:"Freeze Frame",tag:"REFLEX",instructions:"The marker moves across the numbered track and bounces back. Press FREEZE whenever you want. Your score is the number under the marker.",start:startReflex},
+memory:{title:"Remember the Pattern",tag:"MEMORY",instructions:"Watch the ten flashes carefully. When the sequence finishes, repeat it by tapping the matching squares in exactly the same order. A wrong tap ends the game.",start:startMemory},
+math:{title:"Six-Second Maths",tag:"MATHS",instructions:"Choose addition or multiplication. You have six seconds for each question. There are ten questions and four answer choices per question.",start:startMath},
+odd:{title:"Odd One Out",tag:"OBSERVATION",instructions:"Choose the one item that belongs to a different category. Ten rounds; one point for each correct answer.",start:startOdd},
+higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"A starting number is shown. Guess whether the next number will be higher or lower. Ten rounds; one point for each correct prediction.",start:startHigher},
+color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the INK COLOR, not the word being displayed. Ten rounds; one point for each correct answer.",start:startColor},
+count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. Each round gives you six seconds. Ten rounds.",start:startCount},
+sequence:{title:"Sequence Solver",tag:"NUMBER LOGIC",instructions:"Find the missing number in each sequence. Choose from four answers. Ten sequences, one point per correct answer.",start:startSequence},
+target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in twenty seconds. Each hit earns one point.",start:startTarget}
+};
+function setScore(n){score=n;scoreEl.textContent="SCORE "+score}
+function setTimer(s){timerEl.textContent=s}
+function say(msg,kind=""){feedback.textContent=msg;feedback.className="feedback "+kind}
+function button(label,fn,cls="action-btn"){const b=document.createElement("button");b.className=cls;b.textContent=label;b.addEventListener("click",fn);return b}
+function start(name){
+cleanup();cleanup=()=>{};activeGame=name;score=0;setScore(0);setTimer("READY");say("");actions.replaceChildren();content.replaceChildren();
+const g=games[name];title.textContent=g.title;kicker.textContent="GAME / "+String(Object.keys(games).indexOf(name)+1).padStart(2,"0")+" — "+g.tag;instructions.textContent=g.instructions;stage.classList.add("active");$("#gameGrid").style.display="none";g.start();
+stage.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function finish(message="Round complete"){
+cleanup();cleanup=()=>{};setTimer("FINISHED");content.innerHTML='<div class="result-panel"><div class="mg-kicker">RESULT</div><div class="result-score">'+score+'</div><h3>'+message+'</h3><p style="color:var(--mg-muted)">Your score for this game.</p></div>';actions.replaceChildren(button("PLAY AGAIN",()=>start(activeGame)),button("BACK TO ALL GAMES",close,"action-btn secondary"));
+}
+function close(){cleanup();cleanup=()=>{};stage.classList.remove("active");$("#gameGrid").style.display="grid";window.scrollTo({top:0,behavior:"smooth"})}
+$("#closeGame").addEventListener("click",close);
+document.querySelectorAll("[data-game]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.game)));
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function choices(correct,extras){return shuffle([correct,...extras.filter(x=>x!==correct).slice(0,3)])}
+function renderChoices(items,onPick,disabled=false){
+const grid=document.createElement("div");grid.className="choice-grid";
+items.forEach((item,i)=>{const b=button(String(item),()=>onPick(item,i),"choice");b.disabled=disabled;grid.append(b)});
+content.append(grid);return grid;
+}
+function startPokemon(){
+const pool=[["Pikachu",1],["Gengar",1],["Eevee",1],["Metformin",0],["Sertraline",0],["Amoxicillin",0],["Lucario",1],["Ibuprofen",0],["Mewtwo",1],["Atorvastatin",0],["Jigglypuff",1],["Omeprazole",0]];
+const round=shuffle(pool).slice(0,6);const selected=new Set();
+const grid=document.createElement("div");grid.className="choice-grid";
+round.forEach(([name,isPokemon])=>{const b=button(name,()=>{if(selected.has(name)){selected.delete(name);b.classList.remove("selected")}else{selected.add(name);b.classList.add("selected")}},"choice");grid.append(b)});
+content.append(grid);say("Selected: 0 / 6");
+grid.addEventListener("click",()=>say("Selected: "+selected.size+" / 6"));
+actions.append(button("SUBMIT PICKS",()=>{const correct=round.filter(x=>x[1]===1).map(x=>x[0]);const got=[...selected];const points=got.filter(x=>correct.includes(x)).length*2;setScore(points);grid.querySelectorAll("button").forEach(b=>{b.disabled=true;const item=round.find(x=>x[0]===b.textContent);if(item[1])b.classList.add("correct");else if(selected.has(item[0]))b.classList.add("wrong")});say("Pokémon: "+correct.join(", ")+" · Medicines: "+round.filter(x=>!x[1]).map(x=>x[0]).join(", "), "good");actions.replaceChildren(button("SEE RESULT",()=>finish("Pokémon found: "+points/2+" of 3"))) }));
+}
+function startReflex(){
+const track=document.createElement("div");track.className="reflex-track";
+const nums=[1,2,3,4,5,4,3,2,1];let pos=0,dir=1,locked=false,interval;
+nums.forEach((n,i)=>{const p=document.createElement("div");p.className="reflex-point";p.textContent=n;p.dataset.i=i;track.append(p)});
+const ball=document.createElement("div");ball.className="reflex-ball";track.append(ball);content.append(track);
+function draw(){track.querySelectorAll(".reflex-point").forEach((p,i)=>p.classList.toggle("active",i===pos));ball.style.left=(pos/(nums.length-1)*100)+"%"}
+draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=8){pos=8;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},145);
+cleanup=()=>clearInterval(interval);
+actions.append(button("FREEZE",()=>{if(locked)return;locked=true;const n=nums[pos];setScore(n);setTimer("FROZEN");say("Frozen on "+n+". You scored "+n+" point"+(n===1?"":"s")+".","good");actions.replaceChildren(button("TRY AGAIN",()=>start("reflex")),button("BACK TO GAMES",close,"action-btn secondary"))}));
+}
+function startMemory(){
+const palette=[["#fb7185","●"],["#60a5fa","◆"],["#fbbf24","★"],["#34d399","▲"],["#c084fc","✚"],["#fb923c","■"],["#22d3ee","⬟"],["#f472b6","♥"],["#a3e635","✿"]];
+const grid=document.createElement("div");grid.className="pattern-grid";const cells=[];
+palette.forEach(([color,symbol],i)=>{const b=button(symbol,()=>tap(i),"pattern-cell");b.style.background=color;b.disabled=true;grid.append(b);cells.push(b)});
+content.append(grid);let seq=[],at=0,playing=true,wrong=false,timer;
+function flash(i){cells[i].classList.add("flash");setTimeout(()=>cells[i].classList.remove("flash"),360)}
+seq=Array.from({length:10},()=>Math.floor(Math.random()*9));
+let step=0;setTimer("WATCH");
+function showNext(){if(step>=seq.length){playing=false;setTimer("YOUR TURN");cells.forEach(b=>b.disabled=false);say("Now repeat the ten flashes in order.");return}flash(seq[step++]);timer=setTimeout(showNext,760)}
+timer=setTimeout(showNext,500);
+function tap(i){if(playing||wrong)return;if(i!==seq[at]){wrong=true;cells.forEach(b=>b.disabled=true);say("Out of sequence! You reached "+at+" correct flashes.","bad");finishMemory();return}flash(i);at++;setScore(at);if(at===10){cells.forEach(b=>b.disabled=true);say("Perfect sequence!","good");finishMemory()}else say("Correct: "+at+" / 10","good")}
+function finishMemory(){clearTimeout(timer);actions.replaceChildren(button("PLAY AGAIN",()=>start("memory")),button("BACK TO GAMES",close,"action-btn secondary"))}
+cleanup=()=>clearTimeout(timer);
+}
+function startMath(){
+let mode=null,q=0,roundScore=0,clock=null,timeLeft=6;
+const modeWrap=document.createElement("div");modeWrap.className="math-options";modeWrap.append(button("ADDITION",()=>begin("add"),"choice"),button("MULTIPLICATION",()=>begin("mul"),"choice"));content.append(modeWrap);say("Choose a maths mode to begin.");
+function begin(m){mode=m;q=0;roundScore=0;setScore(0);next()}
+function next(){clearInterval(clock);if(q>=10){finish("Maths round complete");return}q++;timeLeft=6;setTimer("6.0s");content.innerHTML='<div class="big-center"><div class="mg-kicker">QUESTION '+q+' / 10</div><div class="progress-track"><div class="progress-fill" id="mathProgress"></div></div><div class="math-question" id="mathQ"></div><div class="answer-grid" id="mathAnswers"></div></div>';
+const a=mode==="add"?Math.floor(Math.random()*40)+5:Math.floor(Math.random()*12)+2;const b=mode==="add"?Math.floor(Math.random()*40)+5:Math.floor(Math.random()*12)+2;const answer=mode==="add"?a+b:a*b;$("#mathQ").textContent=a+(mode==="add"?" + ":" × ")+b+" = ?";
+const opts=choices(answer,[answer+pick([-10,-7,-4,-2,2,3,5,8,10]),answer+pick([-12,-6,-3,3,6,9]),answer+pick([-15,-8,-5,4,7,12])]);const box=$("#mathAnswers");
+opts.forEach(v=>box.append(button(v,()=>{clearInterval(clock);if(v===answer){roundScore++;setScore(roundScore);say("Correct!","good")}else say("Not quite. The answer was "+answer+".","bad");setTimeout(next,450)},"choice")));
+clock=setInterval(()=>{timeLeft-=.1;setTimer(Math.max(0,timeLeft).toFixed(1)+"s");const p=$("#mathProgress");if(p)p.style.width=((6-timeLeft)/6*100)+"%";if(timeLeft<=0){clearInterval(clock);say("Time! Answer: "+answer,"bad");setTimeout(next,500)}},100);
+}
+cleanup=()=>clearInterval(clock);
+}
+function startOdd(){
+const rounds=[
+{q:["Mercury","Venus","Mars","Jupiter","Sirius"],a:"Sirius",why:"Sirius is a star; the others are planets."},
+{q:["Violin","Cello","Trumpet","Viola","Double bass"],a:"Trumpet",why:"Trumpet is a brass instrument; the others are strings."},
+{q:["Triangle","Square","Pentagon","Cube","Hexagon"],a:"Cube",why:"A cube is three-dimensional; the others are 2D shapes."},
+{q:["Eagle","Robin","Penguin","Salmon","Owl"],a:"Salmon",why:"Salmon is a fish; the others are birds."},
+{q:["Copper","Iron","Gold","Oxygen","Silver"],a:"Oxygen",why:"Oxygen is a gas/non-metal; the others are metals."},
+{q:["Monday","March","Friday","Sunday","Tuesday"],a:"March",why:"March is a month; the others are days."},
+{q:["Kilogram","Metre","Litre","Second","Blue"],a:"Blue",why:"Blue is a color; the others are measurement units."},
+{q:["Oak","Pine","Maple","Rose","Granite"],a:"Granite",why:"Granite is a rock; the others are plants."},
+{q:["Square","Rectangle","Rhombus","Circle","Cylinder"],a:"Cylinder",why:"A cylinder is 3D; the others are 2D."},
+{q:["Whisper","Shout","Murmur","Speak","Sleep"],a:"Sleep",why:"Sleep is not a way of speaking."}
+];let i=0;function next(){if(i===10){finish("Observation round complete");return}const r=rounds[i++];setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">WHICH ONE DOES NOT BELONG?</div>';const grid=renderChoices(shuffle(r.q),v=>{grid.querySelectorAll("button").forEach(b=>{b.disabled=true;if(b.textContent===r.a)b.classList.add("correct");else if(b.textContent===v)b.classList.add("wrong")});if(v===r.a){setScore(score+1);say("Correct. "+r.why,"good")}else say(r.why,"bad");setTimeout(next,950)});say("Round "+i+" of 10")}next();
+}
+function startHigher(){
+let current=Math.floor(Math.random()*80)+10,round=0;function next(){if(round===10){finish("Prediction complete");return}round++;const nextNum=Math.floor(Math.random()*99)+1;content.innerHTML='<div class="big-center"><div class="mg-kicker">ROUND '+round+' / 10</div><div class="big-number">'+current+'</div><p style="color:var(--mg-muted)">Will the next number be higher or lower?</p></div>';setTimer(round+" / 10");const grid=document.createElement("div");grid.className="math-options";const higher=button("HIGHER",()=>answer("higher"),"choice"),lower=button("LOWER",()=>answer("lower"),"choice");grid.append(higher,lower);content.append(grid);function answer(v){higher.disabled=lower.disabled=true;const actual=nextNum>current?"higher":nextNum<current?"lower":"equal";if(v===actual){setScore(score+1);say(nextNum+" is "+actual+". Correct!","good")}else say(nextNum+" is "+(actual==="equal"?"the same":actual)+".","bad");current=nextNum;setTimeout(next,750)}}next();
+}
+function startColor(){
+const names=["RED","BLUE","GREEN","YELLOW","PURPLE"];const hex={RED:"#fb7185",BLUE:"#60a5fa",GREEN:"#4ade80",YELLOW:"#facc15",PURPLE:"#c084fc"};let i=0;function next(){if(i===10){finish("Focus test complete");return}i++;const word=pick(names),ink=pick(names.filter(n=>n!==word));setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">CHOOSE THE INK COLOR</div><div class="word-card" style="color:'+hex[ink]+'">'+word+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(names).forEach(n=>grid.append(button(n,()=>{grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(n===ink){setScore(score+1);say("Correct — the ink was "+ink+".","good")}else say("The ink color was "+ink+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
+}
+function startCount(){
+let i=0,timer=null,remaining=6;function next(){clearInterval(timer);if(i===10){finish("Counting complete");return}i++;remaining=6;const n=Math.floor(Math.random()*17)+4;const sym=pick(["◆","●","★","▲","✚"]);setTimer("6.0s");content.innerHTML='<div class="mg-kicker big-center">ROUND '+i+' / 10 — HOW MANY?</div><div class="count-display">'+Array.from({length:n},()=>'<span class="count-dot">'+sym+'</span>').join("")+'</div><div class="progress-track"><div class="progress-fill" id="countProgress"></div></div>';const opts=choices(n,[n+pick([-5,-3,-2,2,3,4]),n+pick([-6,-4,-1,1,4,6]),n+pick([-7,-3,2,5,7])]);const grid=document.createElement("div");grid.className="choice-grid";opts.forEach(v=>grid.append(button(v,()=>answer(v),"choice")));content.append(grid);function answer(v){clearInterval(timer);grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(v===n){setScore(score+1);say("Exactly right!","good")}else say("There were "+n+".","bad");setTimeout(next,600)}timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((6-remaining)/6*100)+"%";if(remaining<=0){clearInterval(timer);say("Time! There were "+n+".","bad");setTimeout(next,600)}},100)}next();cleanup=()=>clearInterval(timer);
+}
+function startSequence(){
+const make=(start,diff)=>({s:[start,start+diff,start+2*diff,null,start+4*diff],a:start+3*diff,opts:[start+3*diff,start+2*diff,start+4*diff,start+5*diff]});
+const rounds=[make(3,4),make(2,3),make(5,5),make(1,7),make(10,10),make(2,6),make(4,8),make(7,2),make(12,3),make(1,9)];let i=0;function next(){if(i===10){finish("Sequence solver complete");return}const r=rounds[i++];setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">WHAT NUMBER IS MISSING?</div><div class="sequence">'+r.s.map(v=>'<span class="'+(v===null?"missing":"")+'">'+(v===null?"?":v)+'</span>').join("")+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(r.opts).forEach(v=>grid.append(button(v,()=>{grid.querySelectorAll("button").forEach(b=>{b.disabled=true;if(Number(b.textContent)===r.a)b.classList.add("correct");else if(Number(b.textContent)===v)b.classList.add("wrong")});if(v===r.a){setScore(score+1);say("Correct!","good")}else say("The missing number was "+r.a+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
+}
+function startTarget(){
+const arena=document.createElement("div");arena.className="target-arena";content.append(arena);let left=20,interval=null,moveTimer=null;const target=button("✦",hit,"target");arena.append(target);let hits=0;
+function move(){const maxX=Math.max(0,arena.clientWidth-58),maxY=Math.max(0,arena.clientHeight-58);target.style.left=Math.floor(Math.random()*maxX)+"px";target.style.top=Math.floor(Math.random()*maxY)+"px"}
+function hit(){if(left<=0)return;hits++;setScore(hits);move()}
+move();moveTimer=setInterval(move,1150);setTimer("20s");interval=setInterval(()=>{left--;setTimer(left+"s");if(left<=0){clearInterval(interval);clearInterval(moveTimer);target.disabled=true;finish("Targets hit: "+hits)}},1000);
+cleanup=()=>{clearInterval(interval);clearInterval(moveTimer)};
+}
+})();
+</script>
+</body>
+</html>
