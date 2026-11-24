@@ -26,7 +26,7 @@ body{background:var(--mg-bg);color:var(--mg-text);font-family:Manrope,system-ui,
 .mg-hero h1 span{color:var(--mg-purple)}
 .mg-hero p{color:var(--mg-muted);max-width:570px;line-height:1.7;margin:0}
 .mg-count{font:500 11px "DM Mono",monospace;color:var(--mg-muted);white-space:nowrap;padding-bottom:8px}
-.game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px 0 56px}
+.mg-hero{position:relative;z-index:0;isolation:isolate}.game-grid{position:relative;z-index:2;clear:both;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px 0 56px}
 .game-card{border:1px solid var(--mg-line);border-radius:20px;background:linear-gradient(145deg,rgba(17,32,53,.96),rgba(9,20,36,.94));padding:22px;min-height:205px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
 .game-card:hover{border-color:rgba(167,139,250,.5);transform:translateY(-2px)}
 .game-card-top{display:flex;justify-content:space-between;align-items:center}
@@ -104,7 +104,7 @@ button{font:inherit;cursor:pointer}
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 01</span><span class="game-type">KNOWLEDGE</span></div><h2>Pokémon or Medicine?</h2><p>Six names. Three Pokémon and three medicines. Select the Pokémon to score two points each.</p><button class="play-btn" data-game="pokemon">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 02</span><span class="game-type">REFLEX</span></div><h2>Freeze Frame</h2><p>A marker races along the numbers 1–2–3–4–5–4–3–2–1. Freeze it and score the number underneath.</p><button class="play-btn" data-game="reflex">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 03</span><span class="game-type">MEMORY</span></div><h2>Remember the Pattern</h2><p>Watch ten flashes across a 3 × 3 grid, then repeat the exact sequence. One mistake ends the run.</p><button class="play-btn" data-game="memory">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 04</span><span class="game-type">MATHS</span></div><h2>Six-Second Maths</h2><p>Choose addition or multiplication. Answer each question within six seconds using the four choices.</p><button class="play-btn" data-game="math">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 04</span><span class="game-type">MATHS</span></div><h2>Ten-Second Maths</h2><p>Choose addition or multiplication. Answer each question within ten seconds using the four choices.</p><button class="play-btn" data-game="math">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 05</span><span class="game-type">OBSERVATION</span></div><h2>Odd One Out</h2><p>Find the item that doesn't belong. Ten quick rounds, one point for each correct choice.</p><button class="play-btn" data-game="odd">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 06</span><span class="game-type">PREDICTION</span></div><h2>Higher or Lower</h2><p>Look at the current number and predict whether the next card will be higher or lower.</p><button class="play-btn" data-game="higher">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 07</span><span class="game-type">FOCUS</span></div><h2>Color Clash</h2><p>Ignore the word. Choose the color of the ink it's written in. Ten rounds of interference.</p><button class="play-btn" data-game="color">PLAY <span>↗</span></button></article>
@@ -132,13 +132,13 @@ const games={
 pokemon:{title:"Pokémon or Medicine?",tag:"KNOWLEDGE",instructions:"Select all three Pokémon. You earn 2 points for each Pokémon you correctly select. Selecting a medicine does not earn points. You can change your choices until you submit.",start:startPokemon},
 reflex:{title:"Freeze Frame",tag:"REFLEX",instructions:"The marker moves across the numbered track and bounces back. Press FREEZE whenever you want. Your score is the number under the marker.",start:startReflex},
 memory:{title:"Remember the Pattern",tag:"MEMORY",instructions:"Watch the ten flashes carefully. When the sequence finishes, repeat it by tapping the matching squares in exactly the same order. A wrong tap ends the game.",start:startMemory},
-math:{title:"Six-Second Maths",tag:"MATHS",instructions:"Choose addition or multiplication. You have six seconds for each question. There are ten questions and four answer choices per question.",start:startMath},
-odd:{title:"Odd One Out",tag:"OBSERVATION",instructions:"Choose the one item that belongs to a different category. Ten rounds; one point for each correct answer.",start:startOdd},
-higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"A starting number is shown. Guess whether the next number will be higher or lower. Ten rounds; one point for each correct prediction.",start:startHigher},
+math:{title:"Ten-Second Maths",tag:"MATHS",instructions:"Choose addition or multiplication. You have ten seconds for each question. There are ten questions and four answer choices per question.",start:startMath},
+odd:{title:"Odd One Out",tag:"OBSERVATION",instructions:"Find as many odd ones out as you can in 15 seconds. Correct answers score; wrong answers are ignored and let you try again.",start:startOdd},
+higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"Predict whether the next card in a shuffled deck will be higher or lower. One point per correct guess; the game ends on your first wrong guess.",start:startHigher},
 color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the INK COLOR, not the word being displayed. Ten rounds; one point for each correct answer.",start:startColor},
-count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. Each round gives you six seconds. Ten rounds.",start:startCount},
+count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. The quantities grow as you progress. One wrong answer ends the game.",start:startCount},
 sequence:{title:"Sequence Solver",tag:"NUMBER LOGIC",instructions:"Find the missing number in each sequence. Choose from four answers. Ten sequences, one point per correct answer.",start:startSequence},
-target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in twenty seconds. Each hit earns one point.",start:startTarget}
+target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in ten seconds. Each hit earns one point.",start:startTarget}
 };
 function setScore(n){score=n;scoreEl.textContent="SCORE "+score}
 function setTimer(s){timerEl.textContent=s}
@@ -164,8 +164,9 @@ items.forEach((item,i)=>{const b=button(String(item),()=>onPick(item,i),"choice"
 content.append(grid);return grid;
 }
 function startPokemon(){
-const pool=[["Pikachu",1],["Gengar",1],["Eevee",1],["Metformin",0],["Sertraline",0],["Amoxicillin",0],["Lucario",1],["Ibuprofen",0],["Mewtwo",1],["Atorvastatin",0],["Jigglypuff",1],["Omeprazole",0]];
-const round=shuffle(pool).slice(0,6);const selected=new Set();
+const pokemon=["Pikachu","Gengar","Eevee","Lucario","Mewtwo","Jigglypuff","Charizard","Bulbasaur","Squirtle","Charmander","Snorlax","Dragonite","Gardevoir","Greninja","Sylveon","Umbreon","Rayquaza","Psyduck","Togepi","Mimikyu","Rowlet","Fuecoco","Sprigatito","Quaxly","Zorua","Arcanine","Ditto","Lapras","Machamp","Celebi"];
+const medicines=["Metformin","Sertraline","Amoxicillin","Ibuprofen","Atorvastatin","Omeprazole","Loratadine","Cetirizine","Naproxen","Losartan","Amlodipine","Fluoxetine","Azithromycin","Pantoprazole","Gabapentin","Melatonin","Doxycycline","Prednisone","Furosemide","Warfarin","Levothyroxine","Montelukast","Acetaminophen","Famotidine","Clopidogrel","Escitalopram","Cephalexin","Hydroxyzine","Rosuvastatin","Albuterol"];
+const round=shuffle([...shuffle(pokemon).slice(0,3).map(n=>[n,1]),...shuffle(medicines).slice(0,3).map(n=>[n,0])]);const selected=new Set();
 const grid=document.createElement("div");grid.className="choice-grid";
 round.forEach(([name,isPokemon])=>{const b=button(name,()=>{if(selected.has(name)){selected.delete(name);b.classList.remove("selected")}else{selected.add(name);b.classList.add("selected")}},"choice");grid.append(b)});
 content.append(grid);say("Selected: 0 / 6");
@@ -178,7 +179,7 @@ const nums=[1,2,3,4,5,4,3,2,1];let pos=0,dir=1,locked=false,interval;
 nums.forEach((n,i)=>{const p=document.createElement("div");p.className="reflex-point";p.textContent=n;p.dataset.i=i;track.append(p)});
 const ball=document.createElement("div");ball.className="reflex-ball";track.append(ball);content.append(track);
 function draw(){track.querySelectorAll(".reflex-point").forEach((p,i)=>p.classList.toggle("active",i===pos));ball.style.left=(pos/(nums.length-1)*100)+"%"}
-draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=8){pos=8;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},145);
+draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=8){pos=8;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},72.5);
 cleanup=()=>clearInterval(interval);
 actions.append(button("FREEZE",()=>{if(locked)return;locked=true;const n=nums[pos];setScore(n);setTimer("FROZEN");say("Frozen on "+n+". You scored "+n+" point"+(n===1?"":"s")+".","good");actions.replaceChildren(button("TRY AGAIN",()=>start("reflex")),button("BACK TO GAMES",close,"action-btn secondary"))}));
 }
@@ -187,24 +188,24 @@ const palette=[["#fb7185","●"],["#60a5fa","◆"],["#fbbf24","★"],["#34d399",
 const grid=document.createElement("div");grid.className="pattern-grid";const cells=[];
 palette.forEach(([color,symbol],i)=>{const b=button(symbol,()=>tap(i),"pattern-cell");b.style.background=color;b.disabled=true;grid.append(b);cells.push(b)});
 content.append(grid);let seq=[],at=0,playing=true,wrong=false,timer;
-function flash(i){cells[i].classList.add("flash");setTimeout(()=>cells[i].classList.remove("flash"),360)}
+function flash(i){cells[i].classList.add("flash");setTimeout(()=>cells[i].classList.remove("flash"),180)}
 seq=Array.from({length:10},()=>Math.floor(Math.random()*9));
 let step=0;setTimer("WATCH");
-function showNext(){if(step>=seq.length){playing=false;setTimer("YOUR TURN");cells.forEach(b=>b.disabled=false);say("Now repeat the ten flashes in order.");return}flash(seq[step++]);timer=setTimeout(showNext,760)}
+function showNext(){if(step>=seq.length){playing=false;setTimer("YOUR TURN");cells.forEach(b=>b.disabled=false);say("Now repeat the ten flashes in order.");return}flash(seq[step++]);timer=setTimeout(showNext,380)}
 timer=setTimeout(showNext,500);
 function tap(i){if(playing||wrong)return;if(i!==seq[at]){wrong=true;cells.forEach(b=>b.disabled=true);say("Out of sequence! You reached "+at+" correct flashes.","bad");finishMemory();return}flash(i);at++;setScore(at);if(at===10){cells.forEach(b=>b.disabled=true);say("Perfect sequence!","good");finishMemory()}else say("Correct: "+at+" / 10","good")}
 function finishMemory(){clearTimeout(timer);actions.replaceChildren(button("PLAY AGAIN",()=>start("memory")),button("BACK TO GAMES",close,"action-btn secondary"))}
 cleanup=()=>clearTimeout(timer);
 }
 function startMath(){
-let mode=null,q=0,roundScore=0,clock=null,timeLeft=6;
+let mode=null,q=0,roundScore=0,clock=null,timeLeft=10;
 const modeWrap=document.createElement("div");modeWrap.className="math-options";modeWrap.append(button("ADDITION",()=>begin("add"),"choice"),button("MULTIPLICATION",()=>begin("mul"),"choice"));content.append(modeWrap);say("Choose a maths mode to begin.");
 function begin(m){mode=m;q=0;roundScore=0;setScore(0);next()}
-function next(){clearInterval(clock);if(q>=10){finish("Maths round complete");return}q++;timeLeft=6;setTimer("6.0s");content.innerHTML='<div class="big-center"><div class="mg-kicker">QUESTION '+q+' / 10</div><div class="progress-track"><div class="progress-fill" id="mathProgress"></div></div><div class="math-question" id="mathQ"></div><div class="answer-grid" id="mathAnswers"></div></div>';
-const a=mode==="add"?Math.floor(Math.random()*40)+5:Math.floor(Math.random()*12)+2;const b=mode==="add"?Math.floor(Math.random()*40)+5:Math.floor(Math.random()*12)+2;const answer=mode==="add"?a+b:a*b;$("#mathQ").textContent=a+(mode==="add"?" + ":" × ")+b+" = ?";
+function next(){clearInterval(clock);if(q>=10){finish("Maths round complete");return}q++;timeLeft=10;setTimer("10.0s");content.innerHTML='<div class="big-center"><div class="mg-kicker">QUESTION '+q+' / 10</div><div class="progress-track"><div class="progress-fill" id="mathProgress"></div></div><div class="math-question" id="mathQ"></div><div class="answer-grid" id="mathAnswers"></div></div>';
+const a=Math.floor(Math.random()*9)+1;const b=Math.floor(Math.random()*9)+1;const answer=mode==="add"?a+b:a*b;$("#mathQ").textContent=a+(mode==="add"?" + ":" × ")+b+" = ?";
 const opts=choices(answer,[answer+pick([-10,-7,-4,-2,2,3,5,8,10]),answer+pick([-12,-6,-3,3,6,9]),answer+pick([-15,-8,-5,4,7,12])]);const box=$("#mathAnswers");
 opts.forEach(v=>box.append(button(v,()=>{clearInterval(clock);if(v===answer){roundScore++;setScore(roundScore);say("Correct!","good")}else say("Not quite. The answer was "+answer+".","bad");setTimeout(next,450)},"choice")));
-clock=setInterval(()=>{timeLeft-=.1;setTimer(Math.max(0,timeLeft).toFixed(1)+"s");const p=$("#mathProgress");if(p)p.style.width=((6-timeLeft)/6*100)+"%";if(timeLeft<=0){clearInterval(clock);say("Time! Answer: "+answer,"bad");setTimeout(next,500)}},100);
+clock=setInterval(()=>{timeLeft-=.1;setTimer(Math.max(0,timeLeft).toFixed(1)+"s");const p=$("#mathProgress");if(p)p.style.width=((10-timeLeft)/10*100)+"%";if(timeLeft<=0){clearInterval(clock);say("Time! Answer: "+answer,"bad");setTimeout(next,500)}},100);
 }
 cleanup=()=>clearInterval(clock);
 }
@@ -214,33 +215,45 @@ const rounds=[
 {q:["Violin","Cello","Trumpet","Viola","Double bass"],a:"Trumpet",why:"Trumpet is a brass instrument; the others are strings."},
 {q:["Triangle","Square","Pentagon","Cube","Hexagon"],a:"Cube",why:"A cube is three-dimensional; the others are 2D shapes."},
 {q:["Eagle","Robin","Penguin","Salmon","Owl"],a:"Salmon",why:"Salmon is a fish; the others are birds."},
-{q:["Copper","Iron","Gold","Oxygen","Silver"],a:"Oxygen",why:"Oxygen is a gas/non-metal; the others are metals."},
+{q:["Copper","Iron","Gold","Oxygen","Silver"],a:"Oxygen",why:"Oxygen is not a metal; the others are metals."},
 {q:["Monday","March","Friday","Sunday","Tuesday"],a:"March",why:"March is a month; the others are days."},
 {q:["Kilogram","Metre","Litre","Second","Blue"],a:"Blue",why:"Blue is a color; the others are measurement units."},
 {q:["Oak","Pine","Maple","Rose","Granite"],a:"Granite",why:"Granite is a rock; the others are plants."},
 {q:["Square","Rectangle","Rhombus","Circle","Cylinder"],a:"Cylinder",why:"A cylinder is 3D; the others are 2D."},
 {q:["Whisper","Shout","Murmur","Speak","Sleep"],a:"Sleep",why:"Sleep is not a way of speaking."}
-];let i=0;function next(){if(i===10){finish("Observation round complete");return}const r=rounds[i++];setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">WHICH ONE DOES NOT BELONG?</div>';const grid=renderChoices(shuffle(r.q),v=>{grid.querySelectorAll("button").forEach(b=>{b.disabled=true;if(b.textContent===r.a)b.classList.add("correct");else if(b.textContent===v)b.classList.add("wrong")});if(v===r.a){setScore(score+1);say("Correct. "+r.why,"good")}else say(r.why,"bad");setTimeout(next,950)});say("Round "+i+" of 10")}next();
+];
+let current=0,remaining=15,clock=null,locked=false;
+function showRound(){const r=rounds[current++%rounds.length];content.innerHTML='<div class="mg-kicker big-center">FIND THE ODD ONE OUT</div><div class="big-center" style="color:var(--mg-muted);margin:8px 0 18px">Correct answers add a point. Wrong answers do not cost anything.</div>';const grid=renderChoices(shuffle(r.q),v=>{if(locked)return;if(v===r.a){setScore(score+1);say("Correct! "+r.why,"good");locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);setTimeout(()=>{if(remaining>0){locked=false;showRound()}},350)}else say("Not that one — try again.","")})}
+setTimer("15s");showRound();clock=setInterval(()=>{remaining--;setTimer(remaining+"s");if(remaining<=0){clearInterval(clock);finish("Time's up — "+score+" correct answers")}},1000);cleanup=()=>clearInterval(clock);
 }
+
 function startHigher(){
-let current=Math.floor(Math.random()*80)+10,round=0;function next(){if(round===10){finish("Prediction complete");return}round++;const nextNum=Math.floor(Math.random()*99)+1;content.innerHTML='<div class="big-center"><div class="mg-kicker">ROUND '+round+' / 10</div><div class="big-number">'+current+'</div><p style="color:var(--mg-muted)">Will the next number be higher or lower?</p></div>';setTimer(round+" / 10");const grid=document.createElement("div");grid.className="math-options";const higher=button("HIGHER",()=>answer("higher"),"choice"),lower=button("LOWER",()=>answer("lower"),"choice");grid.append(higher,lower);content.append(grid);function answer(v){higher.disabled=lower.disabled=true;const actual=nextNum>current?"higher":nextNum<current?"lower":"equal";if(v===actual){setScore(score+1);say(nextNum+" is "+actual+". Correct!","good")}else say(nextNum+" is "+(actual==="equal"?"the same":actual)+".","bad");current=nextNum;setTimeout(next,750)}}next();
+const suits=["♠","♥","♦","♣"],ranks=[{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},{v:6,t:"6"},{v:7,t:"7"},{v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},{v:11,t:"J"},{v:12,t:"Q"},{v:13,t:"K"},{v:14,t:"A"}],deck=shuffle(suits.flatMap(s=>ranks.map(r=>({v:r.v,t:r.t,suit:s,red:s==="♥"||s==="♦"}))));
+let index=1,current=deck[0];
+function cardMarkup(c){return '<div style="width:150px;height:205px;margin:12px auto;border-radius:15px;background:#f8fafc;color:'+(c.red?"#dc2626":"#111827")+';display:flex;flex-direction:column;justify-content:space-between;padding:13px;font:800 27px Georgia;box-shadow:0 8px 28px #0005"><span>'+c.t+c.suit+'</span><span style="font-size:58px;text-align:center">'+c.suit+'</span><span style="align-self:flex-end;transform:rotate(180deg)">'+c.t+c.suit+'</span></div>'}
+function draw(){content.innerHTML='<div class="big-center"><div class="mg-kicker">CARD '+index+' / 52</div>'+cardMarkup(current)+'<p style="color:var(--mg-muted)">Will the next card be higher or lower?</p></div>';setTimer("CARD "+index);const grid=document.createElement("div");grid.className="math-options";grid.append(button("HIGHER",()=>guess("higher"),"choice"),button("LOWER",()=>guess("lower"),"choice"));content.append(grid)}
+function guess(direction){const next=deck[index++],actual=next.v>current.v?"higher":next.v<current.v?"lower":"equal",right=actual===direction;content.innerHTML='<div class="big-center"><div class="mg-kicker">NEXT CARD</div>'+cardMarkup(next)+'<p style="color:var(--mg-muted)">Previous card: '+current.t+current.suit+'</p></div>';if(right){setScore(score+1);say("Correct! "+next.t+next.suit+" is "+actual+".","good");current=next;if(index>=deck.length)finish("You cleared the deck!");else setTimeout(draw,650)}else{say("Wrong guess. "+next.t+next.suit+" was "+(actual==="equal"?"the same rank":actual)+". Game over.","bad");actions.replaceChildren(button("PLAY AGAIN",()=>start("higher")),button("BACK TO GAMES",close,"action-btn secondary"))}}
+draw();
 }
+
 function startColor(){
 const names=["RED","BLUE","GREEN","YELLOW","PURPLE"];const hex={RED:"#fb7185",BLUE:"#60a5fa",GREEN:"#4ade80",YELLOW:"#facc15",PURPLE:"#c084fc"};let i=0;function next(){if(i===10){finish("Focus test complete");return}i++;const word=pick(names),ink=pick(names.filter(n=>n!==word));setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">CHOOSE THE INK COLOR</div><div class="word-card" style="color:'+hex[ink]+'">'+word+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(names).forEach(n=>grid.append(button(n,()=>{grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(n===ink){setScore(score+1);say("Correct — the ink was "+ink+".","good")}else say("The ink color was "+ink+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
 }
 function startCount(){
-let i=0,timer=null,remaining=6;function next(){clearInterval(timer);if(i===10){finish("Counting complete");return}i++;remaining=6;const n=Math.floor(Math.random()*17)+4;const sym=pick(["◆","●","★","▲","✚"]);setTimer("6.0s");content.innerHTML='<div class="mg-kicker big-center">ROUND '+i+' / 10 — HOW MANY?</div><div class="count-display">'+Array.from({length:n},()=>'<span class="count-dot">'+sym+'</span>').join("")+'</div><div class="progress-track"><div class="progress-fill" id="countProgress"></div></div>';const opts=choices(n,[n+pick([-5,-3,-2,2,3,4]),n+pick([-6,-4,-1,1,4,6]),n+pick([-7,-3,2,5,7])]);const grid=document.createElement("div");grid.className="choice-grid";opts.forEach(v=>grid.append(button(v,()=>answer(v),"choice")));content.append(grid);function answer(v){clearInterval(timer);grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(v===n){setScore(score+1);say("Exactly right!","good")}else say("There were "+n+".","bad");setTimeout(next,600)}timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((6-remaining)/6*100)+"%";if(remaining<=0){clearInterval(timer);say("Time! There were "+n+".","bad");setTimeout(next,600)}},100)}next();cleanup=()=>clearInterval(timer);
+let i=0,timer=null,remaining=6;
+function next(){clearInterval(timer);if(i===10){finish("Counting complete");return}i++;remaining=6;const min=i===1?1:(i*2-1),max=i===1?3:(i*2+2),n=Math.floor(Math.random()*(max-min+1))+min,sym=pick(["◆","●","★","▲","✚"]);setTimer("6.0s");content.innerHTML='<div class="mg-kicker big-center">ROUND '+i+' / 10 — HOW MANY?</div><div class="big-center" style="color:var(--mg-muted)">Count is increasing · range '+min+'–'+max+'</div><div class="count-display">'+Array.from({length:n},()=>'<span class="count-dot">'+sym+'</span>').join("")+'</div><div class="progress-track"><div class="progress-fill" id="countProgress"></div></div>';const opts=choices(n,[n+pick([-5,-3,-2,2,3,4]),n+pick([-6,-4,-1,1,4,6]),n+pick([-7,-3,2,5,7])]),grid=document.createElement("div");grid.className="choice-grid";opts.forEach(v=>grid.append(button(v,()=>answer(v),"choice")));content.append(grid);function answer(v){clearInterval(timer);grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(v===n){setScore(score+1);say("Exactly right!","good");setTimeout(next,550)}else{say("Wrong answer. There were "+n+".","bad");setTimeout(()=>finish("Run ended at round "+i),650)}}timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((6-remaining)/6*100)+"%";if(remaining<=0){clearInterval(timer);say("Time! There were "+n+".","bad");setTimeout(()=>finish("Time ran out on round "+i),600)}},100)}
+next();cleanup=()=>clearInterval(timer);
 }
+
 function startSequence(){
 const make=(start,diff)=>({s:[start,start+diff,start+2*diff,null,start+4*diff],a:start+3*diff,opts:[start+3*diff,start+2*diff,start+4*diff,start+5*diff]});
 const rounds=[make(3,4),make(2,3),make(5,5),make(1,7),make(10,10),make(2,6),make(4,8),make(7,2),make(12,3),make(1,9)];let i=0;function next(){if(i===10){finish("Sequence solver complete");return}const r=rounds[i++];setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">WHAT NUMBER IS MISSING?</div><div class="sequence">'+r.s.map(v=>'<span class="'+(v===null?"missing":"")+'">'+(v===null?"?":v)+'</span>').join("")+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(r.opts).forEach(v=>grid.append(button(v,()=>{grid.querySelectorAll("button").forEach(b=>{b.disabled=true;if(Number(b.textContent)===r.a)b.classList.add("correct");else if(Number(b.textContent)===v)b.classList.add("wrong")});if(v===r.a){setScore(score+1);say("Correct!","good")}else say("The missing number was "+r.a+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
 }
 function startTarget(){
-const arena=document.createElement("div");arena.className="target-arena";content.append(arena);let left=20,interval=null,moveTimer=null;const target=button("✦",hit,"target");arena.append(target);let hits=0;
+const arena=document.createElement("div");arena.className="target-arena";content.append(arena);let left=10,interval=null,moveTimer=null;const target=button("✦",hit,"target");arena.append(target);let hits=0;
 function move(){const maxX=Math.max(0,arena.clientWidth-58),maxY=Math.max(0,arena.clientHeight-58);target.style.left=Math.floor(Math.random()*maxX)+"px";target.style.top=Math.floor(Math.random()*maxY)+"px"}
 function hit(){if(left<=0)return;hits++;setScore(hits);move()}
-move();moveTimer=setInterval(move,1150);setTimer("20s");interval=setInterval(()=>{left--;setTimer(left+"s");if(left<=0){clearInterval(interval);clearInterval(moveTimer);target.disabled=true;finish("Targets hit: "+hits)}},1000);
-cleanup=()=>{clearInterval(interval);clearInterval(moveTimer)};
+move();moveTimer=setInterval(move,850);setTimer("10s");interval=setInterval(()=>{left--;setTimer(left+"s");if(left<=0){clearInterval(interval);clearInterval(moveTimer);target.disabled=true;finish("Targets hit: "+hits)}},1000);cleanup=()=>{clearInterval(interval);clearInterval(moveTimer)};
 }
 })();
 </script>
