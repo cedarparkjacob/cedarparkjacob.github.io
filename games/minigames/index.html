@@ -104,12 +104,12 @@ button{font:inherit;cursor:pointer}
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 01</span><span class="game-type">KNOWLEDGE</span></div><h2>Pokémon or Medicine?</h2><p>Six names. Three Pokémon and three medicines. Select the Pokémon to score two points each.</p><button class="play-btn" data-game="pokemon">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 02</span><span class="game-type">REFLEX</span></div><h2>Freeze Frame</h2><p>A marker races along the numbers 1–2–3–4–5–4–3–2–1. Freeze it and score the number underneath.</p><button class="play-btn" data-game="reflex">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 03</span><span class="game-type">MEMORY</span></div><h2>Remember the Pattern</h2><p>Watch ten flashes across a 3 × 3 grid, then repeat the exact sequence. One mistake ends the run.</p><button class="play-btn" data-game="memory">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 04</span><span class="game-type">MATHS</span></div><h2>Ten-Second Maths</h2><p>Choose addition or multiplication. Answer each question within ten seconds using the four choices.</p><button class="play-btn" data-game="math">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 04</span><span class="game-type">MATHS</span></div><h2>Ten-Second Maths</h2><p>Choose addition or multiplication. Answer as many questions as possible in ten seconds total.</p><button class="play-btn" data-game="math">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 05</span><span class="game-type">OBSERVATION</span></div><h2>Odd One Out</h2><p>Find as many odd ones out as you can in 15 seconds. Wrong answers don't count against you.</p><button class="play-btn" data-game="odd">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 06</span><span class="game-type">PREDICTION</span></div><h2>Higher or Lower</h2><p>Predict whether the next card in a shuffled deck will be higher or lower. One wrong guess ends the game.</p><button class="play-btn" data-game="higher">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 07</span><span class="game-type">FOCUS</span></div><h2>Color Clash</h2><p>Ignore the word. Choose the color of the ink it's written in. Ten rounds of interference.</p><button class="play-btn" data-game="color">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 08</span><span class="game-type">QUICK COUNT</span></div><h2>Quick Count</h2><p>Count the symbols. The quantities increase each round, and one wrong answer ends the game.</p><button class="play-btn" data-game="count">PLAY <span>↗</span></button></article>
-<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 09</span><span class="game-type">NUMBER LOGIC</span></div><h2>Sequence Solver</h2><p>Spot the rule and fill in the missing number. Ten number patterns to solve.</p><button class="play-btn" data-game="sequence">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 07</span><span class="game-type">FOCUS</span></div><h2>Color Clash</h2><p>Ignore the word. Choose the color of the ink it's written in. A 15-second total color challenge.</p><button class="play-btn" data-game="color">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 08</span><span class="game-type">QUICK COUNT</span></div><h2>Quick Count</h2><p>Count the symbols. Quantities increase each round. You have 60 seconds total; one wrong answer ends the game.</p><button class="play-btn" data-game="count">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 09</span><span class="game-type">MEMORY</span></div><h2>Memory Match</h2><p>Find matching pairs of symbols in a 4 × 4 grid. Clear all eight pairs.</p><button class="play-btn" data-game="sequence">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 10</span><span class="game-type">SPEED</span></div><h2>Target Tap</h2><p>Hit as many targets as you can in ten seconds. The target moves after every hit.</p><button class="play-btn" data-game="target">PLAY <span>↗</span></button></article>
 </section>
 <section class="game-stage" id="gameStage" aria-live="polite">
@@ -120,7 +120,7 @@ button{font:inherit;cursor:pointer}
 <div class="stage-actions" id="stageActions"></div>
 </section>
 </main>
-<footer class="mg-footer"><span>© 2026 LUDDEN</span><span>MINI ARCADE / BUILD 001</span><a href="../../index.html" style="color:inherit;text-decoration:none">BACK TO BASE ↑</a></footer>
+<footer class="mg-footer"><span>© 2026 LUDDEN</span><span>MINI ARCADE / BUILD 002</span><a href="../../index.html" style="color:inherit;text-decoration:none">BACK TO BASE ↑</a></footer>
 </div>
 <script>
 (() => {
@@ -137,7 +137,7 @@ odd:{title:"Odd One Out",tag:"OBSERVATION",instructions:"Find as many odd ones o
 higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"Predict whether the next card in a shuffled deck will be higher or lower. One point per correct guess; the game ends on your first wrong guess.",start:startHigher},
 color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the INK COLOR, not the word being displayed. Ten rounds; one point for each correct answer.",start:startColor},
 count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. The quantities grow as you progress. One wrong answer ends the game.",start:startCount},
-sequence:{title:"Sequence Solver",tag:"NUMBER LOGIC",instructions:"Find the missing number in each sequence. Choose from four answers. Ten sequences, one point per correct answer.",start:startSequence},
+sequence:{title:"Sequence Solver",tag:"NUMBER LOGIC",instructions:"Find the missing number in each sequence. Choose from four answers. Match all eight pairs using as few turns as possible.",start:startSequence},
 target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in ten seconds. Each hit earns one point.",start:startTarget}
 };
 function setScore(n){score=n;scoreEl.textContent="SCORE "+score}
@@ -179,7 +179,7 @@ const nums=[1,2,3,4,5,4,3,2,1];let pos=0,dir=1,locked=false,interval;
 nums.forEach((n,i)=>{const p=document.createElement("div");p.className="reflex-point";p.textContent=n;p.dataset.i=i;track.append(p)});
 const ball=document.createElement("div");ball.className="reflex-ball";track.append(ball);content.append(track);
 function draw(){track.querySelectorAll(".reflex-point").forEach((p,i)=>p.classList.toggle("active",i===pos));ball.style.left=(pos/(nums.length-1)*100)+"%"}
-draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=8){pos=8;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},72.5);
+draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=8){pos=8;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},56);
 cleanup=()=>clearInterval(interval);
 actions.append(button("FREEZE",()=>{if(locked)return;locked=true;const n=nums[pos];setScore(n);setTimer("FROZEN");say("Frozen on "+n+". You scored "+n+" point"+(n===1?"":"s")+".","good");actions.replaceChildren(button("TRY AGAIN",()=>start("reflex")),button("BACK TO GAMES",close,"action-btn secondary"))}));
 }
@@ -198,35 +198,51 @@ function finishMemory(){clearTimeout(timer);actions.replaceChildren(button("PLAY
 cleanup=()=>clearTimeout(timer);
 }
 function startMath(){
-let mode=null,q=0,roundScore=0,clock=null,timeLeft=10;
-const modeWrap=document.createElement("div");modeWrap.className="math-options";modeWrap.append(button("ADDITION",()=>begin("add"),"choice"),button("MULTIPLICATION",()=>begin("mul"),"choice"));content.append(modeWrap);say("Choose a maths mode to begin.");
-function begin(m){mode=m;q=0;roundScore=0;setScore(0);next()}
-function next(){clearInterval(clock);if(q>=10){finish("Maths round complete");return}q++;timeLeft=10;setTimer("10.0s");content.innerHTML='<div class="big-center"><div class="mg-kicker">QUESTION '+q+' / 10</div><div class="progress-track"><div class="progress-fill" id="mathProgress"></div></div><div class="math-question" id="mathQ"></div><div class="answer-grid" id="mathAnswers"></div></div>';
-const a=Math.floor(Math.random()*9)+1;const b=Math.floor(Math.random()*9)+1;const answer=mode==="add"?a+b:a*b;$("#mathQ").textContent=a+(mode==="add"?" + ":" × ")+b+" = ?";
-const opts=choices(answer,[answer+pick([-10,-7,-4,-2,2,3,5,8,10]),answer+pick([-12,-6,-3,3,6,9]),answer+pick([-15,-8,-5,4,7,12])]);const box=$("#mathAnswers");
-opts.forEach(v=>box.append(button(v,()=>{clearInterval(clock);if(v===answer){roundScore++;setScore(roundScore);say("Correct!","good")}else say("Not quite. The answer was "+answer+".","bad");setTimeout(next,450)},"choice")));
-clock=setInterval(()=>{timeLeft-=.1;setTimer(Math.max(0,timeLeft).toFixed(1)+"s");const p=$("#mathProgress");if(p)p.style.width=((10-timeLeft)/10*100)+"%";if(timeLeft<=0){clearInterval(clock);say("Time! Answer: "+answer,"bad");setTimeout(next,500)}},100);
-}
+let mode=null,q=0,clock=null,remaining=10;
+const wrap=document.createElement("div");wrap.className="math-options";wrap.append(button("ADDITION",()=>begin("add"),"choice"),button("MULTIPLICATION",()=>begin("mul"),"choice"));content.append(wrap);say("Choose a mode to start the 10-second challenge.");
+function begin(m){mode=m;q=0;setScore(0);remaining=10;next();clock=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#mathProgress");if(p)p.style.width=((10-remaining)/10*100)+"%";if(remaining<=0){clearInterval(clock);finish("Time is up — "+score+" correct answers")}},100)}
+function next(){if(remaining<=0)return;q++;content.innerHTML='<div class="big-center"><div class="mg-kicker">QUESTION '+q+'</div><div class="progress-track"><div class="progress-fill" id="mathProgress"></div></div><div class="math-question" id="mathQ"></div><div class="answer-grid" id="mathAnswers"></div></div>';const a=Math.floor(Math.random()*9)+1,b=Math.floor(Math.random()*9)+1,answer=mode==="add"?a+b:a*b;$("#mathQ").textContent=a+(mode==="add"?" + ":" × ")+b+" = ?";const opts=choices(answer,[answer+pick([-10,-7,-4,-2,2,3,5,8,10]),answer+pick([-12,-6,-3,3,6,9]),answer+pick([-15,-8,-5,4,7,12])]),box=$("#mathAnswers");opts.forEach(v=>box.append(button(v,()=>{if(remaining<=0)return;if(v===answer){setScore(score+1);say("Correct!","good")}else say("Answer: "+answer,"bad");next()},"choice")))}
 cleanup=()=>clearInterval(clock);
 }
 function startOdd(){
 const rounds=[
 {q:["Mercury","Venus","Mars","Jupiter","Sirius"],a:"Sirius",why:"Sirius is a star; the others are planets."},
-{q:["Violin","Cello","Trumpet","Viola","Double bass"],a:"Trumpet",why:"Trumpet is a brass instrument; the others are strings."},
-{q:["Triangle","Square","Pentagon","Cube","Hexagon"],a:"Cube",why:"A cube is three-dimensional; the others are 2D shapes."},
+{q:["Violin","Cello","Trumpet","Viola","Double bass"],a:"Trumpet",why:"Trumpet is brass; the others are string instruments."},
+{q:["Triangle","Square","Pentagon","Cube","Hexagon"],a:"Cube",why:"A cube is three-dimensional; the others are 2D."},
 {q:["Eagle","Robin","Penguin","Salmon","Owl"],a:"Salmon",why:"Salmon is a fish; the others are birds."},
-{q:["Copper","Iron","Gold","Oxygen","Silver"],a:"Oxygen",why:"Oxygen is not a metal; the others are metals."},
-{q:["Monday","March","Friday","Sunday","Tuesday"],a:"March",why:"March is a month; the others are days."},
+{q:["Copper","Iron","Gold","Oxygen","Silver"],a:"Oxygen",why:"Oxygen is not a metal."},
+{q:["Monday","March","Friday","Sunday","Tuesday"],a:"March",why:"March is a month; the others are weekdays."},
 {q:["Kilogram","Metre","Litre","Second","Blue"],a:"Blue",why:"Blue is a color; the others are measurement units."},
 {q:["Oak","Pine","Maple","Rose","Granite"],a:"Granite",why:"Granite is a rock; the others are plants."},
 {q:["Square","Rectangle","Rhombus","Circle","Cylinder"],a:"Cylinder",why:"A cylinder is 3D; the others are 2D."},
-{q:["Whisper","Shout","Murmur","Speak","Sleep"],a:"Sleep",why:"Sleep is not a way of speaking."}
+{q:["Whisper","Shout","Murmur","Speak","Sleep"],a:"Sleep",why:"Sleep is not a way of speaking."},
+{q:["January","April","August","October","Tuesday"],a:"Tuesday",why:"Tuesday is a weekday; the others are months."},
+{q:["Hydrogen","Helium","Carbon","Nitrogen","Granite"],a:"Granite",why:"Granite is not an element."},
+{q:["Square","Cube","Sphere","Cone","Pyramid"],a:"Square",why:"A square is 2D; the others are 3D solids."},
+{q:["Shark","Dolphin","Whale","Octopus","Seal"],a:"Octopus",why:"An octopus is a mollusc; the others are vertebrates."},
+{q:["Python","Java","Ruby","Cobra","JavaScript"],a:"Cobra",why:"Cobra is a snake; the others are programming languages."},
+{q:["Red","Blue","Green","Cyan","Triangle"],a:"Triangle",why:"Triangle is a shape; the others are colors."},
+{q:["Piano","Guitar","Flute","Drums","Canvas"],a:"Canvas",why:"Canvas is an art surface; the others are instruments."},
+{q:["Inch","Foot","Yard","Mile","Gram"],a:"Gram",why:"Gram measures mass; the others measure length."},
+{q:["Celsius","Fahrenheit","Kelvin","Joule","Rankine"],a:"Joule",why:"Joule measures energy; the others are temperature scales."},
+{q:["Novel","Poem","Play","Biography","Sculpture"],a:"Sculpture",why:"Sculpture is a visual artwork; the others are literary forms."},
+{q:["Penny","Nickel","Dime","Quarter","Dollar bill"],a:"Dollar bill",why:"A dollar bill is paper currency; the others are coins."},
+{q:["Dog","Cat","Rabbit","Hamster","Eagle"],a:"Eagle",why:"Eagle is a bird; the others are mammals."},
+{q:["2","3","5","9","11"],a:"9",why:"Nine is not prime; the others are prime."},
+{q:["8","27","64","100","125"],a:"100",why:"100 is not a perfect cube."},
+{q:["April","June","September","November","December"],a:"December",why:"December has 31 days; the others have 30."},
+{q:["HTML","CSS","SQL","HTTP","Banana"],a:"Banana",why:"Banana is food; the others are technologies."},
+{q:["Atlantic","Pacific","Indian","Arctic","Sahara"],a:"Sahara",why:"Sahara is a desert; the others are oceans."},
+{q:["Kilobyte","Megabyte","Gigabyte","Terabyte","Kilometre"],a:"Kilometre",why:"Kilometre measures distance; the others measure data."},
+{q:["Venus","Earth","Mars","Jupiter","Pluto"],a:"Pluto",why:"Pluto is a dwarf planet."},
+{q:["Baker","Carpenter","Welder","Electrician","Saxophone"],a:"Saxophone",why:"Saxophone is an instrument; the others are trades."},
+{q:["Hockey","Tennis","Soccer","Basketball","Violin"],a:"Violin",why:"Violin is not a sport."},
+{q:["Rose","Tulip","Daisy","Fern","Granite"],a:"Granite",why:"Granite is a rock; the others are plants."}
 ];
-let current=0,remaining=15,clock=null,locked=false;
-function showRound(){const r=rounds[current++%rounds.length];content.innerHTML='<div class="mg-kicker big-center">FIND THE ODD ONE OUT</div><div class="big-center" style="color:var(--mg-muted);margin:8px 0 18px">Correct answers add a point. Wrong answers do not cost anything.</div>';const grid=renderChoices(shuffle(r.q),v=>{if(locked)return;if(v===r.a){setScore(score+1);say("Correct! "+r.why,"good");locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);setTimeout(()=>{if(remaining>0){locked=false;showRound()}},350)}else say("Not that one — try again.","")})}
-setTimer("15s");showRound();clock=setInterval(()=>{remaining--;setTimer(remaining+"s");if(remaining<=0){clearInterval(clock);finish("Time's up — "+score+" correct answers")}},1000);cleanup=()=>clearInterval(clock);
+let deck=shuffle(rounds),current=null,remaining=15,clock=null,locked=false;
+function showRound(){if(!deck.length)deck=shuffle(rounds);current=deck.pop();content.innerHTML='<div class="mg-kicker big-center">FIND THE ODD ONE OUT</div><div class="big-center" style="color:var(--mg-muted);margin:8px 0 18px">Random challenge — new each round.</div>';const grid=renderChoices(shuffle(current.q),v=>{if(locked)return;if(v===current.a){setScore(score+1);say("Correct! "+current.why,"good");locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);setTimeout(()=>{if(remaining>0){locked=false;showRound()}},300)}else say("Not that one — try again.","")})}
+setTimer("15.0s");showRound();clock=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");if(remaining<=0){clearInterval(clock);finish("Time is up — "+score+" correct answers")}},100);cleanup=()=>clearInterval(clock);
 }
-
 function startHigher(){
 const suits=["♠","♥","♦","♣"],ranks=[{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},{v:6,t:"6"},{v:7,t:"7"},{v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},{v:11,t:"J"},{v:12,t:"Q"},{v:13,t:"K"},{v:14,t:"A"}],deck=shuffle(suits.flatMap(s=>ranks.map(r=>({v:r.v,t:r.t,suit:s,red:s==="♥"||s==="♦"}))));
 let index=1,current=deck[0];
@@ -237,17 +253,20 @@ draw();
 }
 
 function startColor(){
-const names=["RED","BLUE","GREEN","YELLOW","PURPLE"];const hex={RED:"#fb7185",BLUE:"#60a5fa",GREEN:"#4ade80",YELLOW:"#facc15",PURPLE:"#c084fc"};let i=0;function next(){if(i===10){finish("Focus test complete");return}i++;const word=pick(names),ink=pick(names.filter(n=>n!==word));setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">CHOOSE THE INK COLOR</div><div class="word-card" style="color:'+hex[ink]+'">'+word+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(names).forEach(n=>grid.append(button(n,()=>{grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(n===ink){setScore(score+1);say("Correct — the ink was "+ink+".","good")}else say("The ink color was "+ink+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
+const names=["RED","BLUE","GREEN","YELLOW","PURPLE"],hex={RED:"#fb7185",BLUE:"#60a5fa",GREEN:"#4ade80",YELLOW:"#facc15",PURPLE:"#c084fc"};let remaining=15,clock=null,locked=false;
+function next(){if(remaining<=0)return;const word=pick(names),ink=pick(names.filter(n=>n!==word));content.innerHTML='<div class="mg-kicker big-center">CHOOSE THE INK COLOR</div><div class="word-card" style="color:'+hex[ink]+'">'+word+'</div><div class="progress-track"><div class="progress-fill" id="colorProgress"></div></div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(names).forEach(n=>grid.append(button(n,()=>{if(locked||remaining<=0)return;locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(n===ink){setScore(score+1);say("Correct — "+ink,"good")}else say("Ink color: "+ink,"bad");setTimeout(()=>{locked=false;next()},120)},"choice")));content.append(grid)}
+setTimer("15.0s");next();clock=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#colorProgress");if(p)p.style.width=((15-remaining)/15*100)+"%";if(remaining<=0){clearInterval(clock);finish("Time is up — "+score+" correct answers")}},100);cleanup=()=>clearInterval(clock);
 }
 function startCount(){
-let i=0,timer=null,remaining=6;
-function next(){clearInterval(timer);if(i===10){finish("Counting complete");return}i++;remaining=6;const min=i===1?1:(i*2-1),max=i===1?3:(i*2+2),n=Math.floor(Math.random()*(max-min+1))+min,sym=pick(["◆","●","★","▲","✚"]);setTimer("6.0s");content.innerHTML='<div class="mg-kicker big-center">ROUND '+i+' / 10 — HOW MANY?</div><div class="big-center" style="color:var(--mg-muted)">Count is increasing · range '+min+'–'+max+'</div><div class="count-display">'+Array.from({length:n},()=>'<span class="count-dot">'+sym+'</span>').join("")+'</div><div class="progress-track"><div class="progress-fill" id="countProgress"></div></div>';const opts=choices(n,[n+pick([-5,-3,-2,2,3,4]),n+pick([-6,-4,-1,1,4,6]),n+pick([-7,-3,2,5,7])]),grid=document.createElement("div");grid.className="choice-grid";opts.forEach(v=>grid.append(button(v,()=>answer(v),"choice")));content.append(grid);function answer(v){clearInterval(timer);grid.querySelectorAll("button").forEach(b=>b.disabled=true);if(v===n){setScore(score+1);say("Exactly right!","good");setTimeout(next,550)}else{say("Wrong answer. There were "+n+".","bad");setTimeout(()=>finish("Run ended at round "+i),650)}}timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((6-remaining)/6*100)+"%";if(remaining<=0){clearInterval(timer);say("Time! There were "+n+".","bad");setTimeout(()=>finish("Time ran out on round "+i),600)}},100)}
-next();cleanup=()=>clearInterval(timer);
+let i=0,timer=null,remaining=60,locked=false;
+function next(){if(remaining<=0||locked)return;if(i===10){finish("Counting complete");return}i++;const min=i===1?1:i*2-1,max=i===1?3:i*2+2,n=Math.floor(Math.random()*(max-min+1))+min,sym=pick(["◆","●","★","▲","✚"]);content.innerHTML='<div class="mg-kicker big-center">ROUND '+i+' / 10 — HOW MANY?</div><div class="big-center" style="color:var(--mg-muted)">Count is increasing · range '+min+'–'+max+'</div><div class="count-display">'+Array.from({length:n},()=>'<span class="count-dot">'+sym+'</span>').join("")+'</div><div class="progress-track"><div class="progress-fill" id="countProgress"></div></div>';const opts=choices(n,[n+pick([-5,-3,-2,2,3,4]),n+pick([-6,-4,-1,1,4,6]),n+pick([-7,-3,2,5,7])]),grid=document.createElement("div");grid.className="choice-grid";opts.forEach(v=>grid.append(button(v,()=>{if(locked||remaining<=0)return;if(v===n){setScore(score+1);say("Exactly right!","good");locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);setTimeout(()=>{locked=false;next()},250)}else{locked=true;grid.querySelectorAll("button").forEach(b=>b.disabled=true);say("Wrong answer. There were "+n+".","bad");setTimeout(()=>finish("Run ended at round "+i),450)}},"choice")));content.append(grid)}
+setTimer("60.0s");next();timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((60-remaining)/60*100)+"%";if(remaining<=0){clearInterval(timer);finish("Time is up — reached round "+i)}},100);cleanup=()=>clearInterval(timer);
 }
-
 function startSequence(){
-const make=(start,diff)=>({s:[start,start+diff,start+2*diff,null,start+4*diff],a:start+3*diff,opts:[start+3*diff,start+2*diff,start+4*diff,start+5*diff]});
-const rounds=[make(3,4),make(2,3),make(5,5),make(1,7),make(10,10),make(2,6),make(4,8),make(7,2),make(12,3),make(1,9)];let i=0;function next(){if(i===10){finish("Sequence solver complete");return}const r=rounds[i++];setTimer(i+" / 10");content.innerHTML='<div class="mg-kicker big-center">WHAT NUMBER IS MISSING?</div><div class="sequence">'+r.s.map(v=>'<span class="'+(v===null?"missing":"")+'">'+(v===null?"?":v)+'</span>').join("")+'</div>';const grid=document.createElement("div");grid.className="choice-grid";shuffle(r.opts).forEach(v=>grid.append(button(v,()=>{grid.querySelectorAll("button").forEach(b=>{b.disabled=true;if(Number(b.textContent)===r.a)b.classList.add("correct");else if(Number(b.textContent)===v)b.classList.add("wrong")});if(v===r.a){setScore(score+1);say("Correct!","good")}else say("The missing number was "+r.a+".","bad");setTimeout(next,650)},"choice")));content.append(grid)}next();
+const symbols=["●","◆","★","▲","♥","☀","✚","♣"],deck=shuffle([...symbols,...symbols]);let first=null,second=null,matched=0,moves=0,locked=false;
+content.innerHTML='<div class="big-center"><div class="mg-kicker">FIND ALL EIGHT PAIRS</div><p style="color:var(--mg-muted)">Choose two tiles. Matching pairs stay visible.</p></div>';const grid=document.createElement("div");grid.style.cssText="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:520px;margin:18px auto";const tiles=[];
+deck.forEach(symbol=>{const b=button("?",()=>flip(tiles.indexOf(b)),"choice");b.style.cssText="aspect-ratio:1;min-height:64px;font-size:clamp(22px,5vw,34px)";b.dataset.symbol=symbol;grid.append(b);tiles.push(b)});content.append(grid);const label=document.createElement("div");label.className="big-center";label.style.color="var(--mg-muted)";label.textContent="Moves: 0";content.append(label);setTimer("8 PAIRS");
+function flip(index){const tile=tiles[index];if(locked||tile.disabled||tile===first)return;tile.textContent=tile.dataset.symbol;tile.classList.add("selected");if(!first){first=tile;return}second=tile;moves++;label.textContent="Moves: "+moves;locked=true;if(first.dataset.symbol===second.dataset.symbol){first.classList.add("correct");second.classList.add("correct");first.disabled=second.disabled=true;matched++;setScore(matched);first=null;second=null;locked=false;if(matched===8){say("All pairs found in "+moves+" moves!","good");setTimeout(()=>finish("All eight pairs matched"),350)}}else setTimeout(()=>{first.textContent="?";second.textContent="?";first.classList.remove("selected");second.classList.remove("selected");first=null;second=null;locked=false},650)}
 }
 function startTarget(){
 const arena=document.createElement("div");arena.className="target-arena";content.append(arena);let left=10,interval=null,moveTimer=null;const target=button("✦",hit,"target");arena.append(target);let hits=0;
