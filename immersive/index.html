@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090d18">
-<title>Immersive Mew — Crack Packs</title>
+<title>Immersive Cards — Crack Packs</title>
 <style>
 :root{color-scheme:dark;--bg:#090d18;--panel:#111a2c;--line:#293954;--text:#eef2ff;--muted:#9aa9c1;--purple:#9b7cff;--cyan:#5ee7ed;--gold:#f5c86b}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% -20%,#26365b 0,transparent 55%),var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}body{min-height:100vh}.top{height:66px;padding:0 clamp(15px,4vw,48px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff14;background:#090d18d9;backdrop-filter:blur(16px);position:sticky;top:0;z-index:3}.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:900;letter-spacing:.06em}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#0891b2)}.brand small{display:block;color:var(--muted);font-size:8px;letter-spacing:.16em}.back{color:var(--cyan);text-decoration:none;font-size:12px}main{width:min(1120px,calc(100% - 30px));margin:35px auto 70px}.eyebrow{color:var(--cyan);font-size:10px;font-weight:850;letter-spacing:.2em}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:25px}.hero h1{font-size:clamp(36px,7vw,64px);letter-spacing:-.06em;line-height:.98;margin:9px 0 12px}.hero h1 span{color:var(--purple)}.hero p{margin:0;color:var(--muted);max-width:620px}.count{border:1px solid var(--line);background:#111a2cbb;padding:12px 15px;border-radius:12px;color:var(--muted);white-space:nowrap}.count b{color:var(--text);font-size:21px;display:block}.notice{margin:16px 0;padding:13px 15px;background:#111a2cbb;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px}.card{appearance:none;text-align:left;width:100%;padding:8px;border:1px solid #293954;border-radius:15px;background:linear-gradient(155deg,#17243a,#0d1525);color:var(--text);cursor:pointer;min-width:0;transition:transform .18s,border-color .18s,box-shadow .18s;touch-action:pan-y}.card:hover,.card:focus-visible{transform:translateY(-3px);border-color:var(--purple);box-shadow:0 10px 30px #0005;outline:none}.card img{display:block;width:100%;aspect-ratio:3/4;object-fit:contain;background:#080e19;border-radius:9px}.card-info{padding:9px 3px 4px}.card-name{font-weight:850;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-meta{font-size:10px;color:var(--muted);margin-top:3px}.card-hint{font-size:9px;color:var(--cyan);margin-top:7px;letter-spacing:.04em}.empty{grid-column:1/-1;text-align:center;padding:35px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
@@ -44,9 +44,9 @@
 <body>
 <header class="top"><a class="brand" href="/crackpacks/"><span class="mark">P</span><span>POCKET<span style="color:#9aa9c1">DEX</span><small>CRACK PACKS / IMMERSIVE TEST</small></span></a><a class="back" href="/crackpacks/">← Back to Crack Packs</a></header>
 <main>
-<section class="hero"><div><div class="eyebrow">IMMERSIVE PLAYBACK LAB / TEST 01</div><h1>Mew <span>Immersive.</span></h1><p>Ten Mew card versions from the Crack Packs catalog. Tap a card or press and hold to launch the Poké Ball transition and test the full-screen experience.</p></div><div class="count"><b id="cardCount">—</b>MEW VERSIONS</div></section>
-<div class="notice" id="status" role="status">Loading Mew cards from the Crack Packs catalog…</div>
-<section class="grid" id="cards" aria-label="Mew card versions"><div class="empty">Loading card catalog…</div></section>
+<section class="hero"><div><div class="eyebrow">IMMERSIVE PLAYBACK LAB</div><h1>Immersive <span>Cards.</span></h1><p>Browse every immersive card in the catalog. Tap or press and hold any card to launch the fireworks opening and full-screen animation.</p></div><div class="count"><b id="cardCount">—</b>IMMERSIVE CARDS</div></section>
+<div class="notice" id="status" role="status">Loading immersive cards from the Crack Packs catalog…</div>
+<section class="grid" id="cards" aria-label="Immersive card versions"><div class="empty">Loading card catalog…</div></section>
 </main>
 <div id="transition" aria-hidden="true"><div class="fx-layer" id="fxLayer"></div><div class="ball"><span class="ball-line"></span><span class="ball-center"></span></div><div class="transition-label">PREPARING IMMERSIVE VIEW</div></div>
 <section id="player" aria-label="Immersive card player" aria-hidden="true">
@@ -80,7 +80,7 @@ function makeCard(c,i){
  const info=document.createElement('div');info.className='card-info';
  const name=document.createElement('div');name.className='card-name';name.textContent=c.name||'Mew';
  const meta=document.createElement('div');meta.className='card-meta';meta.textContent=cardSet(c)+(cardNumber(c)?' · '+cardNumber(c):'');
- const hint=document.createElement('div');hint.className='card-hint';hint.textContent='▶ '+FX_NAMES[i%10].toUpperCase()+' · PLAY VIDEO';
+ const hint=document.createElement('div');hint.className='card-hint';hint.textContent='✦ FIREWORKS · PLAY IMMERSIVE';
  info.append(name,meta,hint);button.append(img,info);
  const launch=()=>{if(button.dataset.launched==='1')return;button.dataset.launched='1';openCard(c,img.src);setTimeout(()=>button.dataset.launched='0',900)};
  button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;longTriggered=false;clearTimeout(longTimer);longTimer=setTimeout(()=>{longTriggered=true;launch()},480)});
@@ -98,10 +98,10 @@ function showPlayer(c,imageUrl){
  video.onerror=()=>showComingSoon(imageUrl);
  const p=video.play();if(p&&p.catch)p.catch(()=>{$('#playerMessage').textContent='Tap Play to start the immersive video with sound.';});
 }
-function playEffect(index){
+function playEffect(){
  clearTimeout(fxTimer);const layer=$('#fxLayer');layer.innerHTML='';
  for(let i=0;i<42;i++){
-  const el=document.createElement('span');el.className='fx-particle '+FX_TYPES[index];
+  const el=document.createElement('span');el.className='fx-particle spark';
   const angle=(Math.PI*2*i/42)+(Math.random()-.5)*.24;
   const distance=130+Math.random()*Math.max(innerWidth,innerHeight)*.48;
   el.style.setProperty('--tx',(Math.cos(angle)*distance)+'px');
@@ -158,7 +158,7 @@ async function init(){
   cardsEl.innerHTML='';mew.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
   $('#cardCount').textContent='0 / 10';statusEl.textContent='Could not load the Mew card catalog: '+error.message;
-  cardsEl.innerHTML='<div class="empty">The card catalog could not be loaded, so the ten real Mew versions cannot be listed yet. The immersive player is ready once the catalog is reachable.</div>';
+  cardsEl.innerHTML='<div class="empty">The card catalog could not be loaded, so immersive cards cannot be listed yet.</div>';
  }
 }
 init();
