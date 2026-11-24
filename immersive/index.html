@@ -44,7 +44,7 @@
 <body>
 <header class="top"><a class="brand" href="/crackpacks/"><span class="mark">P</span><span>POCKET<span style="color:#9aa9c1">DEX</span><small>CRACK PACKS / IMMERSIVE TEST</small></span></a><a class="back" href="/crackpacks/">← Back to Crack Packs</a></header>
 <main>
-<section class="hero"><div><div class="eyebrow">IMMERSIVE PLAYBACK LAB</div><h1>Immersive <span>Cards.</span></h1><p>Browse every immersive card in the catalog. Tap or press and hold any card to launch the fireworks opening and full-screen animation.</p></div><div class="count"><b id="cardCount">—</b>IMMERSIVE CARDS</div></section>
+<section class="hero"><div><div class="eyebrow">IMMERSIVE PLAYBACK LAB</div><h1>Immersive <span>Cards.</span></h1><p>Browse every immersive card in the live card catalog—not just cards with known video files. Tap or press and hold any card to launch its full-screen view.</p></div><div class="count"><b id="cardCount">—</b>IMMERSIVE CARDS IN CATALOG</div></section>
 <div class="notice" id="status" role="status">Loading immersive cards from the Crack Packs catalog…</div>
 <section class="grid" id="cards" aria-label="Immersive card versions"><div class="empty">Loading card catalog…</div></section>
 </main>
@@ -185,7 +185,7 @@ async function init(){
   if(!immersive.length)throw new Error('The catalog loaded, but it did not contain any cards marked as immersive (IM).');
   immersive.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''))||String(a.number_label||a.number||'').localeCompare(String(b.number_label||b.number||''),undefined,{numeric:true}));
   $('#cardCount').textContent=immersive.length;
-  statusEl.textContent='Loaded '+immersive.length+' immersive cards. Every card uses the fireworks opening. Matching immersive animations are connected where available; cards without a matched source show a coming-soon preview.';
+  const mappedCount=immersive.filter(c=>VIDEO_URLS[cardVideoNumber(c)]||VIDEO_FILES[cardVideoNumber(c)]).length;\n  statusEl.textContent='Loaded all '+immersive.length+' immersive cards found in the catalog. '+mappedCount+' have a video source configured; every other card remains listed and shows “Immersive video coming soon.” The video list does not limit which cards appear.';
   cardsEl.innerHTML='';immersive.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
   $('#cardCount').textContent='0';statusEl.textContent='Could not load the immersive card catalog: '+error.message;
