@@ -185,7 +185,8 @@ async function init(){
   if(!immersive.length)throw new Error('The catalog loaded, but it did not contain any cards marked as immersive (IM).');
   immersive.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''))||String(a.number_label||a.number||'').localeCompare(String(b.number_label||b.number||''),undefined,{numeric:true}));
   $('#cardCount').textContent=immersive.length;
-  const mappedCount=immersive.filter(c=>VIDEO_URLS[cardVideoNumber(c)]||VIDEO_FILES[cardVideoNumber(c)]).length;\n  statusEl.textContent='Loaded all '+immersive.length+' immersive cards found in the catalog. '+mappedCount+' have a video source configured; every other card remains listed and shows “Immersive video coming soon.” The video list does not limit which cards appear.';
+  const mappedCount=immersive.filter(c=>VIDEO_URLS[cardVideoNumber(c)]||VIDEO_FILES[cardVideoNumber(c)]).length;
+  statusEl.textContent='Loaded all '+immersive.length+' immersive cards found in the catalog. '+mappedCount+' have a video source configured; every other card remains listed and shows “Immersive video coming soon.” The video list does not limit which cards appear.';
   cardsEl.innerHTML='';immersive.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
   $('#cardCount').textContent='0';statusEl.textContent='Could not load the immersive card catalog: '+error.message;
