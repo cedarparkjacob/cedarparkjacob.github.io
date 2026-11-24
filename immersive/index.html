@@ -77,10 +77,9 @@ const VIDEO_FILES=[
  {name:'Suicune ex',num:'090',file:'Animación carta inmersiva Suicune ex (Manantial Oculto 90 TCG Pocket).webm'}
 ];
 const videoForCard=c=>{
- const name=String(c.name||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const number=String(cardNumber(c)).match(/\\d{1,3}/)?.[0]?.padStart(3,'0');
- const entry=VIDEO_FILES.find(v=>v.num===number&&name===v.name.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim());
- return entry?'https://www.wikidex.net/wiki/Special:Redirect/file/'+encodeURIComponent(entry.file):'';
+ const entry=VIDEO_FILES.find(v=>v.num===number);
+ return entry?'https://www.wikidex.net/wiki/Special:FilePath/'+encodeURIComponent(entry.file):'';
 };
 const $=s=>document.querySelector(s);
 const cardsEl=$('#cards'),statusEl=$('#status'),player=$('#player'),video=$('#video'),still=$('#stillCard'),transition=$('#transition');
