@@ -299,7 +299,7 @@ function end(message){if(finished)return;finished=true;clearInterval(clock);clea
 preview=setTimeout(begin,2000);cleanup=()=>{finished=true;clearInterval(clock);clearTimeout(preview)};
 }
 function startCircle(){
-const values=[5,4,3,2,1,0,-1,-2,-3,-4,-5];let pos=0,locked=false,interval=null;
+const values=[5,4,3,2,1,-1,-2,-3,-4,-5];let pos=0,locked=false,interval=null;
 const arena=document.createElement("div");arena.className="circle-freeze";const points=[];
 values.forEach((value,i)=>{const angle=(-90+i*(360/values.length))*Math.PI/180;const radius=39;const point=document.createElement("div");point.className="circle-point";point.textContent=value>0?"+"+value:String(value);point.style.left=(50+Math.cos(angle)*radius)+"%";point.style.top=(50+Math.sin(angle)*radius)+"%";arena.append(point);points.push(point)});
 content.append(arena);
