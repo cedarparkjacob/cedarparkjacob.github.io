@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07111f">
-<meta name="description" content="Ten quick mini-games in the Ludden arcade.">
+<meta name="description" content="Eleven quick mini-games in the Ludden arcade.">
 <title>Mini Games — Ludden</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,6 +79,15 @@ button{font:inherit;cursor:pointer}
 .sequence{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:30px 0}
 .sequence span{font:700 clamp(20px,4vw,30px) "DM Mono",monospace;background:#172941;border:1px solid var(--mg-line);border-radius:10px;padding:12px 15px}
 .sequence .missing{color:var(--mg-cyan);border-style:dashed}
+.circle-freeze{width:min(82vw,360px);aspect-ratio:1;position:relative;margin:24px auto 34px;border-radius:50%;background:radial-gradient(circle,rgba(94,234,212,.05) 0 42%,transparent 43%),rgba(5,14,26,.45);border:1px dashed #3a506e}
+.circle-freeze:before{content:"";position:absolute;inset:12%;border:3px solid #31445f;border-radius:50%;box-shadow:0 0 24px rgba(94,234,212,.08)}
+.circle-point{position:absolute;width:42px;height:42px;margin:0;border-radius:50%;display:grid;place-items:center;background:#1b2c45;border:1px solid #4b6381;color:var(--mg-text);font:700 15px "DM Mono",monospace;transform:translate(-50%,-50%)}
+.circle-point.active{background:var(--mg-purple);color:#100d20;border-color:#e2d7ff;box-shadow:0 0 25px rgba(167,139,250,.65);transform:translate(-50%,-50%) scale(1.18)}
+.memory-match-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;max-width:520px;margin:18px auto}
+.memory-card{aspect-ratio:1;min-height:58px;font-size:clamp(22px,5vw,34px);padding:4px}
+.memory-card.face-down{background:linear-gradient(145deg,#243a59,#14243a);color:var(--mg-cyan);border-color:#526b8d}
+.memory-card.matched{border-color:var(--mg-green);background:rgba(134,239,172,.14);color:var(--mg-green)}
+.memory-card:disabled{opacity:1}
 .target-arena{position:relative;height:260px;border:1px dashed #3a506e;border-radius:16px;overflow:hidden;background:rgba(5,14,26,.45)}
 .target{position:absolute;width:54px;height:54px;border-radius:50%;border:3px solid white;background:var(--mg-purple);box-shadow:0 0 24px rgba(167,139,250,.5);display:grid;place-items:center;color:#100d20;font-size:20px;font-weight:900}
 .result-panel{text-align:center;padding:30px 12px}
@@ -97,8 +106,8 @@ button{font:inherit;cursor:pointer}
 </header>
 <main>
 <section class="mg-hero">
-<div><div class="mg-eyebrow">ZONE 01 / MINI ARCADE</div><h1>Ten games.<br><span>One more go.</span></h1><p>Quick challenges for memory, reflexes, pattern recognition, and a little bit of luck. Pick a game, press play, and see how you do.</p></div>
-<div class="mg-count">10 EXPERIMENTS / BUILD 001</div>
+<div><div class="mg-eyebrow">ZONE 01 / MINI ARCADE</div><h1>Eleven games.<br><span>One more go.</span></h1><p>Quick challenges for memory, reflexes, pattern recognition, and a little bit of luck. Pick a game, press play, and see how you do.</p></div>
+<div class="mg-count">11 EXPERIMENTS / BUILD 003</div>
 </section>
 <section class="game-grid" id="gameGrid" aria-label="Mini games">
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 01</span><span class="game-type">KNOWLEDGE</span></div><h2>Pokémon or Medicine?</h2><p>Six names. Three Pokémon and three medicines. Select the Pokémon to score two points each.</p><button class="play-btn" data-game="pokemon">PLAY <span>↗</span></button></article>
@@ -111,6 +120,7 @@ button{font:inherit;cursor:pointer}
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 08</span><span class="game-type">QUICK COUNT</span></div><h2>Quick Count</h2><p>Count the symbols. Quantities increase each round. You have 60 seconds total; one wrong answer ends the game.</p><button class="play-btn" data-game="count">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 09</span><span class="game-type">MEMORY</span></div><h2>Memory Match</h2><p>Find matching pairs of symbols in a 4 × 4 grid. Clear all eight pairs.</p><button class="play-btn" data-game="sequence">PLAY <span>↗</span></button></article>
 <article class="game-card"><div class="game-card-top"><span class="game-number">GAME 10</span><span class="game-type">SPEED</span></div><h2>Target Tap</h2><p>Hit as many targets as you can in ten seconds. The target moves after every hit.</p><button class="play-btn" data-game="target">PLAY <span>↗</span></button></article>
+<article class="game-card"><div class="game-card-top"><span class="game-number">GAME 11</span><span class="game-type">REFLEX</span></div><h2>Circle Freeze</h2><p>A marker loops around a circle through +5 to −5 and back again. Freeze it on a number to score.</p><button class="play-btn" data-game="circle">PLAY <span>↗</span></button></article>
 </section>
 <section class="game-stage" id="gameStage" aria-live="polite">
 <div class="stage-head"><div><div class="mg-kicker" id="stageKicker">GAME</div><h2 id="stageTitle">Game title</h2></div><div class="stage-tools"><span class="score-pill" id="stageScore">SCORE 0</span><span class="timer-pill" id="stageTimer">READY</span><button class="action-btn secondary" id="closeGame">CLOSE ✕</button></div></div>
@@ -120,7 +130,7 @@ button{font:inherit;cursor:pointer}
 <div class="stage-actions" id="stageActions"></div>
 </section>
 </main>
-<footer class="mg-footer"><span>© 2026 LUDDEN</span><span>MINI ARCADE / BUILD 002</span><a href="../../index.html" style="color:inherit;text-decoration:none">BACK TO BASE ↑</a></footer>
+<footer class="mg-footer"><span>© 2026 LUDDEN</span><span>MINI ARCADE / BUILD 003</span><a href="../../index.html" style="color:inherit;text-decoration:none">BACK TO BASE ↑</a></footer>
 </div>
 <script>
 (() => {
@@ -138,7 +148,8 @@ higher:{title:"Higher or Lower",tag:"PREDICTION",instructions:"Predict whether t
 color:{title:"Color Clash",tag:"FOCUS",instructions:"Choose the ink color, not the word. Score as many as you can in 15 seconds total.",start:startColor},
 count:{title:"Quick Count",tag:"QUICK COUNT",instructions:"Count the symbols shown, then choose the correct number. Quantities grow each round. You have 60 seconds total; one wrong answer ends the game.",start:startCount},
 sequence:{title:"Memory Match",tag:"MEMORY",instructions:"Find all eight matching pairs in the 4 × 4 grid. Select two tiles at a time; mismatches flip back. Score is the number of pairs found.",start:startSequence},
-target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in ten seconds. Each hit earns one point.",start:startTarget}
+target:{title:"Target Tap",tag:"SPEED",instructions:"Tap the moving target as many times as possible in ten seconds. Each hit earns one point.",start:startTarget},
+circle:{title:"Circle Freeze",tag:"REFLEX",instructions:"The marker travels around a circular track through +5 to −5, then reverses direction. Press FREEZE to stop it and score the number underneath.",start:startCircle}
 };
 function setScore(n){score=n;scoreEl.textContent="SCORE "+score}
 function setTimer(s){timerEl.textContent=s}
@@ -264,10 +275,25 @@ function next(){if(remaining<=0||locked)return;if(i===10){finish("Counting compl
 setTimer("60.0s");next();timer=setInterval(()=>{remaining-=.1;setTimer(Math.max(0,remaining).toFixed(1)+"s");const p=$("#countProgress");if(p)p.style.width=((60-remaining)/60*100)+"%";if(remaining<=0){clearInterval(timer);finish("Time is up — reached round "+i)}},100);cleanup=()=>clearInterval(timer);
 }
 function startSequence(){
-const symbols=["●","◆","★","▲","♥","☀","✚","♣"],deck=shuffle([...symbols,...symbols]);let first=null,second=null,matched=0,moves=0,locked=false;
-content.innerHTML='<div class="big-center"><div class="mg-kicker">FIND ALL EIGHT PAIRS</div><p style="color:var(--mg-muted)">Choose two tiles. Matching pairs stay visible.</p></div>';const grid=document.createElement("div");grid.style.cssText="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:520px;margin:18px auto";const tiles=[];
-deck.forEach(symbol=>{const b=button("?",()=>flip(tiles.indexOf(b)),"choice");b.style.cssText="aspect-ratio:1;min-height:64px;font-size:clamp(22px,5vw,34px)";b.dataset.symbol=symbol;grid.append(b);tiles.push(b)});content.append(grid);const label=document.createElement("div");label.className="big-center";label.style.color="var(--mg-muted)";label.textContent="Moves: 0";content.append(label);setTimer("8 PAIRS");
-function flip(index){const tile=tiles[index];if(locked||tile.disabled||tile===first)return;tile.textContent=tile.dataset.symbol;tile.classList.add("selected");if(!first){first=tile;return}second=tile;moves++;label.textContent="Moves: "+moves;locked=true;if(first.dataset.symbol===second.dataset.symbol){first.classList.add("correct");second.classList.add("correct");first.disabled=second.disabled=true;matched++;setScore(matched);first=null;second=null;locked=false;if(matched===8){say("All pairs found in "+moves+" moves!","good");setTimeout(()=>finish("All eight pairs matched"),350)}}else setTimeout(()=>{first.textContent="?";second.textContent="?";first.classList.remove("selected");second.classList.remove("selected");first=null;second=null;locked=false},650)}
+const symbols=["●","◆","★","▲","♥","☀","✚","♣"],deck=shuffle([...symbols,...symbols]);let first=null,matched=0,moves=0,locked=true,remaining=10,clock=null,preview=null,finished=false;
+content.innerHTML='<div class="big-center"><div class="mg-kicker">MEMORIZE THE CARDS</div><p style="color:var(--mg-muted)">All cards are face up. Remember their positions — they flip in 2 seconds.</p></div>';
+const grid=document.createElement("div");grid.className="memory-match-grid";const tiles=[];
+deck.forEach(symbol=>{const b=button(symbol,()=>flip(b),"choice memory-card");b.dataset.symbol=symbol;b.disabled=true;grid.append(b);tiles.push(b)});content.append(grid);
+const status=document.createElement("div");status.className="big-center";status.style.color="var(--mg-muted)";status.textContent="Memorize the layout…";content.append(status);setTimer("MEMORIZE");
+function begin(){if(finished)return;locked=false;tiles.forEach(b=>{b.textContent="?";b.classList.add("face-down");b.disabled=false});status.textContent="Find all eight pairs before time runs out.";setTimer("10.0s");clock=setInterval(()=>{remaining=Math.max(0,remaining-.1);setTimer(remaining.toFixed(1)+"s");if(remaining<=0)end("Time's up — "+matched+" of 8 pairs found.")},100)}
+function flip(tile){if(locked||finished||tile.disabled||tile===first)return;tile.textContent=tile.dataset.symbol;tile.classList.remove("face-down");if(!first){first=tile;return}moves++;const second=tile;locked=true;if(first.dataset.symbol===second.dataset.symbol){first.classList.add("matched");second.classList.add("matched");first.disabled=second.disabled=true;matched++;setScore(matched);first=null;locked=false;status.textContent="Pairs: "+matched+" / 8 · Moves: "+moves;if(matched===8)end("All eight pairs found in "+moves+" moves!")}else{const previous=first;first=null;setTimeout(()=>{if(finished)return;[previous,second].forEach(b=>{b.textContent="?";b.classList.add("face-down")});locked=false;status.textContent="Pairs: "+matched+" / 8 · Moves: "+moves},500)}}
+function end(message){if(finished)return;finished=true;clearInterval(clock);clearTimeout(preview);tiles.forEach(b=>b.disabled=true);finish(message)}
+preview=setTimeout(begin,2000);cleanup=()=>{finished=true;clearInterval(clock);clearTimeout(preview)};
+}
+function startCircle(){
+const values=[5,4,3,2,1,0,-1,-2,-3,-4,-5];let pos=0,dir=1,locked=false,interval=null;
+const arena=document.createElement("div");arena.className="circle-freeze";const points=[];
+values.forEach((value,i)=>{const angle=(-90+i*(360/values.length))*Math.PI/180;const radius=39;const point=document.createElement("div");point.className="circle-point";point.textContent=value>0?"+"+value:String(value);point.style.left=(50+Math.cos(angle)*radius)+"%";point.style.top=(50+Math.sin(angle)*radius)+"%";arena.append(point);points.push(point)});
+content.append(arena);
+function draw(){points.forEach((p,i)=>p.classList.toggle("active",i===pos))}
+draw();interval=setInterval(()=>{if(locked)return;pos+=dir;if(pos>=values.length-1){pos=values.length-1;dir=-1}else if(pos<=0){pos=0;dir=1}draw()},56);
+cleanup=()=>clearInterval(interval);
+actions.append(button("FREEZE",()=>{if(locked)return;locked=true;const value=values[pos];setScore(value);setTimer("FROZEN");say("Frozen on "+(value>0?"+"+value:value)+". Your score is "+value+".",value>=0?"good":"bad");actions.replaceChildren(button("TRY AGAIN",()=>start("circle")),button("BACK TO GAMES",close,"action-btn secondary"))}));
 }
 function startTarget(){
 const arena=document.createElement("div");arena.className="target-arena";content.append(arena);let left=10,interval=null,moveTimer=null;const target=button("✦",hit,"target");arena.append(target);let hits=0;
