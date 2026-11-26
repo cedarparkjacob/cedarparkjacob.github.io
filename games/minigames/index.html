@@ -179,7 +179,7 @@ async function startPokemon(){
 content.textContent="Loading the complete Pokémon species list…";
 let species;
 try{
-if(!allPokemonSpeciesPromise)allPokemonSpeciesPromise=fetch("https://pokeapi.co/api/v2/pokemon-species?limit=2000").then(r=>{if(!r.ok)throw new Error("Pokémon list unavailable");return r.json()}).then(data=>data.results.map(item=>({name:item.name,id:Number(item.url.match(/\\/(\\d+)\\/$/)?.[1])})).filter(x=>x.id>0).sort((a,b)=>a.id-b.id));
+if(!allPokemonSpeciesPromise)allPokemonSpeciesPromise=fetch("https://pokeapi.co/api/v2/pokemon-species?limit=2000").then(r=>{if(!r.ok)throw new Error("Pokémon list unavailable");return r.json()}).then(data=>data.results.map(item=>({name:item.name,id:Number(item.url.match(/\/(\d+)\/$/)?.[1])})).filter(x=>x.id>0).sort((a,b)=>a.id-b.id));
 species=await allPokemonSpeciesPromise;
 }catch(error){
 allPokemonSpeciesPromise=null;
