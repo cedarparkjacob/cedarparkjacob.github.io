@@ -154,7 +154,7 @@ const YOUTUBE_IDS={
 const VIDEO_FILES={};
 function cardKey(c){
  const raw=String(c.number_label||c.number||c.card_number||'');
- const digits=(raw.match(/(\\d{1,3})(?:\\D*)$/)||raw.match(/\\d{1,3}/)||[])[0]||'';
+ const digits=(raw.match(/(\d{1,3})(?:\D*)$/)||raw.match(/\d{1,3}/)||[])[0]||'';
  const number=digits.padStart(3,'0');
  const set=String(c.set||c.set_code||'').trim().toUpperCase();
  return set+'|'+number;
