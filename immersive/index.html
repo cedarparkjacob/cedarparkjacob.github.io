@@ -308,7 +308,7 @@ function stopSources(){
 function embedYoutube(id){
  const frame=$('#youtubeFrame');
  const origin=encodeURIComponent(location.origin);
- frame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&playsinline=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&origin='+origin;
+ frame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&playsinline=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&autohide=1&showinfo=0&enablejsapi=1&origin='+origin;
  frame.className='full';frame.style.display='block';youtubeActive=true;youtubePaused=false;
 }
 function setSourceMode(){
@@ -397,7 +397,7 @@ function togglePause(){
 }
 $('#pauseBtn').addEventListener('click',togglePause);
 $('#exitBtn').addEventListener('click',exitPlayer);
-$('#tapShield').addEventListener('click',()=>{player.classList.toggle('controls-visible');});
+function showControlsTemporarily(){player.classList.add('controls-visible');clearTimeout(controlsTimer);controlsTimer=setTimeout(()=>player.classList.remove('controls-visible'),2600);}\n$('#tapShield').addEventListener('click',()=>{if(player.classList.contains('controls-visible')){player.classList.remove('controls-visible');clearTimeout(controlsTimer);}else showControlsTemporarily();});\nplayer.addEventListener('click',e=>{if(e.target.closest('.player-actions')){clearTimeout(controlsTimer);}});
 document.addEventListener('keydown',e=>{if(!player.classList.contains('show'))return;if(e.key==='Escape')exitPlayer();if(e.code==='Space'){e.preventDefault();togglePause()}});
 async function init(){
  try{
