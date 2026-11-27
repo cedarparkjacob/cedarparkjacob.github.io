@@ -91,12 +91,12 @@ const VIDEO_URLS={
   "A4a|090": "https://images.wikidexcdn.net/mwuploads/wikidex/2/2f/latest/20260302154457/Animaci%C3%B3n_carta_inmersiva_Suicune_ex_%28Manantial_Oculto_90_TCG_Pocket%29.webm"
 };
 const WIKI_FILES={
-  "A3a|Buzzwole ex": "Animación carta inmersiva Buzzwole ex (Crisis Dimensional 88 TCG Pocket).webm",
-  "A2|Dialga ex": "Animación carta inmersiva Dialga ex (Pugna Espaciotemporal 207 TCG Pocket).webm",
-  "A3b|Eevee ex": "Animación carta inmersiva Eevee ex (Arboleda de Eevee 92 TCG Pocket).webm",
-  "A3|Guzma": "Animación carta inmersiva Guzmán (Guardianes Celestiales 208 TCG Pocket).webm",
-  "A2|Palkia ex": "Animación carta inmersiva Palkia ex (Pugna Espaciotemporal 204 TCG Pocket).webm",
-  "B4a|Team Rocket's Master Plan": "Animación carta inmersiva Plan Maestro del Team Rocket (La Ambición del Team Rocket 94 TCG Pocket).webm"
+  "A3a|buzzwole ex": "Animación carta inmersiva Buzzwole ex (Crisis Dimensional 88 TCG Pocket).webm",
+  "A2|dialga ex": "Animación carta inmersiva Dialga ex (Pugna Espaciotemporal 207 TCG Pocket).webm",
+  "A3b|eevee ex": "Animación carta inmersiva Eevee ex (Arboleda de Eevee 92 TCG Pocket).webm",
+  "A3|guzma": "Animación carta inmersiva Guzmán (Guardianes Celestiales 208 TCG Pocket).webm",
+  "A2|palkia ex": "Animación carta inmersiva Palkia ex (Pugna Espaciotemporal 204 TCG Pocket).webm",
+  "B4a|team rocket s master plan": "Animación carta inmersiva Plan Maestro del Team Rocket (La Ambición del Team Rocket 94 TCG Pocket).webm"
 };
 const GAME8_URLS={
   "A1|280": "https://img.game8.co/4003586/8349724f9314ab43b8417107675d6a12.mp4/show",
@@ -237,6 +237,7 @@ const WIKI_DIRECT={
  'A2a|arceus ex':'https://images.wikidexcdn.net/mwuploads/wikidex/e/e3/latest/20260302064755/Animaci%C3%B3n_carta_inmersiva_Arceus_ex_%28Luz_Triunfal_95_TCG_Pocket%29.webm',
  'A2b|giratina ex':'https://images.wikidexcdn.net/mwuploads/wikidex/7/70/latest/20260302070106/Animaci%C3%B3n_carta_inmersiva_Giratina_ex_%28Festival_Brillante_96_TCG_Pocket%29.webm',
  'A3|lillie':'https://images.wikidexcdn.net/mwuploads/wikidex/9/9f/latest/20260302074428/Animaci%C3%B3n_carta_inmersiva_Lylia_%28Guardianes_Celestiales_209_TCG_Pocket%29.webm',
+ 'A3|lylia':'https://images.wikidexcdn.net/mwuploads/wikidex/9/9f/latest/20260302074428/Animaci%C3%B3n_carta_inmersiva_Lylia_%28Guardianes_Celestiales_209_TCG_Pocket%29.webm',
  'A4a|suicune ex':'https://images.wikidexcdn.net/mwuploads/wikidex/2/2f/latest/20260302154457/Animaci%C3%B3n_carta_inmersiva_Suicune_ex_%28Manantial_Oculto_90_TCG_Pocket%29.webm'
 };
 const WIKI_NAME_ALIASES={'A3|lillie':['lillie','lylia'],'A3|guzma':['guzma','guzman']};
@@ -246,8 +247,7 @@ async function wikiUrlForCard(c){
  if(WIKI_DIRECT[key])return WIKI_DIRECT[key];
  const aliases=WIKI_NAME_ALIASES[key]||[];
  const name=norm(c.name||c.card_name||'');
- const match=Object.entries(WIKI_FILES).find(([k])=>k===setCode(c)+'|'+(name||''));
- let file=match?.[1];
+ let file=WIKI_FILES[setCode(c)+'|'+(name||'')];
  if(!file&&aliases.length){
   const prefix=setCode(c)+'|';
   file=Object.entries(WIKI_FILES).find(([k])=>k.startsWith(prefix)&&aliases.some(a=>norm(k.slice(prefix.length))===norm(a)))?.[1];
@@ -365,7 +365,7 @@ function showComingSoon(imageUrl){
  $('#pauseBtn').style.display='none';$('#playerMessage').textContent='Immersive video coming soon for this card. The full-screen preview is ready for its matching video file.';
 }
 function requestPlayerFullscreen(){
- const target=player;
+ const target=document.documentElement;
  if(!document.fullscreenElement&&target.requestFullscreen){target.requestFullscreen({navigationUI:'hide'}).then(()=>{try{screen.orientation?.lock?.('portrait').catch(()=>{});}catch(_){}}).catch(()=>{});}
 }
 function openCard(c,imageUrl){
