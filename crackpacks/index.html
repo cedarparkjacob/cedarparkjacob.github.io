@@ -205,5 +205,4 @@ let start=null;$('#stage').addEventListener('pointerdown',e=>{if(e.target.closes
 async function init(){load();updateTop();try{const r=await fetch(CATALOG,{cache:'no-store'});if(!r.ok)throw Error('Catalog request failed: '+r.status);const data=await r.json();catalog=Array.isArray(data)?data:(data.cards||[]);if(!catalog.length)throw Error('Catalog has no card versions.');fillSets();initPullFilters();$('#openBtn').disabled=false;$('#status').textContent='Catalog loaded · '+catalog.length.toLocaleString()+' card versions';renderStats()}catch(e){$('#status').textContent='Could not load the local card catalog. '+e.message;$('#openBtn').disabled=true;$('#oddsNote').textContent='The simulator needs its local card catalog to be built first.'}}
 init();
 })();
-<script src="immersive-player.js?v=crackpacks-immersive-2" defer></script>
-</script></body></html>
+</script><script src="immersive-player.js?v=crackpacks-immersive-2" defer></script></body></html>
