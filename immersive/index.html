@@ -291,9 +291,9 @@ function makeCard(c,i){
  const hint=document.createElement('div');hint.className='card-hint';hint.textContent='✦ FIREWORKS · PLAY IMMERSIVE';
  info.append(name,meta,hint);button.append(img,info);
  const launch=()=>{if(button.dataset.launched==='1')return;button.dataset.launched='1';openCard(c,img.src);setTimeout(()=>button.dataset.launched='0',900)};
- button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;longTriggered=false;clearTimeout(longTimer);longTimer=setTimeout(()=>{longTriggered=true;launch()},480)});
+ button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;longTriggered=false;clearTimeout(longTimer);longTimer=setTimeout(()=>{longTriggered=true},480)});
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>button.addEventListener(ev,()=>clearTimeout(longTimer)));
- button.addEventListener('click',()=>{if(longTriggered){longTriggered=false;return}launch()});
+ button.addEventListener('click',()=>{if(longTriggered)longTriggered=false;launch()});
  return button;
 }
 let activeSourceConfig=null;
