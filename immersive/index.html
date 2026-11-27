@@ -141,7 +141,7 @@ const GAME8_URLS={
 const YOUTUBE_IDS={
   "C1|185": "uEOx-9cILqk",
   "P-B|103": "cVALVDJsKXA",
-  "C1|187": "Z-T2OfFJRrE",
+  "C1|183": "Z-T2OfFJRrE",
   "C1|186": "SL7v4zRM6mk",
   "C1|184": "OpoTLSqGlRM",
   "A4b|376": "9NMsDlXg_Fw",
@@ -329,7 +329,7 @@ async function showPlayer(c,imageUrl){
  try{
   const source=await videoForCard(c);
   if(source.type==='wiki'){
-   activeSourceConfig={wiki:source.url};video.style.display='block';video.muted=false;video.onerror=()=>showComingSoon(imageUrl);
+   activeSourceConfig={wiki:source.url};video.style.display='block';video.muted=false;video.onerror=()=>{const fallback=YOUTUBE_IDS[cardKey(c)];if(fallback){activeSourceConfig={type:'youtube',youtube:fallback};setSourceMode();}else showComingSoon(imageUrl);};
    video.controls=false;video.src=source.url;video.load();video.currentTime=0;
    video.play().catch(()=>{$('#playerMessage').textContent='Tap the screen, then press Play.';});
    $('#sourceCaption').textContent='Process used: '+source.label+'.';
@@ -362,7 +362,7 @@ function playEffect(){
  const ball=$('.ball');ball.style.animation='none';void ball.offsetWidth;ball.style.animation='';
 }
 function showComingSoon(imageUrl){
- stopSources();$('#sourceCaption').textContent='Process used: no matching WikiDex, Game8, or YouTube video is configured for this exact set and card number.';$('#sourceSwitch').innerHTML='';video.style.display='none';still.src=imageUrl;still.style.display='block';
+ stopSources();$('#sourceCaption').textContent='No playable WikiDex or YouTube video is currently available for this card.';$('#sourceSwitch').innerHTML='';video.style.display='none';still.src=imageUrl;still.style.display='block';
  $('#pauseBtn').style.display='none';$('#playerMessage').textContent='Immersive video coming soon for this card. The full-screen preview is ready for its matching video file.';
 }
 function requestPlayerFullscreen(){
