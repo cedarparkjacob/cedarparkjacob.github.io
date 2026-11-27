@@ -214,7 +214,10 @@ function setCode(c){
   const v=c?.[k];if(v&&typeof v==='object')values.push(v.code,v.id,v.name,v.abbreviation);else values.push(v);
  }
  for(const v of values){
-  const m=String(v??'').trim().toUpperCase().match(/^(A\d+[A-Z]?|B\d+[A-Z]?|C\d+|P-B)$/);
+  const raw=String(v??'').trim();
+  const mixed=raw.match(/^([AB])(\d+)([a-z])$/i);
+  if(mixed)return mixed[1].toUpperCase()+mixed[2]+mixed[3].toLowerCase();
+  const m=raw.toUpperCase().match(/^(A\d+|B\d+|C\d+|P-B)$/);
   if(m)return m[1];
  }
  const text=values.map(norm).filter(Boolean).join(' ');
