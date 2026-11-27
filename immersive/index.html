@@ -405,7 +405,7 @@ async function init(){
   if(!immersive.length)throw new Error('The catalog loaded, but it did not contain any cards marked as immersive (IM).');
   immersive.sort((a,b)=>String(a.set||'').localeCompare(String(b.set||''))||String(a.number_label||a.number||'').localeCompare(String(b.number_label||b.number||''),undefined,{numeric:true}));
   $('#cardCount').textContent=immersive.length;
-  const mappedCount=immersive.filter(c=>YOUTUBE_IDS[cardKey(c)]||Object.keys(WIKI_FILES).some(k=>k.startsWith(setCode(c)+'|'))||Object.keys(WIKI_DIRECT).some(k=>k.startsWith(setCode(c)+'|'))).length;
+  const mappedCount=immersive.filter(c=>YOUTUBE_IDS[cardKey(c)]||WIKI_DIRECT[wikiNameKey(c)]||WIKI_FILES[wikiNameKey(c)]).length;
   statusEl.textContent='Loaded all '+immersive.length+' immersive cards. WikiDex is used for its 15 original immersive animations; all other matched cards play their YouTube Short full-screen.';
   cardsEl.innerHTML='';immersive.forEach((c,i)=>{c._immersiveIndex=i;cardsEl.append(makeCard(c,i));});
  }catch(error){
