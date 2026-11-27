@@ -398,7 +398,8 @@ function togglePause(){
 $('#pauseBtn').addEventListener('click',togglePause);
 $('#exitBtn').addEventListener('click',exitPlayer);
 function showControlsTemporarily(){player.classList.add('controls-visible');clearTimeout(controlsTimer);controlsTimer=setTimeout(()=>player.classList.remove('controls-visible'),2600);}
-$('#tapShield').addEventListener('click',()=>{if(player.classList.contains('controls-visible')){player.classList.remove('controls-visible');clearTimeout(controlsTimer);}else showControlsTemporarily();});\nplayer.addEventListener('click',e=>{if(e.target.closest('.player-actions')){clearTimeout(controlsTimer);}});
+$('#tapShield').addEventListener('click',()=>{if(player.classList.contains('controls-visible')){player.classList.remove('controls-visible');clearTimeout(controlsTimer);}else showControlsTemporarily();});
+player.addEventListener('click',e=>{if(e.target.closest('.player-actions')){clearTimeout(controlsTimer);}});
 document.addEventListener('keydown',e=>{if(!player.classList.contains('show'))return;if(e.key==='Escape')exitPlayer();if(e.code==='Space'){e.preventDefault();togglePause()}});
 async function init(){
  try{
